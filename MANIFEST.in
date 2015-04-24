@@ -1,0 +1,2 @@
+include orangecontrib/data-fusion/tutorials/*.ows
+include orangecontrib/data-fusion/widgets/icons/*
