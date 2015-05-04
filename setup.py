@@ -23,7 +23,14 @@ if __name__ == '__main__':
     setup(
         name="Orange3 Data Fusion",
         packages=find_packages(),
-        install_requires=['Orange'],
+        install_requires=[
+            'Orange',
+            'scikit-fusion',
+            'pygraphviz>=1.3rc2',
+        ],
+        dependency_links = [
+            'https://github.com/marinkaz/scikit-fusion/archive/master.zip#egg=scikit-fusion',
+        ],
         entry_points=ENTRY_POINTS,
         namespace_packages=['orangecontrib'],
         include_package_data=True,
