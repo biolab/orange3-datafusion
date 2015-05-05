@@ -15,14 +15,8 @@ class OWFusionGraph(widget.OWWidget):
     def __init__(self):
         super().__init__()
         self.graph = fusion.FusionGraph()
-        self.renderer = QtSvg.QSvgRenderer()
-
-        # Monkey-patch the mainArea's paintEvent() with rendering the graph SVG
-        self.mainArea.paintEvent = (
-            lambda widget, event, oldPaintEvent=self.mainArea.paintEvent:
-                self.renderer.render(QtGui.QPainter(widget)) or
-                oldPaintEvent(event)
-            ).__get__(self.mainArea, type(self.mainArea))
+        self.webview = QtWebKit.QWebView(self.mainArea)
+        self.mainArea.layout().addWidget(self.webview)
 
     def add_relation(self, relation):
         self.graph.add_relation(relation)
@@ -33,7 +27,7 @@ class OWFusionGraph(widget.OWWidget):
         graph.draw_graphviz(stream, 'svg')
         stream.seek(0)
         stream = QtCore.QByteArray(stream.read())
-        self.renderer.load(stream)
+        self.webview.setContent(stream, 'image/svg+xml')
         super().repaint()
 
 
