@@ -1,0 +1,6 @@
+svg {
+    margin: 4vh 0 0 5vw;
+}
+.node ellipse {
+    fill: Orange !important;
+}
