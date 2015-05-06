@@ -11,16 +11,27 @@ class OWFusionGraph(widget.OWWidget):
     icon = "icons/fusion-graph.svg"
     inputs = [("Relation", fusion.Relation, "add_relation", widget.Multiple)]
 
+    n_object_types = n_relations = 0
 
     def __init__(self):
         super().__init__()
         self.graph = fusion.FusionGraph()
         self.webview = QtWebKit.QWebView(self.mainArea)
         self.mainArea.layout().addWidget(self.webview)
+        self._create_layout()
+
+    def _create_layout(self):
+        info = gui.widgetBox(self.controlArea, "Info")
+        gui.label(info, self, '%(n_object_types)d object types')
+        gui.label(info, self, '%(n_relations)d relations')
+        self.controlArea.layout().addStretch(1)
 
     def add_relation(self, relation):
         self.graph.add_relation(relation)
         self.repaint(self.graph)
+        # this ensures gui.label-s get updated
+        self.n_object_types = self.graph.n_object_types
+        self.n_relations = self.graph.n_relations
 
     def repaint(self, graph):
         stream = BytesIO()
