@@ -23,10 +23,6 @@ if __name__ == '__main__':
     setup(
         name="Orange3 Data Fusion",
         packages=find_packages(),
-        package_data={
-            'orangecontrib.datafusion': ['tutorials/*.ows'],
-            'orangecontrib.datafusion.widgets': ['icons/*'],
-        },
         install_requires=['Orange'],
         entry_points=ENTRY_POINTS,
         namespace_packages=['orangecontrib'],
