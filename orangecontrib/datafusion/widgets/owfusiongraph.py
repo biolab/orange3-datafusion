@@ -17,7 +17,7 @@ import re
 class OWFusionGraph(widget.OWWidget):
     name = "Fusion Graph"
     icon = "icons/fusion-graph.svg"
-    inputs = [("fusion.Relation", fusion.Relation, "add_relation", widget.Multiple)]
+    inputs = [("fusion.Relation", fusion.Relation, "on_add_relation", widget.Multiple)]
     outputs = [("fusion.Relation", fusion.Relation)]
 
     # Signal emitted when a node in the SVG is selected, carrying its name
@@ -102,7 +102,7 @@ class OWFusionGraph(widget.OWWidget):
         info.layout().addWidget(self.listview)
         self.controlArea.layout().addStretch(1)
 
-    def add_relation(self, relation):
+    def on_add_relation(self, relation):
         self.graph.add_relation(relation)
         self.repaint(self.graph)
         self.listview.new_item_from(relation)
@@ -129,28 +129,33 @@ def main():
     # example from https://github.com/marinkaz/scikit-fusion
     import numpy as np
     R12 = np.random.rand(50, 100)
+    R22 = np.random.rand(100, 100)
     R13 = np.random.rand(50, 40)
-    R31 = np.random.rand(150, 20)
+    R31 = np.random.rand(40, 50)
     R23 = np.random.rand(100, 40)
     R23 = np.random.rand(100, 40)
-    t1 = fusion.ObjectType('Type 1', 10)
-    t2 = fusion.ObjectType('Type 2', 20)
-    t3 = fusion.ObjectType('Type 3', 30)
-    relations = [fusion.Relation(R12, t1, t2),
-                 fusion.Relation(R13, t1, t3),
-                 fusion.Relation(R23, t2, t3),
+    R24 = np.random.rand(100, 400)
+    R34 = np.random.rand(40, 400)
+    t1 = fusion.ObjectType('Users', 10)
+    t2 = fusion.ObjectType('Actors', 20)
+    t3 = fusion.ObjectType('Movies', 30)
+    t4 = fusion.ObjectType('Genres', 40)
+    relations = [fusion.Relation(R12, t1, t2, name='like'),
+                 fusion.Relation(R13, t1, t3, name='rated'),
+                 fusion.Relation(R23, t2, t3, name='play in'),
                  fusion.Relation(R31, t3, t1),
-                 fusion.Relation(R13, t3, t1),
-                 fusion.Relation(R13, t1, t1)]
+                 fusion.Relation(R24, t2, t4, name='prefer'),
+                 fusion.Relation(R34, t3, t4, name='belong to'),
+                 fusion.Relation(R22, t2, t2, name='married to')]
 
     app = QtGui.QApplication(['asdf'])
     w = OWFusionGraph()
     w.show()
     def _add_next_relation(event, relation=iter(relations)):
-        try: w.add_relation(next(relation))
+        try: w.on_add_relation(next(relation))
         except StopIteration: w.killTimer(w.timer_id)
     w.timerEvent = _add_next_relation
-    w.timer_id = w.startTimer(1000)
+    w.timer_id = w.startTimer(500)
     app.exec()
 
 
