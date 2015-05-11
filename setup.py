@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 ENTRY_POINTS = {
     # Entry point used to specify packages containing tutorials accessible
@@ -22,14 +22,7 @@ ENTRY_POINTS = {
 if __name__ == '__main__':
     setup(
         name="Orange3 Data Fusion",
-        packages=['orangecontrib',
-                  'orangecontrib.datafusion',
-                  'orangecontrib.datafusion.tutorials',
-                  'orangecontrib.datafusion.widgets'],
-        package_data={
-            'orangecontrib.datafusion': ['tutorials/*.ows'],
-            'orangecontrib.datafusion.widgets': ['icons/*'],
-        },
+        packages=find_packages(),
         install_requires=['Orange'],
         entry_points=ENTRY_POINTS,
         namespace_packages=['orangecontrib'],
