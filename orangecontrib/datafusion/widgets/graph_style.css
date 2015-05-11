@@ -1,6 +1,29 @@
 svg {
-    margin: 4vh 0 0 5vw;
+    cursor: default;
+    -webkit-user-select: none;
 }
-.node ellipse {
-    fill: Orange !important;
+
+/*
+ * One does NOT just style <g> (SVG groups). Be more specific. Use !important
+ * to override existing values. Just to be sure, use -webkit-* prefix.
+ */
+
+.node.selected ellipse
+{
+    -webkit-svg-shadow: 0 0 20px orange;
+    filter: drop-shadow(0 0 20px orange);
+}
+
+.edge.selected path,
+.edge.selected polygon
+{
+    stroke: maroon !important;
+}
+.edge.selected polygon
+{
+    fill: maroon !important;
+}
+.edge.selected text
+{
+    fill: maroon !important;
 }
