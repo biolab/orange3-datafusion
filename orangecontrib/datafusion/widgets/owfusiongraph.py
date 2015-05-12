@@ -6,10 +6,7 @@ from Orange.widgets import widget, gui
 from skfusion import fusion
 
 from os import path
-CSS_FILE = path.join(path.dirname(__file__), 'graph_style.css')
-JAVASCRIPT_FILE = path.join(path.dirname(__file__), 'graph_script.js')
-assert path.exists(CSS_FILE)
-JAVASCRIPT_CONTENT = open(JAVASCRIPT_FILE).read()
+JS_GRAPH = open(path.join(path.dirname(__file__), 'graph_script.js')).read()
 
 import re
 
@@ -31,11 +28,6 @@ class OWFusionGraph(widget.OWWidget):
         self.graph = fusion.FusionGraph()
         self.webview = QtWebKit.QWebView(self.mainArea)
         settings = self.webview.settings()
-        def _path2url(path):
-            from urllib.parse import urljoin
-            from urllib.request import pathname2url
-            return urljoin('file:', pathname2url(path))
-        settings.setUserStyleSheetUrl(QtCore.QUrl(_path2url(CSS_FILE)))
         if __debug__:  # TODO
             settings.setAttribute(settings.DeveloperExtrasEnabled, True)
         else:
@@ -121,7 +113,7 @@ class OWFusionGraph(widget.OWWidget):
         self.webview.setContent(stream, 'image/svg+xml')
         webframe = self.webview.page().mainFrame()
         webframe.addToJavaScriptWindowObject('pybridge', self)
-        webframe.evaluateJavaScript(JAVASCRIPT_CONTENT)
+        webframe.evaluateJavaScript(JS_GRAPH)
         super().repaint()
 
 

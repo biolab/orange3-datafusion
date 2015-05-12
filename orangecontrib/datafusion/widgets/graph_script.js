@@ -1,9 +1,11 @@
 
-$ = document.querySelectorAll.bind(document);
+function $(selector) { return document.querySelectorAll(selector) }
+// document.querySelectorAll returns a NodeList which is missing mapping methods
 NodeList.prototype.forEach = Array.prototype.forEach;
 
-
 var svg = $('svg')[0];
+svg.style.cursor = 'default';
+svg.style.webkitUserSelect = 'none';
 
 // Handle mousewheel zooming
 curZoom = 1;
@@ -32,20 +34,62 @@ $('title').forEach(function(title) {
 
 
 // Highlight nodes when clicked
-var elements = $('.node, .edge')
-elements.forEach(function(elem) {
+var ELEMENTS = $('.node, .edge');
+ELEMENTS.forEach(function(elem) {
     elem.addEventListener('click', function(event) {
-        elements.forEach(function(elem) {
-            elem.classList.remove('selected');
+        // Deselect all elements
+        ELEMENTS.forEach(function(elem) {
+            dehighlightOne(elem);
         });
-        elem.classList.add('selected');
+        // Only (re)select thus clicked element
+        highlightOne(elem);
         // Send the selection via pybridge for further processing
         window.pybridge.graph_element_selected(elem.id);
-        //~ alert(window.pybridge);
     });
 });
+var EDGE_COLORS = ['maroon', 'black'];
+var HIGHLIGHTS = {
+    /* tagName: { attribute: [highlightedValue, originalValue] } */
+    // Node
+    'ellipse': {
+        'fill': ['orange', 'white']
+    },
+    // Edge line
+    'path': {
+        'stroke': EDGE_COLORS
+    },
+    // Edge arrow-head
+    'polygon': {
+        'stroke': EDGE_COLORS,
+        'fill': EDGE_COLORS
+    },
+    // Edge text
+    'text': {
+        'fill': EDGE_COLORS,
+        'font-weight': ['bold', 'normal']
+    }
+};
+function SUBELEMENTS(elem) {
+    return elem.querySelectorAll(Object.keys(HIGHLIGHTS).toString())
+}
+function dehighlightOne(elem) {
+    SUBELEMENTS(elem).forEach(function(elem) {
+        var props = HIGHLIGHTS[elem.tagName];
+        for (var attr in props) {
+            elem.setAttribute(attr, props[attr][1]);
+        }
+    });
+}
+function highlightOne(elem) {
+    SUBELEMENTS(elem).forEach(function(elem) {
+        var props = HIGHLIGHTS[elem.tagName];
+        for (var attr in props) {
+            elem.setAttribute(attr, props[attr][0]);
+        }
+    });
+}
 function highlight(selector) {
     $(selector).forEach(function(elem) {
-        elem.classList.add('selected');
+        highlightOne(elem);
     });
 }
