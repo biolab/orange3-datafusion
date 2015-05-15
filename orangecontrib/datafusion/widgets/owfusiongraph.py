@@ -14,7 +14,7 @@ import re
 class OWFusionGraph(widget.OWWidget):
     name = "Fusion Graph"
     icon = "icons/fusion-graph.svg"
-    inputs = [("fusion.Relation", fusion.Relation, "on_add_relation", widget.Multiple)]
+    inputs = [("fusion.Relation", fusion.Relation, "on_relation_change", widget.Multiple)]
     outputs = [("fusion.Relation", fusion.Relation)]
 
     # Signal emitted when a node in the SVG is selected, carrying its name
@@ -24,6 +24,7 @@ class OWFusionGraph(widget.OWWidget):
         super().__init__()
         self.n_object_types = 0
         self.n_relations = 0
+        self.relations = {}  # id-->relation map
         self.graph_element_selected.connect(self.on_graph_element_selected)
         self.graph = fusion.FusionGraph()
         self.webview = QtWebKit.QWebView(self.mainArea)
@@ -74,15 +75,24 @@ class OWFusionGraph(widget.OWWidget):
                 self.setHorizontalScrollMode(self.ScrollPerPixel)
                 self.setSelectionMode(self.SingleSelection)
                 self.setAlternatingRowColors(True)
-            def new_item_from(self, relation):
-                name = '%6d %s %s %d %s' % (relation.data.shape[0],
+            def _get_name(self, relation):
+                return '%6d %s %s %d %s' % (relation.data.shape[0],
                                             relation.row_type.name,
                                             relation.name or '→',
                                             relation.data.shape[1],
                                             relation.col_type.name)
-                item = QtGui.QListWidgetItem(name, self)
+            def add_item(self, relation):
+                item = QtGui.QListWidgetItem(self._get_name(relation), self)
                 item.setData(QtCore.Qt.UserRole, relation)
                 self.addItem(item)
+            def remove_item(self, relation):
+                for item in self.findItems(self._get_name(relation), QtCore.Qt.MatchFixedString):
+                    if relation == item.data(QtCore.Qt.UserRole):
+                        self.takeItem(self.row(item))
+                        break
+                else:
+                    class WhatTheFuckException(Exception): pass
+                    raise WhatTheFuckException
             def show_only(self, shown):
                 for i in range(self.count()):
                     item = self.item(i)
@@ -94,10 +104,21 @@ class OWFusionGraph(widget.OWWidget):
         info.layout().addWidget(self.listview)
         self.controlArea.layout().addStretch(1)
 
-    def on_add_relation(self, relation):
-        self.graph.add_relation(relation)
+    def on_relation_change(self, relation, id):
+        def _on_remove_relation(id):
+            try: relation = self.relations.pop(id)
+            except KeyError: return
+            self.graph.remove_relation(relation)
+            self.listview.remove_item(relation)
+        def _on_add_relation(relation, id):
+            _on_remove_relation(id)
+            self.relations[id] = relation
+            self.graph.add_relation(relation)
+            self.listview.add_item(relation)
+        if relation:
+               _on_add_relation(relation, id)
+        else:  _on_remove_relation(id)
         self.repaint(self.graph)
-        self.listview.new_item_from(relation)
         # this ensures gui.label-s get updated
         self.n_object_types = self.graph.n_object_types
         self.n_relations = self.graph.n_relations
@@ -143,9 +164,12 @@ def main():
     app = QtGui.QApplication(['asdf'])
     w = OWFusionGraph()
     w.show()
-    def _add_next_relation(event, relation=iter(relations)):
-        try: w.on_add_relation(next(relation))
-        except StopIteration: w.killTimer(w.timer_id)
+
+    def _add_next_relation(event, relation=iter(relations), id=iter(range(len(relations)))):
+        try: w.on_relation_change(next(relation), next(id))
+        except StopIteration:
+            w.killTimer(w.timer_id)
+            w.on_relation_change(None, 4)  # Remove relation #4
     w.timerEvent = _add_next_relation
     w.timer_id = w.startTimer(500)
     app.exec()
