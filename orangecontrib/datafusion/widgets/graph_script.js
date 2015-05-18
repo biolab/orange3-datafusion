@@ -41,10 +41,14 @@ ELEMENTS.forEach(function(elem) {
         ELEMENTS.forEach(function(elem) {
             dehighlightOne(elem);
         });
-        // Only (re)select thus clicked element
-        highlightOne(elem);
-        // Send the selection via pybridge for further processing
-        window.pybridge.graph_element_selected(elem.id);
+        try {
+            // Send the selection via pybridge for further processing
+            window.pybridge.graph_element_selected(elem.id);
+            // Only (re)select thus clicked element
+            highlightOne(elem);
+        } catch (err) {
+            // Do something else elsewhere
+        };
     });
 });
 var EDGE_COLORS = ['maroon', 'black'];
