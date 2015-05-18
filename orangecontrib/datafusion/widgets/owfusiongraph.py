@@ -5,6 +5,7 @@ from PyQt4 import QtCore, QtGui, QtSvg, QtWebKit
 from Orange.widgets import widget, gui, settings
 
 from skfusion import fusion
+from orangecontrib.datafusion.table import Relation
 
 from os import path
 JS_GRAPH = open(path.join(path.dirname(__file__), 'graph_script.js')).read()
@@ -24,9 +25,9 @@ INITIALIZATION_ALGO = [
 class OWFusionGraph(widget.OWWidget):
     name = "Fusion Graph"
     icon = "icons/fusion-graph.svg"
-    inputs = [("fusion.Relation", fusion.Relation, "on_relation_change", widget.Multiple)]
+    inputs = [("Relation", Relation, "on_relation_change", widget.Multiple)]
     outputs = [
-        ("fusion.Relation", fusion.Relation),
+        ("Relation", Relation),
         ("Fusion graph", fusion.FusionFit),
     ]
 
@@ -118,7 +119,7 @@ class OWFusionGraph(widget.OWWidget):
                     item.setHidden(item.data(QtCore.Qt.UserRole) not in shown)
             def currentItemChanged(_, current, previous):
                 relation = current.getData(QtCore.Qt.UserRole)
-                self.send(self.outputs[0][0], relation)
+                self.send('Relation', relation)
         self.listview = OurListWidget(info)
         info.layout().addWidget(self.listview)
         self.param_decomposition_algo = gui.radioButtons(self.controlArea,
@@ -173,7 +174,7 @@ class OWFusionGraph(widget.OWWidget):
             self.graph.add_relation(relation)
             self.listview.add_item(relation)
         if relation:
-               _on_add_relation(relation, id)
+               _on_add_relation(relation.relation, id)
         else:  _on_remove_relation(id)
         self.repaint(self.graph)
         # this ensures gui.label-s get updated
@@ -222,7 +223,9 @@ def main():
     w = OWFusionGraph()
     w.show()
 
-    def _add_next_relation(event, relation=iter(relations), id=iter(range(len(relations)))):
+    def _add_next_relation(event,
+                           id=iter(range(len(relations))),
+                           relation=iter(map(Relation, relations))):
         try: w.on_relation_change(next(relation), next(id))
         except StopIteration:
             w.killTimer(w.timer_id)
