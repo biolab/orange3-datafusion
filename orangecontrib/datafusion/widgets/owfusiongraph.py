@@ -1,7 +1,8 @@
 from io import BytesIO
+from collections import defaultdict
 
 from PyQt4 import QtCore, QtGui, QtSvg, QtWebKit
-from Orange.widgets import widget, gui
+from Orange.widgets import widget, gui, settings
 
 from skfusion import fusion
 
@@ -10,15 +11,33 @@ JS_GRAPH = open(path.join(path.dirname(__file__), 'graph_script.js')).read()
 
 import re
 
+DECOMPOSITION_ALGO = [
+    ('Matrix tri-factorization', fusion.Dfmf),
+    ('Matrix tri-completion', fusion.Dfmc),
+]
+INITIALIZATION_ALGO = [
+    'Random',
+    'Random C',
+    'Random Vcol'
+]
 
 class OWFusionGraph(widget.OWWidget):
     name = "Fusion Graph"
     icon = "icons/fusion-graph.svg"
     inputs = [("fusion.Relation", fusion.Relation, "on_relation_change", widget.Multiple)]
-    outputs = [("fusion.Relation", fusion.Relation)]
+    outputs = [
+        ("fusion.Relation", fusion.Relation),
+        ("Fusion graph", fusion.FusionFit),
+    ]
 
     # Signal emitted when a node in the SVG is selected, carrying its name
     graph_element_selected = QtCore.pyqtSignal(str)
+
+    pref_algorithm = settings.Setting(0)
+    pref_initialization = settings.Setting(0)
+    pref_n_iterations = settings.Setting(10)
+    pref_rank = settings.Setting(10)
+    autorun = settings.Setting(False)
 
     def __init__(self):
         super().__init__()
@@ -102,7 +121,45 @@ class OWFusionGraph(widget.OWWidget):
                 self.send(self.outputs[0][0], relation)
         self.listview = OurListWidget(info)
         info.layout().addWidget(self.listview)
+        self.param_decomposition_algo = gui.radioButtons(self.controlArea,
+            self, 'pref_algorithm', dict(DECOMPOSITION_ALGO).keys(),
+            box='Decomposition algorithm',
+            callback=self.checkcommit)
+        self.param_decomposition_algo = gui.radioButtons(self.controlArea,
+            self, 'pref_initialization', INITIALIZATION_ALGO,
+            box='Initialization algorithm',
+            callback=self.checkcommit)
+        gui.hSlider(self.controlArea, self, 'pref_n_iterations',
+            'Maximum number of iterations',
+            minValue=10, maxValue=500, createLabel=True,
+            callback=self.checkcommit)
+        gui.hSlider(self.controlArea, self, 'pref_rank',
+            'Factorization rank',
+            minValue=1, maxValue=100, createLabel=True, labelFormat=" %d%%",
+            callback=self.checkcommit)
+        gui.auto_commit(self.controlArea, self, "autorun", "Run",
+                        checkbox_label="Run after any change  ")
         self.controlArea.layout().addStretch(1)
+
+    def checkcommit(self):
+        return self.commit()
+
+    def commit(self):
+        Algo = DECOMPOSITION_ALGO[self.pref_algorithm][1]
+        init_type = INITIALIZATION_ALGO[self.pref_initialization].lower().replace(' ', '_')
+        # Update rank on object-types
+        maxrank = defaultdict(int)
+        for rel in self.graph.relations:
+            rows, cols = rel.data.shape
+            row_type, col_type = rel.row_type, rel.col_type
+            if rows > maxrank[row_type]:
+                maxrank[row_type] = row_type.rank = max(5, int(rows * (self.pref_rank / 100)))
+            if cols > maxrank[col_type]:
+                maxrank[col_type] = col_type.rank = max(5, int(cols * (self.pref_rank / 100)))
+        # Run the algo ...
+        self.fuser = Algo(init_type=init_type,
+                          max_iter=self.pref_n_iterations).fuse(self.graph)
+        self.send('Fusion graph', self.fuser)
 
     def on_relation_change(self, relation, id):
         def _on_remove_relation(id):
