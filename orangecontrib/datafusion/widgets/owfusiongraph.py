@@ -22,6 +22,17 @@ INITIALIZATION_ALGO = [
     'Random Vcol'
 ]
 
+class WebviewWidget(QtWebKit.QWebView):
+    def __init__(self, parent):
+        super().__init__(parent)
+        parent.layout().addWidget(self)
+        settings = self.settings()
+        if __debug__:  # TODO
+            settings.setAttribute(settings.DeveloperExtrasEnabled, True)
+        else:
+            self.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
+
+
 class OWFusionGraph(widget.OWWidget):
     name = "Fusion Graph"
     icon = "icons/fusion-graph.svg"
@@ -47,12 +58,7 @@ class OWFusionGraph(widget.OWWidget):
         self.relations = {}  # id-->relation map
         self.graph_element_selected.connect(self.on_graph_element_selected)
         self.graph = fusion.FusionGraph()
-        self.webview = QtWebKit.QWebView(self.mainArea)
-        settings = self.webview.settings()
-        if __debug__:  # TODO
-            settings.setAttribute(settings.DeveloperExtrasEnabled, True)
-        else:
-            self.webview.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
+        self.webview = WebviewWidget(self.mainArea)
         self._create_layout()
 
     @QtCore.pyqtSlot(str)
@@ -83,7 +89,6 @@ class OWFusionGraph(widget.OWWidget):
         self.listview.show_only(selected_relations)
 
     def _create_layout(self):
-        self.mainArea.layout().addWidget(self.webview)
         info = gui.widgetBox(self.controlArea, 'Info')
         gui.label(info, self, '%(n_object_types)d object types')
         gui.label(info, self, '%(n_relations)d relations')
