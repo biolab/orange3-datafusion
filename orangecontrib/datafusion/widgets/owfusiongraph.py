@@ -22,6 +22,7 @@ INITIALIZATION_ALGO = [
     'Random Vcol'
 ]
 
+
 class WebviewWidget(QtWebKit.QWebView):
     def __init__(self, parent):
         super().__init__(parent)
@@ -82,11 +83,66 @@ class OWFusionGraph(widget.OWWidget):
         self.evalJS("highlight('%s');" % selector)
         # Update the control listview table
         if selected_is_edge:
-            selected_relations = set(self.graph.get_relations(*nodes))
+            selected_relations = set(self.listview.hash(i)
+                                     for i in self.graph.get_relations(*nodes))
         else:
-            selected_relations = (set(self.graph.in_relations(nodes[0])) |
-                                  set(self.graph.out_relations(nodes[0])))
+            selected_relations = (set(self.listview.hash(i)
+                                      for i in self.graph.in_relations(nodes[0])) |
+                                  set(self.listview.hash(i)
+                                      for i in self.graph.out_relations(nodes[0])))
         self.listview.show_only(selected_relations)
+
+    class SimpleListWidget(QtGui.QListWidget):
+        """ A wrapper around QListWidget. Adapt by overriding some of its
+            methods.
+        """
+        def __init__(self, parent=None, owwidget=None):
+            super().__init__(parent)
+            self.owwidget = owwidget
+            self.setHorizontalScrollMode(self.ScrollPerPixel)
+            self.setSelectionMode(self.SingleSelection)
+            self.setAlternatingRowColors(True)
+            self.currentItemChanged.connect(self._on_currentItemChanged)
+            if parent: parent.layout().addWidget(self)
+        def get_name(self, relation):
+            """Override this for objects that aren't relations."""
+            return '%6d %s %s %d %s' % (relation.data.shape[0],
+                                        relation.row_type.name,
+                                        relation.name or '→',
+                                        relation.data.shape[1],
+                                        relation.col_type.name)
+        def add_item(self, relation, name=''):
+            name = name or self.get_name(relation)
+            item = QtGui.QListWidgetItem(name, self)
+            item.setData(QtCore.Qt.UserRole, relation)
+            self.addItem(item)
+        def remove_item(self, relation, name=''):
+            name = name or self.get_name(relation)
+            for item in self.findItems(name, QtCore.Qt.MatchFixedString):
+                if relation == item.data(QtCore.Qt.UserRole):
+                    self.takeItem(self.row(item))
+                    break
+            else: raise KeyError('Item not in ListWidget')
+        def hash(self, data):
+            """Override this in subclass to have for unhashable item datas."""
+            return data
+        def show_only(self, shown):
+            for i in range(self.count()):
+                item = self.item(i)
+                data = self.hash(item.data(QtCore.Qt.UserRole))
+                item.setHidden(data not in shown)
+        def send(self, data):
+            """Override to OWWidget.send() something else."""
+            if self.owwidget:
+                self.owwidget.send('Relation', Relation(data))
+        def on_currentItemChanged(self, current, previous):
+            """Override"""
+            relation = current.data(QtCore.Qt.UserRole) if current else None
+            self.send(relation)
+            return relation
+
+        def _on_currentItemChanged(self, current, previous):
+            return self.on_currentItemChanged(current, previous)
 
     def _create_layout(self):
         info = gui.widgetBox(self.controlArea, 'Info')
@@ -94,39 +150,8 @@ class OWFusionGraph(widget.OWWidget):
         gui.label(info, self, '%(n_relations)d relations')
         # Table view of relation details
         info = gui.widgetBox(self.controlArea, 'Relations')
-        class OurListWidget(QtGui.QListWidget):
-            def __init__(self, parent):
-                super().__init__(parent)
-                self.setHorizontalScrollMode(self.ScrollPerPixel)
-                self.setSelectionMode(self.SingleSelection)
-                self.setAlternatingRowColors(True)
-            def _get_name(self, relation):
-                return '%6d %s %s %d %s' % (relation.data.shape[0],
-                                            relation.row_type.name,
-                                            relation.name or '→',
-                                            relation.data.shape[1],
-                                            relation.col_type.name)
-            def add_item(self, relation):
-                item = QtGui.QListWidgetItem(self._get_name(relation), self)
-                item.setData(QtCore.Qt.UserRole, relation)
-                self.addItem(item)
-            def remove_item(self, relation):
-                for item in self.findItems(self._get_name(relation), QtCore.Qt.MatchFixedString):
-                    if relation == item.data(QtCore.Qt.UserRole):
-                        self.takeItem(self.row(item))
-                        break
-                else:
-                    class WhatTheFuckException(Exception): pass
-                    raise WhatTheFuckException
-            def show_only(self, shown):
-                for i in range(self.count()):
-                    item = self.item(i)
-                    item.setHidden(item.data(QtCore.Qt.UserRole) not in shown)
-            def currentItemChanged(_, current, previous):
-                relation = current.getData(QtCore.Qt.UserRole)
-                self.send('Relation', relation)
-        self.listview = OurListWidget(info)
-        info.layout().addWidget(self.listview)
+        self.listview = self.__class__.SimpleListWidget(info, self)
+        self.controlArea.layout().addStretch(1)
         self.param_decomposition_algo = gui.radioButtons(self.controlArea,
             self, 'pref_algorithm', dict(DECOMPOSITION_ALGO).keys(),
             box='Decomposition algorithm',
@@ -145,7 +170,6 @@ class OWFusionGraph(widget.OWWidget):
             callback=self.checkcommit)
         gui.auto_commit(self.controlArea, self, "autorun", "Run",
                         checkbox_label="Run after any change  ")
-        self.controlArea.layout().addStretch(1)
 
     def checkcommit(self):
         return self.commit()
