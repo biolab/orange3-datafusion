@@ -51,26 +51,25 @@ ELEMENTS.forEach(function(elem) {
         };
     });
 });
-var EDGE_COLORS = ['maroon', 'black'];
 var HIGHLIGHTS = {
     /* tagName: { attribute: [highlightedValue, originalValue] } */
     // Node
     'ellipse': {
-        'fill': ['orange', 'white']
+        'fill': 'orange'
     },
     // Edge line
     'path': {
-        'stroke': EDGE_COLORS
+        'stroke': 'maroon'
     },
     // Edge arrow-head
     'polygon': {
-        'stroke': EDGE_COLORS,
-        'fill': EDGE_COLORS
+        'stroke': 'maroon',
+        'fill': 'maroon'
     },
     // Edge text
     'text': {
-        'fill': EDGE_COLORS,
-        'font-weight': ['bold', 'normal']
+        'fill': 'maroon',
+        'font-weight': 'bold'
     }
 };
 function SUBELEMENTS(elem) {
@@ -80,7 +79,13 @@ function dehighlightOne(elem) {
     SUBELEMENTS(elem).forEach(function(elem) {
         var props = HIGHLIGHTS[elem.tagName];
         for (var attr in props) {
-            elem.setAttribute(attr, props[attr][1]);
+            if (!elem.hasAttribute('data-prev-' + attr)) continue;
+            var value = elem.getAttribute('data-prev-' + attr);
+            elem.removeAttribute('data-prev-' + attr);
+            if (value)
+                elem.setAttribute(attr, value);
+            else
+                elem.removeAttribute(attr);
         }
     });
 }
@@ -88,7 +93,11 @@ function highlightOne(elem) {
     SUBELEMENTS(elem).forEach(function(elem) {
         var props = HIGHLIGHTS[elem.tagName];
         for (var attr in props) {
-            elem.setAttribute(attr, props[attr][0]);
+            if (elem.hasAttribute('data-prev-' + attr)) continue;
+            // Backup previous value
+            elem.setAttribute('data-prev-' + attr, elem.getAttribute(attr) || '');
+            // Set new value
+            elem.setAttribute(attr, props[attr]);
         }
     });
 }
