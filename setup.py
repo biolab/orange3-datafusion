@@ -15,7 +15,7 @@ ENTRY_POINTS = {
         # Syntax: category name = path.to.package.containing.widgets
         # Widget category specification can be seen in
         #    orangecontrib/datafusion/widgets/__init__.py
-        'My Category = orangecontrib.datafusion.widgets',
+        'Data Fusion = orangecontrib.datafusion.widgets',
     ),
 }
 
