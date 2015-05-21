@@ -48,12 +48,13 @@ class OWFusionGraph(widget.OWWidget):
     inputs = [("Relation", Relation, "on_relation_change", widget.Multiple)]
     outputs = [
         ("Relation", Relation),
-        ("Fusion graph", fusion.FusionFit),
+        ("Fitted fusion graph", fusion.FusionFit),
     ]
 
     # Signal emitted when a node in the SVG is selected, carrying its name
     graph_element_selected = QtCore.pyqtSignal(str)
 
+    pref_algo_name = settings.Setting('')
     pref_algorithm = settings.Setting(0)
     pref_initialization = settings.Setting(0)
     pref_n_iterations = settings.Setting(10)
@@ -166,11 +167,14 @@ class OWFusionGraph(widget.OWWidget):
         info = gui.widgetBox(self.controlArea, 'Relations')
         self.listview = self.__class__.SimpleListWidget(info, self)
         self.controlArea.layout().addStretch(1)
-        self.param_decomposition_algo = gui.radioButtons(self.controlArea,
+        gui.lineEdit(self.controlArea,
+            self, 'pref_algo_name', 'Fuser name',
+            callback=self.checkcommit, enterPlaceholder=True)
+        gui.radioButtons(self.controlArea,
             self, 'pref_algorithm', dict(DECOMPOSITION_ALGO).keys(),
             box='Decomposition algorithm',
             callback=self.checkcommit)
-        self.param_decomposition_algo = gui.radioButtons(self.controlArea,
+        gui.radioButtons(self.controlArea,
             self, 'pref_initialization', INITIALIZATION_ALGO,
             box='Initialization algorithm',
             callback=self.checkcommit)
@@ -203,6 +207,7 @@ class OWFusionGraph(widget.OWWidget):
         # Run the algo ...
         self.fuser = Algo(init_type=init_type,
                           max_iter=self.pref_n_iterations).fuse(self.graph)
+        self.fuser.name = self.pref_algo_name
         self.send('Fusion graph', self.fuser)
 
     def on_relation_change(self, relation, id):
