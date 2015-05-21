@@ -38,18 +38,24 @@ var ELEMENTS = $('.node, .edge');
 ELEMENTS.forEach(function(elem) {
     elem.addEventListener('click', function(event) {
         // Deselect all elements
-        ELEMENTS.forEach(function(elem) {
-            dehighlightOne(elem);
-        });
+        dehighlight(ELEMENTS);
+        // Only (re)select thus clicked element
+        highlightOne(elem);
         try {
             // Send the selection via pybridge for further processing
             window.pybridge.graph_element_selected(elem.id);
-            // Only (re)select thus clicked element
-            highlightOne(elem);
+            // And this is it for now
+            event.stopPropagation();
         } catch (err) {
             // Do something else elsewhere
         };
     });
+});
+// Dehighlight all nodes when background clicked
+window.addEventListener('click', function(event) {
+    dehighlight(ELEMENTS);
+    // Indicate empty selection via pybridge
+    try { window.pybridge.graph_element_selected(''); } catch (err) {};
 });
 var HIGHLIGHTS = {
     /* tagName: { attribute: [highlightedValue, originalValue] } */
@@ -102,7 +108,10 @@ function highlightOne(elem) {
     });
 }
 function highlight(selector) {
-    $(selector).forEach(function(elem) {
-        highlightOne(elem);
-    });
+    var elements = typeof selector == 'string' ? $(selector) : selector;
+    elements.forEach(function(elem) { highlightOne(elem); });
+}
+function dehighlight(selector) {
+    var elements = typeof selector == 'string' ? $(selector) : selector;
+    elements.forEach(function(elem) { dehighlightOne(elem); });
 }

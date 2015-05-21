@@ -77,8 +77,10 @@ class OWFusionGraph(widget.OWWidget):
            * if node was selected, all its edges.
            Additionally, update the info box.
         """
+        assert not element_id or element_id.startswith('edge ') or element_id.startswith('node ')
+        if not element_id:
+            return self.listview.show_all()
         selected_is_edge = element_id.startswith('edge ')
-        assert element_id.startswith('edge ') or element_id.startswith('node ')
         node_names = re.findall('`([^`]+)`', element_id)
         nodes = [self.graph.get_object_type(name) for name in node_names]
         assert len(nodes) == 2 if selected_is_edge else len(nodes) == 1
@@ -132,6 +134,9 @@ class OWFusionGraph(widget.OWWidget):
                 item = self.item(i)
                 data = self.hash(item.data(QtCore.Qt.UserRole))
                 item.setHidden(data not in shown)
+        def show_all(self):
+            for i in range(self.count()):
+                self.item(i).setHidden(False)
         def send(self, data):
             """Override to OWWidget.send() something else."""
             if self.owwidget:
