@@ -116,9 +116,14 @@ class OWLatentFactors(widget.OWWidget):
                                                                otype))
         for relation, matrices in fuser.backbones_.items():
             matrix = matrices[0]
+            relation_string = relation_str(relation, False)
             self.listview.add_item(matrix, '[{}×{}] {}'.format(matrix.shape[0],
                                                                matrix.shape[1],
-                                                               relation))
+                                                               relation_string))
+            matrix = fuser.complete(relation)
+            self.listview.add_item(matrix, '[{}×{}] {} (completed)'.format(matrix.shape[0],
+                                                                           matrix.shape[1],
+                                                                           relation_string))
         self.repaint()
         # this ensures gui.label-s get updated
         self.n_object_types = fuser.fusion_graph.n_object_types
