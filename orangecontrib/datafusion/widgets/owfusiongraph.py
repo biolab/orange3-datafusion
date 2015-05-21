@@ -134,9 +134,17 @@ class OWFusionGraph(widget.OWWidget):
                 item = self.item(i)
                 data = self.hash(item.data(QtCore.Qt.UserRole))
                 item.setHidden(data not in shown)
+            self.select_first()
         def show_all(self):
             for i in range(self.count()):
                 self.item(i).setHidden(False)
+        def select_first(self):
+            for i in range(self.count()):
+                item = self.item(i)
+                if not item.isHidden():
+                    item.setSelected(True)
+                    self.on_currentItemChanged(item, None)
+                    break
         def send(self, data):
             """Override to OWWidget.send() something else."""
             if self.owwidget:
