@@ -1,11 +1,14 @@
 import sys
-import skfusion
 from PyQt4 import QtGui
 from orangecontrib.datafusion.table import Relation
 from Orange.widgets.widget import OWWidget
 from Orange.widgets import widget, gui, settings
-from orangecontrib.datafusion.movielens import movie_concept_matrix, actor_matrix
-from skfusion.fusion import ObjectType
+from orangecontrib.datafusion import movielens
+
+from skfusion import fusion
+
+MOVIE_ACTORS = "Movie Actors"
+ACTORS_ACTORS = "Costarring Actors"
 
 
 class OWIMDbActors(OWWidget):
@@ -13,56 +16,63 @@ class OWIMDbActors(OWWidget):
     icon = "icons/imdb.svg"
     want_main_area = False
     description = "Get a movie-actor and actor-actor matrix"
-    inputs = [("Filter", Relation, "set_data", widget.Default)]
-    outputs = [("Movies Actors", Relation, widget.Default), ("Actors Actors", Relation, widget.Default)]
+    inputs = [("Filter", Relation, "set_data")]
+    outputs = [(MOVIE_ACTORS, Relation),
+               (ACTORS_ACTORS, Relation)]
 
     percent = settings.Setting(10)
 
     def __init__(self):
         super().__init__()
-        self.data = None
-        self.row_names = None
-        self.movie_actor_mat = None
-        self.actor_actor_mat = None
-        self.actors = None
+        self.movies = None
         self.infobox = gui.widgetBox(self.controlArea, "Select Actors")
 
         percent = gui.hSlider(
             gui.indentedBox(self.infobox), self, "percent",
-            minValue=1, maxValue=100, step=1, ticks=10, labelFormat="%d %%")
+            minValue=1, maxValue=100, step=1, ticks=True, labelFormat="%d %%")
 
         gui.button(self.controlArea, self, "&Apply",
                    callback=self.send_output, default=True)
 
         self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed,
-                           QtGui.QSizePolicy.Fixed))
+                                             QtGui.QSizePolicy.Fixed))
 
         self.setMinimumWidth(250)
         self.setMaximumWidth(250)
 
-    def set_data(self, data):
-        self.row_names = data.relation.row_names
+        self.movies = None
+
+    def set_data(self, relation):
+        assert isinstance(relation, Relation)
+        if relation.col_type == movielens.ObjectType.Movies:
+            self.movies = relation.relation.col_names
+        elif relation.row_type == movielens.ObjectType.Movies:
+            self.movies = relation.relation.row_names
+        else:
+            self.error(1, "Only relations with ObjectType Movies can be used to filter actors.")
+
         self.send_output()
 
     def send_output(self):
-        if self.row_names is not None:
-            self.movie_actor_mat, self.actors = movie_concept_matrix(self.row_names, concept="actor",
+        if self.movies is not None:
+            movie_actor_mat, actors = movielens.movie_concept_matrix(self.movies, concept="actor",
                                                                      actors=self.percent)
-            self.actor_actor_mat = actor_matrix(self.movie_actor_mat)
+            actor_actor_mat = movielens.actor_matrix(movie_actor_mat)
 
-            movies_actors = skfusion.fusion.Relation(self.movie_actor_mat, ObjectType("Movies"),
-                                                     ObjectType("Actors"), row_names=self.row_names,
-                                                     col_names=self.actors)
-            self.send("Movies Actors", Relation(movies_actors))
+            movies_actors = fusion.Relation(movie_actor_mat.T, name='play in',
+                                            row_type=movielens.ObjectType.Actors, row_names=actors,
+                                            col_type=movielens.ObjectType.Movies, col_names=self.movies)
+            self.send(MOVIE_ACTORS, Relation(movies_actors))
 
-            actors_actors = skfusion.fusion.Relation(self.actor_actor_mat, ObjectType("Actors"),
-                                                     ObjectType("Actors"), row_names=self.actors,
-                                                     col_names=self.actors)
-            self.send("Actors Actors", Relation(actors_actors))
+            actors_actors = fusion.Relation(actor_actor_mat, name='costar with',
+                                            row_type=movielens.ObjectType.Actors, row_names=actors,
+                                            col_type=movielens.ObjectType.Actors, col_names=actors)
+            self.send(ACTORS_ACTORS, Relation(actors_actors))
+
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
     ow = OWIMDbActors()
-    #ow.set_data(movies_users)
+    # ow.set_data(movies_users)
     ow.show()
     app.exec_()

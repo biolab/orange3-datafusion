@@ -1,17 +1,17 @@
 import sys
-import skfusion
 from PyQt4 import QtGui
 from Orange.widgets.widget import OWWidget
 from Orange.widgets import widget, gui, settings
 from orangecontrib.datafusion.table import Relation
-from orangecontrib.datafusion.movielens import movie_user_matrix
+from orangecontrib.datafusion import movielens
 
+from skfusion import fusion
 
 class OWMovieRatings(OWWidget):
     name = "Movie Ratings"
     icon = "icons/movielens.svg"
     want_main_area = False
-    description = "Get a matrix of movies and users who rated them"
+    description = "Get a matrix of user ratings for movies."
     outputs = [("Ratings", Relation, widget.Default)]
 
     percent = settings.Setting(10)  # 10: default is 10% of data
@@ -29,7 +29,7 @@ class OWMovieRatings(OWWidget):
         gui.appendRadioButton(methodbox, "Percentage:")
         percent = gui.hSlider(
             gui.indentedBox(methodbox), self, "percent",
-            minValue=1, maxValue=100, step=1, ticks=10, labelFormat="%d %%")
+            minValue=1, maxValue=100, step=1, ticks=True, labelFormat="%d %%")
 
         gui.appendRadioButton(methodbox, "Time period:")
         ibox = gui.indentedBox(methodbox)
@@ -59,13 +59,13 @@ class OWMovieRatings(OWWidget):
 
     def send_output(self):
         if self.method == 0:
-            matrix, movies, users = movie_user_matrix(percentage=self.percent)
+            matrix, movies, users = movielens.movie_user_matrix(percentage=self.percent)
         else:
-            matrix, movies, users = movie_user_matrix(start_year=self.start, end_year=self.end)
+            matrix, movies, users = movielens.movie_user_matrix(start_year=self.start, end_year=self.end)
 
-        relation = skfusion.fusion.Relation(matrix, skfusion.fusion.ObjectType("Movies"),
-                                            skfusion.fusion.ObjectType("Users"),
-                                            row_names=movies, col_names=users)
+        relation = fusion.Relation(matrix.T, name='rate',
+                                   row_type=movielens.ObjectType.Users, row_names=users,
+                                   col_type=movielens.ObjectType.Movies, col_names=movies)
         self.send("Ratings", Relation(relation))
 
 if __name__ == "__main__":

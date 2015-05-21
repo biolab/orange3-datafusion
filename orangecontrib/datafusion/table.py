@@ -38,6 +38,14 @@ class Relation(Table):
         Table._init_ids(self)
 
     @property
+    def col_type(self):
+        return self.relation.col_type
+
+    @property
+    def row_type(self):
+        return self.relation.row_type
+
+    @property
     def name(self):
         """
         :return: name of the relation

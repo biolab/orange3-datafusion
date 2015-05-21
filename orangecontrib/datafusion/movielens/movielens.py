@@ -6,6 +6,14 @@ import numpy as np
 from Orange.canvas.utils import environ
 
 
+
+class ObjectType:
+    Actors = fusion.ObjectType('Actors')
+    Movies = fusion.ObjectType('Movies')
+    Users = fusion.ObjectType('Users')
+    Genres = fusion.ObjectType('Genres')
+
+
 def actor_genre_matrix(actors):
     movies_genres, genres = movie_concept_matrix(input_movies=None, concept="genre")
     movies_actors, actors = movie_concept_matrix(input_movies=None, concept="actor", actors=actors)
