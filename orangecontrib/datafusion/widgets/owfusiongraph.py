@@ -23,6 +23,14 @@ INITIALIZATION_ALGO = [
 ]
 
 
+def relation_str(relation, dimensions=True):
+    name = ('[%dx%d] ' % relation.data.shape) if dimensions else ''
+    name += '%s %s %s' % (relation.row_type.name,
+                          relation.name or '→',
+                          relation.col_type.name)
+    return name
+
+
 class WebviewWidget(QtWebKit.QWebView):
     def __init__(self, parent):
         super().__init__(parent)
@@ -104,20 +112,13 @@ class OWFusionGraph(widget.OWWidget):
             self.setAlternatingRowColors(True)
             self.currentItemChanged.connect(self._on_currentItemChanged)
             if parent: parent.layout().addWidget(self)
-        def get_name(self, relation):
-            """Override this for objects that aren't relations."""
-            return '%6d %s %s %d %s' % (relation.data.shape[0],
-                                        relation.row_type.name,
-                                        relation.name or '→',
-                                        relation.data.shape[1],
-                                        relation.col_type.name)
         def add_item(self, relation, name=''):
-            name = name or self.get_name(relation)
+            name = name or str(relation)
             item = QtGui.QListWidgetItem(name, self)
             item.setData(QtCore.Qt.UserRole, relation)
             self.addItem(item)
         def remove_item(self, relation, name=''):
-            name = name or self.get_name(relation)
+            name = name or str(relation)
             for item in self.findItems(name, QtCore.Qt.MatchFixedString):
                 if relation == item.data(QtCore.Qt.UserRole):
                     self.takeItem(self.row(item))
@@ -196,12 +197,12 @@ class OWFusionGraph(widget.OWWidget):
             try: relation = self.relations.pop(id)
             except KeyError: return
             self.graph.remove_relation(relation)
-            self.listview.remove_item(relation)
+            self.listview.remove_item(relation, relation_str(relation))
         def _on_add_relation(relation, id):
             _on_remove_relation(id)
             self.relations[id] = relation
             self.graph.add_relation(relation)
-            self.listview.add_item(relation)
+            self.listview.add_item(relation, relation_str(relation))
         if relation:
                _on_add_relation(relation.relation, id)
         else:  _on_remove_relation(id)
