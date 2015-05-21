@@ -57,7 +57,7 @@ class OWMovieGenres(OWWidget):
             elif type_.name == "Movies":
                 self.row_type = type_
                 self.row_names = names
-                self.relation_name = "fit"
+                self.relation_name = "fit in"
                 self.matrix, self.genres = movielens.movie_concept_matrix(self.row_names, concept="genre")
                 break
         else:
