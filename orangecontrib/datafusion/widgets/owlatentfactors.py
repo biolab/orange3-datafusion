@@ -76,6 +76,8 @@ class OWLatentFactors(widget.OWWidget):
            * if node was selected, all its edges.
            Additionally, update the info box.
         """
+        if not element_id:
+            return self.listview.show_all()
         selected_is_edge = element_id.startswith('edge ')
         nodes = self._get_selected_nodes(element_id)
         # Update the control listview table
