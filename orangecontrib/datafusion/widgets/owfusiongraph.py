@@ -23,6 +23,11 @@ INITIALIZATION_ALGO = [
 ]
 
 
+class Output:
+    RELATION = 'Relation'
+    FUSION_GRAPH = 'Fitted Fusion Graph'
+
+
 def relation_str(relation, dimensions=True):
     name = ('[%dx%d] ' % relation.data.shape) if dimensions else ''
     name += '%s %s %s' % (relation.row_type.name,
@@ -47,8 +52,8 @@ class OWFusionGraph(widget.OWWidget):
     icon = "icons/fusion-graph.svg"
     inputs = [("Relation", Relation, "on_relation_change", widget.Multiple)]
     outputs = [
-        ("Relation", Relation),
-        ("Fitted fusion graph", fusion.FusionFit),
+        (Output.RELATION, Relation),
+        (Output.FUSION_GRAPH, fusion.FusionFit),
     ]
 
     # Signal emitted when a node in the SVG is selected, carrying its name
@@ -149,7 +154,7 @@ class OWFusionGraph(widget.OWWidget):
         def send(self, data):
             """Override to OWWidget.send() something else."""
             if self.owwidget:
-                self.owwidget.send('Relation', Relation(data))
+                self.owwidget.send(Output.RELATION, Relation(data))
         def on_currentItemChanged(self, current, previous):
             """Override"""
             relation = current.data(QtCore.Qt.UserRole) if current else None
@@ -208,7 +213,7 @@ class OWFusionGraph(widget.OWWidget):
         self.fuser = Algo(init_type=init_type,
                           max_iter=self.pref_n_iterations).fuse(self.graph)
         self.fuser.name = self.pref_algo_name
-        self.send('Fusion graph', self.fuser)
+        self.send(Output.FUSION_GRAPH, self.fuser)
 
     def on_relation_change(self, relation, id):
         def _on_remove_relation(id):
