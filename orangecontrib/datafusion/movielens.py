@@ -4,7 +4,7 @@ import urllib
 import os.path
 import numpy as np
 from Orange.canvas.utils import environ
-
+from skfusion import fusion
 
 
 class ObjectType:
