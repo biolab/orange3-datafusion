@@ -161,6 +161,9 @@ def get_all_movie_years():
 
 
 def get_valid_file_path(filename):
+    return os.path.join(os.path.dirname(__file__), 'datasets', filename)
+
+
     temp_dir = environ.buffer_dir + "\datafusion\\"
     if not os.path.isdir(temp_dir):
         os.makedirs(temp_dir)
