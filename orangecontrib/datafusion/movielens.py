@@ -70,13 +70,13 @@ def actor_matrix(mat):
     return actors
 
 
-def sample_matrix(table, percentage, sampling_type):
+def hide_data(table, percentage, sampling_type):
     percentage /= 100.0
 
     if sampling_type == "Rows and columns":
 
-        row_s_mask, row_oos_mask = sample_matrix(table, percentage=np.sqrt(percentage) * 100.0, sampling_type="Rows")
-        col_s_mask, col_oos_mask = sample_matrix(table, percentage=np.sqrt(percentage) * 100.0, sampling_type="Columns")
+        row_s_mask, row_oos_mask = hide_data(table, percentage=np.sqrt(percentage) * 100.0, sampling_type="Rows")
+        col_s_mask, col_oos_mask = hide_data(table, percentage=np.sqrt(percentage) * 100.0, sampling_type="Columns")
 
         sample_mask = np.logical_and(row_s_mask, col_s_mask)
         oos_mask = np.invert(sample_mask)

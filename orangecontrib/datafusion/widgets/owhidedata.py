@@ -5,18 +5,26 @@ from PyQt4 import QtGui
 from PyQt4.QtCore import Qt
 from Orange.widgets.widget import OWWidget
 from Orange.widgets import widget, gui, settings
-from orangecontrib.datafusion.movielens import sample_matrix
+from orangecontrib.datafusion.movielens import hide_data
 from orangecontrib.datafusion.table import Relation
+from skfusion import fusion
+
+import numpy as np
 
 
-class OWSample(OWWidget):
-    name = "Sample"
+class Output:
+    REMAINING_DATA = "Remaining Data"
+    HIDDEN_DATA = "Hidden Data"
+
+
+class OWHideData(OWWidget):
+    name = "Hide Data"
     icon = "icons/sampling.svg"
     want_main_area = False
-    description = "Sample a Relation"
+    description = "Hide part of relation data"
     inputs = [("Data", Orange.data.table.Table, "set_data", widget.Default)]
-    outputs = [("Sample data", Relation, widget.Default),
-               ("Out of sample data", Relation, widget.Default)]
+    outputs = [(Output.REMAINING_DATA, Relation, widget.Default),
+               (Output.HIDDEN_DATA, Relation, widget.Default)]
 
     percent = settings.Setting(10)
     method = settings.Setting(0)
@@ -26,7 +34,7 @@ class OWSample(OWWidget):
 
     def __init__(self):
         super().__init__()
-        self.data = None
+        self.relation = None
 
         form = QtGui.QGridLayout()
         methodbox = gui.radioButtonsInBox(
@@ -61,25 +69,27 @@ class OWSample(OWWidget):
         self.send_output()
 
     def set_data(self, data):
-        self.data = data
+        self.relation = data
         self.send_output()
 
     def send_output(self):
-        if self.data is not None:
-            sample_mask, oos_mask = sample_matrix(self.data, percentage=self.percent,
-                                                  sampling_type=self.METHOD_NAMES[self.method])
+        if self.relation is not None:
+            remaining_mask, hidden_mask = hide_data(self.relation, percentage=self.percent,
+                                                    sampling_type=self.METHOD_NAMES[self.method])
 
-            relation_sample, relation_oos = copy.deepcopy(self.data), copy.deepcopy(self.data)
-            relation_sample.relation.mask = sample_mask
-            relation_oos.relation.mask = oos_mask
+            remaining_data = copy.copy(self.relation.relation)
+            remaining_data.data = np.ma.array(remaining_data.data, mask=remaining_mask)
+            hidden_data = copy.copy(self.relation.relation)
+            hidden_data.data = np.ma.array(hidden_data.data, mask=hidden_mask)
 
-            self.send("Sample data", relation_sample)
-            self.send("Out of sample data", relation_oos)
+            self.send(Output.REMAINING_DATA, Relation(remaining_data))
+            self.send(Output.HIDDEN_DATA, Relation(hidden_data))
+
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
-    ow = OWSample()
-    #ow.set_data(Orange.data.Table("housing.tab"))
+    ow = OWHideData()
+    # ow.set_data(Orange.data.Table("housing.tab"))
     ow.send_output()
     ow.show()
     app.exec_()
