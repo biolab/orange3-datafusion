@@ -5,6 +5,7 @@ from Orange.widgets import widget, gui
 
 from skfusion import fusion
 from orangecontrib.datafusion.table import Relation
+from orangecontrib.datafusion.widgets.owfusiongraph import relation_str
 
 import numpy as np
 
@@ -46,7 +47,6 @@ class OWCompletionScoring(widget.OWWidget):
         def __init__(self, parent):
             super().__init__(parent)
             parent.layout().addWidget(self)
-            self.verticalHeader().setHidden(True)
         def appendRow(self, row_values):
             self.setSortingEnabled(False)
             row = self.rowCount()
@@ -65,35 +65,29 @@ class OWCompletionScoring(widget.OWWidget):
             def update_table(self, fusers, relations):
                 self.clear()
                 self.setRowCount(0)
-                self.setColumnCount(len(fusers) + 1)  # +1 for relation
-                headers = ['Relation'] + [getattr(fuser, 'name', str(id))
-                                          for id, fuser in fusers.items()]
-                self.setHorizontalHeaderLabels(headers)
-                def _relation_str(relation):
-                    return '%s %s %s' % (relation.row_type,
-                                         relation.name or '→',
-                                         relation.col_type)
+                self.setColumnCount(len(fusers))
+                self.setHorizontalHeaderLabels([getattr(fuser, 'name', str(id))
+                                                for id, fuser in fusers.items()])
                 for relation in relations.values():
                     row = self.rowCount()
                     self.insertRow(row)
-                    item = QtGui.QTableWidgetItem(_relation_str(relation))
-                    item.setBackground(grey_brush)
-                    self.setItem(row, 0, item)
                     rmses = []
-                    for col, fuser in enumerate(fusers.values(), 1):
+                    for fuser in fusers.values():
                         completion = _find_completion(fuser, relation)
                         if completion is not None:
                             rmses.append(RMSE(relation.data, completion))
                         else:
                             rmses.append(None)
                     min_rmse = min(filter(lambda i: i is not None, rmses))
-                    for col, rmse in enumerate(rmses, 1):
+                    for col, rmse in enumerate(rmses):
                         item = QtGui.QTableWidgetItem(str(rmse or ''))
+                        item.setFlags(QtCore.Qt.ItemIsEnabled)
                         if rmse == min_rmse and len(rmses) > 1:
                             item.setFont(BOLD_FONT)
                         self.setItem(row, col, item)
-
                 self.resizeColumnsToContents()
+                self.setVerticalHeaderLabels([relation_str(i, False) for i in relations.values()])
+
         self.table = HereTableWidget(box)
 
     def update(self):
