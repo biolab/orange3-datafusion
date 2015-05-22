@@ -26,6 +26,7 @@ def _find_completion(fuser, relation):
             return fuser.complete(fuser_relation)
     return None
 
+
 class OWCompletionScoring(widget.OWWidget):
     name = 'Completion Scoring'
     icon = 'icons/completion-scoring.svg'
@@ -43,25 +44,17 @@ class OWCompletionScoring(widget.OWWidget):
         self.relations = OrderedDict()
         self._create_layout()
 
-    class SimpleTableWidget(QtGui.QTableWidget):
-        def __init__(self, parent):
-            super().__init__(parent)
-            parent.layout().addWidget(self)
-        def appendRow(self, row_values):
-            self.setSortingEnabled(False)
-            row = self.rowCount()
-            self.insertRow(row)
-            for col, value in enumerate(row_values):
-                item = QtGui.QTableWidgetItem(str(data))
-                self.setItem(row, col, item)
-            self.setSortingEnabled(True)
-
     def _create_layout(self):
         box = gui.widgetBox(self.mainArea, 'Fuser completion scoring')
         grey_brush = QtGui.QBrush(QtGui.QColor('#eee'))
         BOLD_FONT = QtGui.QFont()
         BOLD_FONT.setWeight(QtGui.QFont.DemiBold)
-        class HereTableWidget(self.__class__.SimpleTableWidget):
+
+        class HereTableWidget(QtGui.QTableWidget):
+            def __init__(self, parent):
+                super().__init__(parent)
+                parent.layout().addWidget(self)
+
             def update_table(self, fusers, relations):
                 self.clear()
                 self.setRowCount(0)
@@ -110,19 +103,24 @@ def main():
     X, y = make_blobs(100, 3, centers=2, center_box=(-100, 100), cluster_std=10)
     X = X.astype(int)
     X += abs(X.min())
-    nrows, ncols, _ = X.max(0)
-    R = np.zeros((nrows + 1, ncols + 1))
-    R[:,:] = 0
-    R[X[:,0], X[:,1]] = X[:,2]
-    R = np.ma.array((R - R.min()) / (R.max() - R.min()))
 
-    from copy import deepcopy
-    R12 = np.ma.array(np.random.rand(50, 100))
-    R23 = np.ma.array(np.random.rand(150, 100))
+    nrows, ncols, _ = X.max(0)
+    R1 = np.zeros((nrows + 1, ncols + 1))
+    R1[X[:, 0], X[:, 1]] = X[:, 2]
+    R1 = np.ma.array((R1 - R1.min()) / (R1.max() - R1.min()))
+
+    _, ncols, nrows = X.max(0)
+    R2 = np.zeros((nrows + 1, ncols + 1))
+    R2[X[:, 2], X[:, 1]] = X[:, 0]
+    R2 = np.ma.array((R2 - R2.min()) / (R2.max() - R2.min()))
+
     t1 = fusion.ObjectType('Users', 10)
     t2 = fusion.ObjectType('Movies', 30)
     t3 = fusion.ObjectType('Actors', 40)
-    relations = [fusion.Relation(R, t1, t2, name='like')]
+    relations = [
+        fusion.Relation(R1, t1, t2, name='like'),
+        fusion.Relation(R2, t3, t2, name='feature in'),
+    ]
     G = fusion.FusionGraph()
     for relation in relations:
         relation.data.mask = np.random.rand(*relation.data.shape) > .8
@@ -130,8 +128,8 @@ def main():
     fuserF = fusion.Dfmf()
     fuserF.fuse(G)
 
+    from copy import deepcopy
     G = deepcopy(G)
-    #~ G.remove_relation(relations[1])
     fuserC = fusion.Dfmc()
     fuserC.name = 'My dfmc<3'
     fuserC.fuse(G)
@@ -140,7 +138,7 @@ def main():
     w = OWCompletionScoring()
     w.on_fuser_change(fuserF, fuserF.__class__.__name__)
     w.on_fuser_change(fuserC, fuserC.__class__.__name__)
-    for i,relation in enumerate(relations, 1):
+    for i, relation in enumerate(relations, 1):
         w.on_relation_change(Relation(relation), i)
     w.show()
     app.exec()
