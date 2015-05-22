@@ -120,11 +120,13 @@ class OWFusionGraph(widget.OWWidget):
             self.setAlternatingRowColors(True)
             self.currentItemChanged.connect(self._on_currentItemChanged)
             if parent: parent.layout().addWidget(self)
+
         def add_item(self, relation, name=''):
             name = name or str(relation)
             item = QtGui.QListWidgetItem(name, self)
             item.setData(QtCore.Qt.UserRole, relation)
             self.addItem(item)
+
         def remove_item(self, relation, name=''):
             name = name or str(relation)
             for item in self.findItems(name, QtCore.Qt.MatchFixedString):
@@ -132,18 +134,22 @@ class OWFusionGraph(widget.OWWidget):
                     self.takeItem(self.row(item))
                     break
             else: raise KeyError('Item not in ListWidget')
+
         def hash(self, data):
             """Override this in subclass to have for unhashable item datas."""
             return data
+
         def show_only(self, shown):
             for i in range(self.count()):
                 item = self.item(i)
                 data = self.hash(item.data(QtCore.Qt.UserRole))
                 item.setHidden(data not in shown)
             self.select_first()
+
         def show_all(self):
             for i in range(self.count()):
                 self.item(i).setHidden(False)
+
         def select_first(self):
             for i in range(self.count()):
                 item = self.item(i)
@@ -151,10 +157,12 @@ class OWFusionGraph(widget.OWWidget):
                     item.setSelected(True)
                     self.on_currentItemChanged(item, None)
                     break
+
         def send(self, data):
             """Override to OWWidget.send() something else."""
             if self.owwidget:
                 self.owwidget.send(Output.RELATION, Relation(data))
+
         def on_currentItemChanged(self, current, previous):
             """Override"""
             relation = current.data(QtCore.Qt.UserRole) if current else None
@@ -173,24 +181,24 @@ class OWFusionGraph(widget.OWWidget):
         self.listview = self.__class__.SimpleListWidget(info, self)
         self.controlArea.layout().addStretch(1)
         gui.lineEdit(self.controlArea,
-            self, 'pref_algo_name', 'Fuser name',
-            callback=self.checkcommit, enterPlaceholder=True)
+                     self, 'pref_algo_name', 'Fuser name',
+                     callback=self.checkcommit, enterPlaceholder=True)
         gui.radioButtons(self.controlArea,
-            self, 'pref_algorithm', dict(DECOMPOSITION_ALGO).keys(),
-            box='Decomposition algorithm',
-            callback=self.checkcommit)
+                         self, 'pref_algorithm', dict(DECOMPOSITION_ALGO).keys(),
+                         box='Decomposition algorithm',
+                         callback=self.checkcommit)
         gui.radioButtons(self.controlArea,
-            self, 'pref_initialization', INITIALIZATION_ALGO,
-            box='Initialization algorithm',
-            callback=self.checkcommit)
+                         self, 'pref_initialization', INITIALIZATION_ALGO,
+                         box='Initialization algorithm',
+                         callback=self.checkcommit)
         gui.hSlider(self.controlArea, self, 'pref_n_iterations',
-            'Maximum number of iterations',
-            minValue=10, maxValue=500, createLabel=True,
-            callback=self.checkcommit)
+                    'Maximum number of iterations',
+                    minValue=10, maxValue=500, createLabel=True,
+                    callback=self.checkcommit)
         gui.hSlider(self.controlArea, self, 'pref_rank',
-            'Factorization rank',
-            minValue=1, maxValue=100, createLabel=True, labelFormat=" %d%%",
-            callback=self.checkcommit)
+                    'Factorization rank',
+                    minValue=1, maxValue=100, createLabel=True, labelFormat=" %d%%",
+                    callback=self.checkcommit)
         gui.auto_commit(self.controlArea, self, "autorun", "Run",
                         checkbox_label="Run after any change  ")
 
@@ -221,14 +229,17 @@ class OWFusionGraph(widget.OWWidget):
             except KeyError: return
             self.graph.remove_relation(relation)
             self.listview.remove_item(relation, relation_str(relation))
+
         def _on_add_relation(relation, id):
             _on_remove_relation(id)
             self.relations[id] = relation
             self.graph.add_relation(relation)
             self.listview.add_item(relation, relation_str(relation))
+
         if relation:
-               _on_add_relation(relation.relation, id)
-        else:  _on_remove_relation(id)
+            _on_add_relation(relation.relation, id)
+        else:
+            _on_remove_relation(id)
         self.repaint(self.graph)
         # this ensures gui.label-s get updated
         self.n_object_types = self.graph.n_object_types
