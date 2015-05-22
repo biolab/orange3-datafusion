@@ -16,6 +16,8 @@ JS_FACTORS = open(path.join(path.dirname(__file__), 'factors_script.js')).read()
 import re
 
 from itertools import filterfalse
+
+
 def is_constraint(relation):
     """Skip constraint (Theta) relations"""
     return relation.row_type is relation.col_type
@@ -60,7 +62,10 @@ class OWLatentFactors(widget.OWWidget):
         selected_is_edge = element_id.startswith('edge ')
         nodes = self._get_selected_nodes(element_id)
         from math import log2
-        def _norm(s): return min(max(1.3**log2(s), 8), 20)
+
+        def _norm(s):
+            return min(max(1.3**log2(s), 8), 20)
+
         if selected_is_edge:
             rels = self.fuser.fusion_graph.get_relations(nodes[0], nodes[1])
             sizes = [_norm(self.fuser.backbone(rel).shape[0])
@@ -97,14 +102,17 @@ class OWLatentFactors(widget.OWWidget):
         gui.label(info, self, '%(n_relations)d relations')
         # Table view of relation details
         info = gui.widgetBox(self.controlArea, 'Factors')
+
         class HereListWidget(OWFusionGraph.SimpleListWidget):
             def hash(self, data):
                 return hash(data.data.tobytes())
+
             def send(_, data):
                 data = Table.from_numpy(Domain([ContinuousVariable(str(i))
                                                 for i in range(data.shape[1])]),
                                         data)
                 self.send('Data', data)
+
         self.listview = HereListWidget(info)
         self.controlArea.layout().addStretch(1)
 
