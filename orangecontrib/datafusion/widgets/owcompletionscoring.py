@@ -59,6 +59,8 @@ class OWCompletionScoring(widget.OWWidget):
     def _create_layout(self):
         box = gui.widgetBox(self.mainArea, 'Fuser completion scoring')
         grey_brush = QtGui.QBrush(QtGui.QColor('#eee'))
+        BOLD_FONT = QtGui.QFont()
+        BOLD_FONT.setWeight(QtGui.QFont.DemiBold)
         class HereTableWidget(self.__class__.SimpleTableWidget):
             def update_table(self, fusers, relations):
                 self.clear()
@@ -71,21 +73,26 @@ class OWCompletionScoring(widget.OWWidget):
                     return '%s %s %s' % (relation.row_type,
                                          relation.name or '→',
                                          relation.col_type)
-                # TODO: cache RMSE values
                 for relation in relations.values():
                     row = self.rowCount()
                     self.insertRow(row)
                     item = QtGui.QTableWidgetItem(_relation_str(relation))
                     item.setBackground(grey_brush)
                     self.setItem(row, 0, item)
+                    rmses = []
                     for col, fuser in enumerate(fusers.values(), 1):
                         completion = _find_completion(fuser, relation)
                         if completion is not None:
-                            item = QtGui.QTableWidgetItem(str(RMSE(relation.data,
-                                                                   completion)))
+                            rmses.append(RMSE(relation.data, completion))
                         else:
-                            item = QtGui.QTableWidgetItem('')
+                            rmses.append(None)
+                    min_rmse = min(filter(lambda i: i is not None, rmses))
+                    for col, rmse in enumerate(rmses, 1):
+                        item = QtGui.QTableWidgetItem(str(rmse or ''))
+                        if rmse == min_rmse and len(rmses) > 1:
+                            item.setFont(BOLD_FONT)
                         self.setItem(row, col, item)
+
                 self.resizeColumnsToContents()
         self.table = HereTableWidget(box)
 
