@@ -39,7 +39,7 @@ class OWLatentFactors(widget.OWWidget):
         super().__init__()
         self.n_relations = 0
         self.n_object_types = 0
-        self.graph_element_selected.connect(self.on_graph_element_selected)
+        self.graph_element_selected.connect(self._on_graph_element_selected)
         self.graph_element_get_size.connect(self.on_graph_element_get_size)
         self.webview = WebviewWidget(self.mainArea)
         self._create_layout()
@@ -75,6 +75,9 @@ class OWLatentFactors(widget.OWWidget):
         self.webview.page().mainFrame().evaluateJavaScript('SIZES = {};'.format(repr(sizes)))
 
     @QtCore.pyqtSlot(str)
+    def _on_graph_element_selected(self, element_id):
+        self.on_graph_element_selected(element_id)
+
     def on_graph_element_selected(self, element_id):
         """Handle self.graph_element_selected signal, and highlight also:
            * if edge was selected, the two related nodes,
