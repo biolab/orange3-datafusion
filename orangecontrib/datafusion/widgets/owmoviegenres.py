@@ -36,7 +36,7 @@ class OWMovieGenres(OWWidget):
         self.setMinimumWidth(250)
 
     def update_genres(self):
-        print("updating", len(self.genres))
+        #print("updating", len(self.genres))
         if self.genres is not None:
             for label in self.labels:
                 label.hide()
