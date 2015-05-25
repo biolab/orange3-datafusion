@@ -10,7 +10,6 @@ from orangecontrib.datafusion.widgets.owfusiongraph import (
 from Orange.data import Table, Domain, ContinuousVariable, StringVariable
 
 from os import path
-JS_GRAPH = open(path.join(path.dirname(__file__), 'graph_script.js')).read()
 JS_FACTORS = open(path.join(path.dirname(__file__), 'factors_script.js')).read()
 
 import re
@@ -23,6 +22,12 @@ def is_constraint(relation):
     return relation.row_type is relation.col_type
 
 
+def to_orange_data_table(ndarray):
+    return Table.from_numpy(Domain([ContinuousVariable(str(i))
+                                    for i in range(ndarray.shape[1])]),
+                            ndarray)
+
+
 class OWLatentFactors(widget.OWWidget):
     name = "Latent Factors"
     icon = "icons/latent-factors.svg"
@@ -31,6 +36,7 @@ class OWLatentFactors(widget.OWWidget):
 
     # Signal emitted when a node in the SVG is selected, carrying its id
     graph_element_selected = QtCore.pyqtSignal(str)
+    # Signal to communicate the sizes of matrices on a node / along an edge
     graph_element_get_size = QtCore.pyqtSignal(str)
 
     autorun = settings.Setting(True)
@@ -44,23 +50,13 @@ class OWLatentFactors(widget.OWWidget):
         self.webview = WebviewWidget(self.mainArea)
         self._create_layout()
 
-    def _get_selected_nodes(self, element_id):
-        selected_is_edge = element_id.startswith('edge ')
-        assert element_id.startswith('edge ') or element_id.startswith('node ')
-        # Assumes SVG element's id attributes specify nodes `-delimited
-        node_names = re.findall('`([^`]+)`', element_id)
-        nodes = [self.fuser.fusion_graph.get_object_type(name)
-                 for name in node_names]
-        assert len(nodes) == 2 if selected_is_edge else len(nodes) == 1
-        return nodes
-
     @QtCore.pyqtSlot(str)
     def on_graph_element_get_size(self, element_id):
         """ Return the list of matrix.shape[0] for the selected element(s)
             (node(=factor) or edge(=backbone)).
         """
         selected_is_edge = element_id.startswith('edge ')
-        nodes = self._get_selected_nodes(element_id)
+        nodes = OWFusionGraph._get_selected_nodes(element_id, self.fuser.fusion_graph)
         from math import log2
 
         def _norm(s):
@@ -72,7 +68,7 @@ class OWLatentFactors(widget.OWWidget):
                      for rel in filterfalse(is_constraint, rels)]
         else:
             sizes = [_norm(self.fuser.factor(nodes[0]).shape[0])]
-        self.webview.page().mainFrame().evaluateJavaScript('SIZES = {};'.format(repr(sizes)))
+        OWFusionGraph.evalJS(self, 'SIZES = {};'.format(repr(sizes)))
 
     @QtCore.pyqtSlot(str)
     def _on_graph_element_selected(self, element_id):
@@ -87,7 +83,7 @@ class OWLatentFactors(widget.OWWidget):
         if not element_id:
             return self.listview.show_all()
         selected_is_edge = element_id.startswith('edge ')
-        nodes = self._get_selected_nodes(element_id)
+        nodes = OWFusionGraph._get_selected_nodes(element_id, self.fuser.fusion_graph)
         # Update the control listview table
         if selected_is_edge:
             selected = [self.fuser.backbone(rel)
@@ -111,9 +107,7 @@ class OWLatentFactors(widget.OWWidget):
                 return hash(data.data.tobytes())
 
             def send(_, data):
-                data = Table.from_numpy(Domain([ContinuousVariable(str(i))
-                                                for i in range(data.shape[1])]),
-                                        data)
+                data = to_orange_data_table(data)
                 self.send('Data', data)
 
         self.listview = HereListWidget(info)
@@ -143,16 +137,8 @@ class OWLatentFactors(widget.OWWidget):
         self.n_relations = fuser.fusion_graph.n_relations
 
     def repaint(self):
-        super().repaint()
-        stream = BytesIO()
-        self.fuser.fusion_graph.draw_graphviz(stream, 'svg')
-        stream.seek(0)
-        stream = QtCore.QByteArray(stream.read())
-        self.webview.setContent(stream, 'image/svg+xml')
-        webframe = self.webview.page().mainFrame()
-        webframe.addToJavaScriptWindowObject('pybridge', self)
-        webframe.evaluateJavaScript(JS_GRAPH)
-        webframe.evaluateJavaScript(JS_FACTORS)
+        OWFusionGraph.repaint(self, self.fuser.fusion_graph)
+        OWFusionGraph.evalJS(self, JS_FACTORS)
 
 
 def main():
