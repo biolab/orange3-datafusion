@@ -35,7 +35,7 @@ class OWChaining(OWLatentFactors):
                                    oldhandler=self.listview.on_currentItemChanged):
             data = oldhandler(current, previous)
             if not data: return
-            self.evalJS('dehighlight(ELEMENTS);')
+            OWFusionGraph.evalJS(self, 'dehighlight(ELEMENTS);')
             self._highlight_relations(data)
         self.listview.send = send
         self.listview.on_currentItemChanged = _on_currentItemChanged
@@ -47,7 +47,7 @@ class OWChaining(OWLatentFactors):
             selectors.add('.node[id*={}]'.format(rel.col_type.name))
             selectors.add('.edge[id*={}][id*={}]'.format(rel.row_type.name,
                                                              rel.col_type.name))
-        self.evalJS('highlight("{}");'.format(','.join(selectors)))
+        OWFusionGraph.evalJS(self, 'highlight("{}");'.format(','.join(selectors)))
 
     def on_fuser_change(self, fuser):
         super().on_fuser_change(fuser)
@@ -58,10 +58,10 @@ class OWChaining(OWLatentFactors):
             self.listview.clear()
             self.in_selection_mode = False
             return
-        nodes = self._get_selected_nodes(element_id)
+        nodes = OWFusionGraph._get_selected_nodes(element_id, self.fuser.fusion_graph)
         selected_is_edge = len(nodes) > 1
         if selected_is_edge:
-            self.evalJS('dehighlight(ELEMENTS);')
+            OWFusionGraph.evalJS(self, 'dehighlight(ELEMENTS);')
             self.listview.clear()
             self.in_selection_mode = False
             return
