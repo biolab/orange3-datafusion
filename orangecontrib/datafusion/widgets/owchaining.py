@@ -6,7 +6,7 @@ from Orange.widgets import widget, gui, settings
 from skfusion import fusion
 from orangecontrib.datafusion.table import Relation
 from orangecontrib.datafusion.widgets.owlatentfactors import (
-    OWLatentFactors, to_orange_data_table
+    OWLatentFactors, to_orange_data_table, get_otype_names
 )
 from orangecontrib.datafusion.widgets.owfusiongraph import OWFusionGraph
 
@@ -25,10 +25,11 @@ class OWChaining(OWLatentFactors):
         super()._create_layout()
         def send(data):
             if data:
-                result = self.fuser.factor(data[0].row_type)
+                otype = data[0].row_type
+                result = self.fuser.factor(otype)
                 for rel in data:
                     result = np.dot(result, self.fuser.backbone(rel))
-                data = to_orange_data_table(result)
+                data = to_orange_data_table((result, otype), self.fuser.fusion_graph)
             self.send('Data', data)
         def _on_currentItemChanged(current,
                                    previous,
