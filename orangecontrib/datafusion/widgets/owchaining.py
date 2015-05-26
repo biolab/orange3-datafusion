@@ -83,13 +83,14 @@ class OWChaining(OWLatentFactors):
             results, paths = [], [(ot1, [])]
             while paths:
                 cur, path = paths.pop()
-                if cur == ot2:
+                if cur == ot2 and path:
                     results.append(path)
                     continue
                 for rel in G.out_relations(cur):
+                    # Discount relations to self, constraints (= prevent cycles)
+                    if rel.row_type == rel.col_type: continue
                     # Discount types that are already in path (=prevent cycles)
-                    if any(rel.col_type in r for r in path):
-                        continue
+                    if any(rel.col_type in r for r in path): continue
                     paths.append((rel.col_type, path + [rel]))
             results.sort(key=len)
             return results
