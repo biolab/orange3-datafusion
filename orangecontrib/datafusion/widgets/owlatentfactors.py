@@ -7,7 +7,7 @@ from skfusion import fusion
 from orangecontrib.datafusion.widgets.owfusiongraph import (
     WebviewWidget, OWFusionGraph, relation_str
 )
-from Orange.data import Table, Domain, ContinuousVariable, StringVariable
+from orangecontrib.datafusion.table import Relation
 
 from os import path
 JS_FACTORS = open(path.join(path.dirname(__file__), 'factors_script.js')).read()
@@ -19,20 +19,41 @@ from itertools import filterfalse
 
 def is_constraint(relation):
     """Skip constraint (Theta) relations"""
-    return relation.row_type is relation.col_type
+    return relation.row_type == relation.col_type
 
 
-def to_orange_data_table(ndarray):
-    return Table.from_numpy(Domain([ContinuousVariable(str(i))
-                                    for i in range(ndarray.shape[1])]),
-                            ndarray)
+from itertools import count
+GENERATE_OTYPE = (fusion.ObjectType('LatentSpace' + str(i)) for i in count())
+
+
+def to_orange_data_table(data, graph):
+    arr, otype = data
+    col_type = next(GENERATE_OTYPE)
+    row_type = otype or next(GENERATE_OTYPE)
+    row_names = get_otype_names(otype, arr, graph) if otype else None
+    return Relation(fusion.Relation(arr, row_type, col_type, row_names=row_names))
+
+
+from itertools import chain
+
+
+def get_otype_names(otype, arr, graph):
+    """Return row_names from the `otype`s first shape-matching relation"""
+    for rel in chain(graph.out_relations(otype), graph.in_relations(otype)):
+        if rel.row_type == otype:
+            if rel.data.shape[0] == arr.shape[0] and rel.row_names:
+                return rel.row_names
+        elif rel.col_type == otype:
+            if rel.data.shape[1] == arr.shape[1] and rel.col_names:
+                return rel.col_names
+    return None
 
 
 class OWLatentFactors(widget.OWWidget):
     name = "Latent Factors"
     icon = "icons/latent-factors.svg"
     inputs = [("Fusion graph", fusion.FusionFit, "on_fuser_change")]
-    outputs = [("Data", Table)]
+    outputs = [("Data", Relation)]
 
     # Signal emitted when a node in the SVG is selected, carrying its id
     graph_element_selected = QtCore.pyqtSignal(str)
@@ -91,7 +112,7 @@ class OWLatentFactors(widget.OWWidget):
                                                self.fuser.fusion_graph.get_relations(*nodes))]
         else:
             selected = [self.fuser.factor(nodes[0])]
-        selected = set(self.listview.hash(d) for d in selected)
+        selected = set(self.listview.hash((d, None)) for d in selected)
         self.listview.show_only(selected)
 
     def _create_layout(self):
@@ -104,10 +125,10 @@ class OWLatentFactors(widget.OWWidget):
 
         class HereListWidget(OWFusionGraph.SimpleListWidget):
             def hash(self, data):
-                return hash(data.data.tobytes())
+                return hash(data[0].data.tobytes())
 
             def send(_, data):
-                data = to_orange_data_table(data)
+                data = to_orange_data_table(data, self.fuser.fusion_graph)
                 self.send('Data', data)
 
         self.listview = HereListWidget(info)
@@ -118,19 +139,22 @@ class OWLatentFactors(widget.OWWidget):
         self.listview.clear()
         for otype, matrices in fuser.factors_.items():
             matrix = matrices[0]
-            self.listview.add_item(matrix, '[{}×{}] {}'.format(matrix.shape[0],
-                                                               matrix.shape[1],
-                                                               otype))
+            self.listview.add_item((matrix, otype),
+                                   '[{}×{}] {}'.format(matrix.shape[0],
+                                                       matrix.shape[1],
+                                                       otype.name))
         for relation, matrices in fuser.backbones_.items():
             matrix = matrices[0]
             relation_string = relation_str(relation, False)
-            self.listview.add_item(matrix, '[{}×{}] {}'.format(matrix.shape[0],
-                                                               matrix.shape[1],
-                                                               relation_string))
+            self.listview.add_item((matrix, None),
+                                   '[{}×{}] {}'.format(matrix.shape[0],
+                                                       matrix.shape[1],
+                                                       relation_string))
             matrix = fuser.complete(relation)
-            self.listview.add_item(matrix, '[{}×{}] {} (completed)'.format(matrix.shape[0],
-                                                                           matrix.shape[1],
-                                                                           relation_string))
+            self.listview.add_item((matrix, None),
+                                   '[{}×{}] {} (completed)'.format(matrix.shape[0],
+                                                                   matrix.shape[1],
+                                                                   relation_string))
         self.repaint()
         # this ensures gui.label-s get updated
         self.n_object_types = fuser.fusion_graph.n_object_types
