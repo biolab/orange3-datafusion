@@ -31,11 +31,15 @@ class OWMovieGenres(OWWidget):
         self.layout = QGridLayout()
         self.genrebox = gui.widgetBox(self.controlArea, "Select Genres")
 
+        self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed,
+                           QtGui.QSizePolicy.Fixed))
+        self.setMinimumWidth(250)
+
     def update_genres(self):
+        #print("updating", len(self.genres))
         if self.genres is not None:
             for label in self.labels:
-                del label
-            self.labels = []
+                label.hide()
             size = int(np.ceil(np.sqrt(len(self.genres))))
             for i in range(len(self.genres)):
                 self.labels.append(gui.widgetLabel(self.genrebox, self.genres[i]))
@@ -53,7 +57,7 @@ class OWMovieGenres(OWWidget):
             elif type_.name == "Movies":
                 self.row_type = type_
                 self.row_names = names
-                self.relation_name = "fit"
+                self.relation_name = "fit in"
                 self.matrix, self.genres = movielens.movie_concept_matrix(self.row_names, concept="genre")
                 break
         else:

@@ -53,6 +53,7 @@ class OWIMDbActors(OWWidget):
 
         self.send_output()
 
+
     def send_output(self):
         if self.movies is not None:
             movie_actor_mat, actors = movielens.movie_concept_matrix(self.movies, concept="actor",

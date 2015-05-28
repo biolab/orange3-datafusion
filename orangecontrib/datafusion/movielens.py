@@ -1,9 +1,7 @@
+import os
 import csv
 import random
-import urllib
-import os.path
 import numpy as np
-from Orange.canvas.utils import environ
 from skfusion import fusion
 
 
@@ -33,6 +31,8 @@ def movie_concept_matrix(input_movies, concept, actors=None):
         filename = "movies.csv"
     elif concept == "actor":
         filename = "actors.csv"
+    else:
+        raise ValueError("Wrong concept, must be genre or actor")
     filename = get_valid_file_path(filename)
 
     with open(filename, 'r', encoding="utf8") as f:
@@ -64,9 +64,9 @@ def movie_concept_matrix(input_movies, concept, actors=None):
 def actor_matrix(mat):
     actors = np.zeros((mat.shape[1], mat.shape[1]))
     for row in mat:
-        for i in np.nonzero(row):
-            for j in np.nonzero(row):
-                actors[i, j] += 1
+        for i in np.nonzero(row)[0]:
+            for j in np.nonzero(row)[0]:
+                actors[i, j] += 1 if i != j else 0
     return actors
 
 
@@ -163,14 +163,6 @@ def get_all_movie_years():
 def get_valid_file_path(filename):
     return os.path.join(os.path.dirname(__file__), 'datasets', filename)
 
-
-    temp_dir = environ.buffer_dir + "\datafusion\\"
-    if not os.path.isdir(temp_dir):
-        os.makedirs(temp_dir)
-    if not os.path.isfile(temp_dir + filename):
-        urllib.request.urlretrieve("https://raw.githubusercontent.com/alekdimi/orange3-datafusion/"
-                                   "master/orangecontrib/datafusion/datasets/" + filename, temp_dir + filename)
-    return temp_dir + filename
 
 if __name__ == '__main__':
     pass
