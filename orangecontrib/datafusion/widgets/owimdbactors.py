@@ -29,7 +29,7 @@ class OWIMDbActors(OWWidget):
 
         percent = gui.hSlider(
             gui.indentedBox(self.infobox), self, "percent",
-            minValue=1, maxValue=100, step=1, ticks=True, labelFormat="%d %%")
+            minValue=1, maxValue=100, step=1, ticks=10, labelFormat="%d %%")
 
         gui.button(self.controlArea, self, "&Apply",
                    callback=self.send_output, default=True)
@@ -43,16 +43,16 @@ class OWIMDbActors(OWWidget):
         self.movies = None
 
     def set_data(self, relation):
-        assert isinstance(relation, Relation)
-        if relation.col_type == movielens.ObjectType.Movies:
-            self.movies = relation.relation.col_names
-        elif relation.row_type == movielens.ObjectType.Movies:
-            self.movies = relation.relation.row_names
-        else:
-            self.error(1, "Only relations with ObjectType Movies can be used to filter actors.")
+        if relation is not None:
+            assert isinstance(relation, Relation)
+            if relation.col_type == movielens.ObjectType.Movies:
+                self.movies = relation.relation.col_names
+            elif relation.row_type == movielens.ObjectType.Movies:
+                self.movies = relation.relation.row_names
+            else:
+                self.error(1, "Only relations with ObjectType Movies can be used to filter actors.")
 
-        self.send_output()
-
+            self.send_output()
 
     def send_output(self):
         if self.movies is not None:

@@ -29,7 +29,7 @@ class OWMovieRatings(OWWidget):
         gui.appendRadioButton(methodbox, "Percentage:")
         percent = gui.hSlider(
             gui.indentedBox(methodbox), self, "percent",
-            minValue=1, maxValue=100, step=1, ticks=True, labelFormat="%d %%")
+            minValue=1, maxValue=100, step=1, ticks=10, labelFormat="%d %%")
 
         gui.appendRadioButton(methodbox, "Time period:")
         ibox = gui.indentedBox(methodbox)
@@ -61,7 +61,11 @@ class OWMovieRatings(OWWidget):
         if self.method == 0:
             matrix, movies, users = movielens.movie_user_matrix(percentage=self.percent)
         else:
-            matrix, movies, users = movielens.movie_user_matrix(start_year=self.start, end_year=self.end)
+            try:
+                matrix, movies, users = movielens.movie_user_matrix(start_year=self.start, end_year=self.end)
+            except ValueError:
+                self.error(0, "Invalid starting years")
+                self.send("Ratings", None)
 
         relation = fusion.Relation(matrix.T, name='rate',
                                    row_type=movielens.ObjectType.Users, row_names=users,

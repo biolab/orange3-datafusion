@@ -29,7 +29,7 @@ class OWMovieGenres(OWWidget):
         self.relation_name = ""
 
         self.layout = QGridLayout()
-        self.genrebox = gui.widgetBox(self.controlArea, "Select Genres")
+        self.genrebox = gui.widgetBox(self.controlArea, "Genres")
 
         self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed,
                            QtGui.QSizePolicy.Fixed))
@@ -46,25 +46,26 @@ class OWMovieGenres(OWWidget):
 
     def set_data(self, data):
         self.data = data
-        for type_, names in [(data.relation.row_type, data.relation.row_names),
-                             (data.relation.col_type, data.relation.col_names)]:
-            if type_.name == "Actors":
-                self.row_type = type_
-                self.row_names = names
-                self.relation_name = "prefer"
-                self.matrix, self.genres = movielens.actor_genre_matrix(actors=self.row_names)
-                break
-            elif type_.name == "Movies":
-                self.row_type = type_
-                self.row_names = names
-                self.relation_name = "fit in"
-                self.matrix, self.genres = movielens.movie_concept_matrix(self.row_names, concept="genre")
-                break
-        else:
-            raise ValueError("Can produce genres only for movies or actors.")
+        if self.data is not None:
+            for type_, names in [(data.relation.row_type, data.relation.row_names),
+                                 (data.relation.col_type, data.relation.col_names)]:
+                if type_.name == "Actors":
+                    self.row_type = type_
+                    self.row_names = names
+                    self.relation_name = "prefer"
+                    self.matrix, self.genres = movielens.actor_genre_matrix(actors=self.row_names)
+                    break
+                elif type_.name == "Movies":
+                    self.row_type = type_
+                    self.row_names = names
+                    self.relation_name = "fit in"
+                    self.matrix, self.genres = movielens.movie_concept_matrix(self.row_names, concept="genre")
+                    break
+            else:
+                raise ValueError("Can produce genres only for movies or actors.")
 
-        self.update_genres()
-        self.send_output()
+            self.update_genres()
+            self.send_output()
 
     def send_output(self):
         if self.data is not None:

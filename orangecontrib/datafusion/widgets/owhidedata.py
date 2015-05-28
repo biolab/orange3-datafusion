@@ -56,7 +56,7 @@ class OWHideData(OWWidget):
         sample_size = gui.widgetBox(self.controlArea, "Sample size")
         percent = gui.hSlider(
             sample_size, self, 'percent', minValue=1, maxValue=100, step=1,
-            ticks=False, labelFormat=" %d%%")
+            ticks=10, labelFormat=" %d%%")
 
         gui.button(self.controlArea, self, "&Apply",
                    callback=self.send_output, default=True)
@@ -65,7 +65,7 @@ class OWHideData(OWWidget):
             QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed,
                               QtGui.QSizePolicy.Fixed))
 
-        self.setMinimumWidth(350)
+        self.setMinimumWidth(250)
         self.send_output()
 
     def set_data(self, data):
