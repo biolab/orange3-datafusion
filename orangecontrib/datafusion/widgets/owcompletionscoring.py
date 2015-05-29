@@ -14,7 +14,10 @@ def RMSE(A, B):
     """ NaN-skipping RMSE of masked values beetween the original relation `A`
         and fuser-completed relation `B`.
     """
-    A, B, size = A.data[A.mask], B[A.mask], A.mask.sum()
+    if np.ma.is_masked(A):
+        A, B, size = A.data[A.mask], B[A.mask], A.mask.sum()
+    else:
+        A, B, size = A.data, B.data, A.size
     return np.sqrt(np.nansum((A - B)**2) / size)
 
 
@@ -46,9 +49,9 @@ class OWCompletionScoring(widget.OWWidget):
 
     def _create_layout(self):
         box = gui.widgetBox(self.mainArea, 'Fuser completion scoring')
-        grey_brush = QtGui.QBrush(QtGui.QColor('#eee'))
         BOLD_FONT = QtGui.QFont()
         BOLD_FONT.setWeight(QtGui.QFont.DemiBold)
+        widget = self
 
         class HereTableWidget(QtGui.QTableWidget):
             def __init__(self, parent):
@@ -61,9 +64,11 @@ class OWCompletionScoring(widget.OWWidget):
                 self.setColumnCount(len(fusers))
                 self.setHorizontalHeaderLabels([getattr(fuser, 'name', str(id))
                                                 for id, fuser in fusers.items()])
-                for relation in relations.values():
+                for id, relation in relations.items():
                     row = self.rowCount()
                     self.insertRow(row)
+                    if not np.ma.is_masked(relation.data):
+                        widget.warning(id, 'Relation "{}" has no missing values (mask)'.format(relation_str(relation)))
                     rmses = []
                     for fuser in fusers.values():
                         completion = _find_completion(fuser, relation)
@@ -71,7 +76,9 @@ class OWCompletionScoring(widget.OWWidget):
                             rmses.append(RMSE(relation.data, completion))
                         else:
                             rmses.append(None)
-                    min_rmse = min(filter(lambda i: i is not None, rmses))
+                    rmses = [e for e in rmses if e is not None]
+                    if not rmses: continue
+                    min_rmse = min(rmses)
                     for col, rmse in enumerate(rmses):
                         item = QtGui.QTableWidgetItem(str(rmse or ''))
                         item.setFlags(QtCore.Qt.ItemIsEnabled)
@@ -93,7 +100,8 @@ class OWCompletionScoring(widget.OWWidget):
 
     def on_relation_change(self, relation, id):
         if relation: self.relations[id] = relation.relation
-        else:    del self.relations[id]
+        else: del self.relations[id]
+        self.warning(id, '')
         self.update()
 
 
