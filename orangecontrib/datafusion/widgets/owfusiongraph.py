@@ -47,6 +47,9 @@ class WebviewWidget(QtWebKit.QWebView):
         else:
             self.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
 
+    def sizeHint(self):
+        return QtCore.QSize(500, 500)
+
 
 class OWFusionGraph(widget.OWWidget):
     name = "Fusion Graph"
