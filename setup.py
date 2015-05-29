@@ -23,6 +23,11 @@ if __name__ == '__main__':
     setup(
         name="Orange3 Data Fusion",
         packages=find_packages(),
+        package_data={
+            "orangecontrib.datafusion": ["datasets/*.csv"],
+            "orangecontrib.datafusion.widgets": ["icons/*.svg", "*.js"],
+            "orangecontrib.datafusion.tutorials": ["*.ows"],
+        },
         install_requires=[
             'Orange',
             'scikit-fusion',
@@ -33,6 +38,5 @@ if __name__ == '__main__':
         ],
         entry_points=ENTRY_POINTS,
         namespace_packages=['orangecontrib'],
-        include_package_data=True,
         zip_safe=False,
     )
