@@ -53,7 +53,7 @@ class OWFusionGraph(widget.OWWidget):
     inputs = [("Relation", Relation, "on_relation_change", widget.Multiple)]
     outputs = [
         (Output.RELATION, Relation),
-        (Output.FUSION_GRAPH, fusion.FusionFit),
+        (Output.FUSION_GRAPH, fusion.FusionFit, widget.Default),
     ]
 
     # Signal emitted when a node in the SVG is selected, carrying its name
