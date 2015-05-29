@@ -76,7 +76,9 @@ class OWCompletionScoring(widget.OWWidget):
                             rmses.append(RMSE(relation.data, completion))
                         else:
                             rmses.append(None)
-                    min_rmse = min(filter(lambda i: i is not None, rmses))
+                    rmses = [e for e in rmses if e is not None]
+                    if not rmses: continue
+                    min_rmse = min(rmses)
                     for col, rmse in enumerate(rmses):
                         item = QtGui.QTableWidgetItem(str(rmse or ''))
                         item.setFlags(QtCore.Qt.ItemIsEnabled)
