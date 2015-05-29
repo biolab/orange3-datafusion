@@ -23,8 +23,8 @@ class OWHideData(OWWidget):
     want_main_area = False
     description = "Hide part of relation data"
     inputs = [("Data", Orange.data.table.Table, "set_data", widget.Default)]
-    outputs = [(Output.REMAINING_DATA, Relation, widget.Default),
-               (Output.HIDDEN_DATA, Relation, widget.Default)]
+    outputs = [(Output.REMAINING_DATA, Relation),
+               (Output.HIDDEN_DATA, Relation)]
 
     percent = settings.Setting(10)
     method = settings.Setting(0)
