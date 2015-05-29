@@ -56,7 +56,7 @@ class OWCompletionScoring(widget.OWWidget):
         self._create_layout()
 
     def _create_layout(self):
-        box = gui.widgetBox(self.mainArea, 'Fuser completion scoring')
+        box = gui.widgetBox(self.mainArea, 'RMSE')
         BOLD_FONT = QtGui.QFont()
         BOLD_FONT.setWeight(QtGui.QFont.DemiBold)
         widget = self
