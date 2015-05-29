@@ -5,6 +5,7 @@ from Orange.widgets import widget, gui
 
 from skfusion import fusion
 from orangecontrib.datafusion.table import Relation
+from orangecontrib.datafusion.widgets.owmeanfuser import MeanFuser
 from orangecontrib.datafusion.widgets.owfusiongraph import relation_str
 
 import numpy as np
@@ -43,6 +44,7 @@ class OWCompletionScoring(widget.OWWidget):
     icon = 'icons/completion-scoring.svg'
     inputs = [
         ('Fitted fusion graph', fusion.FusionFit, 'on_fuser_change', widget.Multiple),
+        ('Mean-fitted fusion graph', MeanFuser, 'on_fuser_change', widget.Multiple),
         ('Relation', Relation, 'on_relation_change', widget.Multiple),
     ]
 
