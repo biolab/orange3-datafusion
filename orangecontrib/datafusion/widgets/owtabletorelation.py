@@ -1,4 +1,4 @@
-from PyQt4.QtGui import QTableView, QSizePolicy, QHeaderView, QGridLayout, QWidget
+from PyQt4.QtGui import QTableView, QGridLayout, QWidget
 from PyQt4.QtCore import Qt, QSize
 from Orange.data import Table, Domain
 from Orange.widgets.settings import Setting, ContextSetting, PerfectDomainContextHandler
@@ -38,23 +38,31 @@ class OWTableToRelation(OWWidget):
     def __init__(self):
         super().__init__()
 
+        self.model = None
+        self.view = None
+        self.row_names_combo = None
+        self.icons = gui.attributeIconDict
+        self.populate_control_area()
+        self.populate_main_area()
+
+    def populate_control_area(self):
         rel = gui.widgetBox(self.controlArea, "Relation")
-        gui.lineEdit(rel, self, "relation_name", "Name", callbackOnType=True, callback=self.commit)
+        gui.lineEdit(rel, self, "relation_name", "Name", callbackOnType=True, callback=self.apply)
         gui.checkBox(rel, self, "transpose", "Transpose")
 
         col = gui.widgetBox(self.controlArea, "Column")
-        gui.lineEdit(col, self, "col_type", "Object Type", callbackOnType=True, callback=self.commit)
+        gui.lineEdit(col, self, "col_type", "Object Type", callbackOnType=True, callback=self.apply)
 
         row = gui.widgetBox(self.controlArea, "Row")
-        gui.lineEdit(row, self, "row_type", "Object Type", callbackOnType=True, callback=self.commit)
+        gui.lineEdit(row, self, "row_type", "Object Type", callbackOnType=True, callback=self.apply)
         self.row_names_combo = gui.comboBox(row, self, "row_names_attribute", label="Object Names",
                                             sendSelectedValue=True, emptyString="(None)",
                                             callback=self.update_row_names)
 
         gui.rubber(self.controlArea)
         gui.auto_commit(self.controlArea, self, "auto_commit", "Send")
-        self.icons = gui.attributeIconDict
 
+    def populate_main_area(self):
         grid = QWidget()
         grid.setLayout(QGridLayout(grid))
         self.mainArea.layout().addWidget(grid)
@@ -130,6 +138,9 @@ class OWTableToRelation(OWWidget):
         preview_data = Table(domain, self.data)
         self.model = MyTableModel(preview_data)
         self.view.setModel(self.model)
+
+    def apply(self):
+        self.commit()
 
     def commit(self):
         if self.data:
