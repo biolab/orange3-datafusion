@@ -25,7 +25,8 @@ INITIALIZATION_ALGO = [
 
 class Output:
     RELATION = 'Relation'
-    FUSION_GRAPH = 'Fitted Fusion Graph'
+    FUSION_GRAPH = 'Fusion Graph'
+    FUSER = 'Fitted Fusion Graph'
 
 
 def relation_str(relation, dimensions=True):
@@ -53,7 +54,8 @@ class OWFusionGraph(widget.OWWidget):
     inputs = [("Relation", Relation, "on_relation_change", widget.Multiple)]
     outputs = [
         (Output.RELATION, Relation),
-        (Output.FUSION_GRAPH, fusion.FusionFit, widget.Default),
+        (Output.FUSER, fusion.FusionFit, widget.Default),
+        (Output.FUSION_GRAPH, fusion.FusionGraph),
     ]
 
     # Signal emitted when a node in the SVG is selected, carrying its name
@@ -228,7 +230,7 @@ class OWFusionGraph(widget.OWWidget):
         self.fuser = Algo(init_type=init_type,
                           max_iter=self.pref_n_iterations).fuse(self.graph)
         self.fuser.name = self.pref_algo_name
-        self.send(Output.FUSION_GRAPH, self.fuser)
+        self.send(Output.FUSER, self.fuser)
 
     def on_relation_change(self, relation, id):
         def _on_remove_relation(id):
@@ -248,6 +250,7 @@ class OWFusionGraph(widget.OWWidget):
         else:
             _on_remove_relation(id)
         self.repaint(self.graph)
+        self.send(Output.FUSION_GRAPH, self.graph)
         # this ensures gui.label-s get updated
         self.n_object_types = self.graph.n_object_types
         self.n_relations = self.graph.n_relations
