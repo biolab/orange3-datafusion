@@ -13,6 +13,7 @@ from orangecontrib.datafusion.widgets.owfusiongraph import OWFusionGraph
 
 class OWChaining(OWLatentFactors):
     name = "Chaining"
+    priority = 30000
     icon = "icons/latent-chaining.svg"
     inputs = [("Fusion graph", fusion.FusionFit, "on_fuser_change")]
     outputs = [("Data", Relation)]

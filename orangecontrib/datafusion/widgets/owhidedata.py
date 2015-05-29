@@ -19,6 +19,7 @@ class Output:
 
 class OWHideData(OWWidget):
     name = "Hide Data"
+    priority = 90000
     icon = "icons/sampling.svg"
     want_main_area = False
     description = "Hide part of relation data"

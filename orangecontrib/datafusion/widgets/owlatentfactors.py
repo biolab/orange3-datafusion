@@ -51,6 +51,7 @@ def get_otype_names(otype, arr, graph):
 
 class OWLatentFactors(widget.OWWidget):
     name = "Latent Factors"
+    priority = 20000
     icon = "icons/latent-factors.svg"
     inputs = [("Fusion graph", fusion.FusionFit, "on_fuser_change")]
     outputs = [("Data", Relation)]

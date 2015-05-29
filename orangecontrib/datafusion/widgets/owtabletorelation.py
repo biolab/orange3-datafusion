@@ -15,6 +15,7 @@ class Output:
 
 class OWTableToRelation(OWWidget):
     name = "Table to Relation"
+    priority = 50000
 
     inputs = [("Data", Table, "set_data")]
     outputs = [(Output.RELATION, Relation)]
