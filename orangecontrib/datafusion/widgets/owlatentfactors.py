@@ -4,9 +4,8 @@ from PyQt4 import QtCore, QtGui, QtSvg, QtWebKit
 from Orange.widgets import widget, gui, settings
 
 from skfusion import fusion
-from orangecontrib.datafusion.widgets.owfusiongraph import (
-    WebviewWidget, OWFusionGraph, relation_str
-)
+from orangecontrib.datafusion.widgets import owfusiongraph
+from orangecontrib.datafusion.widgets.owfusiongraph import WebviewWidget, relation_str
 from orangecontrib.datafusion.table import Relation
 
 from os import path
@@ -78,7 +77,7 @@ class OWLatentFactors(widget.OWWidget):
             (node(=factor) or edge(=backbone)).
         """
         selected_is_edge = element_id.startswith('edge ')
-        nodes = OWFusionGraph._get_selected_nodes(element_id, self.fuser.fusion_graph)
+        nodes = owfusiongraph.OWFusionGraph._get_selected_nodes(element_id, self.fuser.fusion_graph)
         from math import log2
 
         def _norm(s):
@@ -90,7 +89,7 @@ class OWLatentFactors(widget.OWWidget):
                      for rel in filterfalse(is_constraint, rels)]
         else:
             sizes = [_norm(self.fuser.factor(nodes[0]).shape[0])]
-        OWFusionGraph.evalJS(self, 'SIZES = {};'.format(repr(sizes)))
+        owfusiongraph.OWFusionGraph.evalJS(self, 'SIZES = {};'.format(repr(sizes)))
 
     @QtCore.pyqtSlot(str)
     def _on_graph_element_selected(self, element_id):
@@ -105,7 +104,7 @@ class OWLatentFactors(widget.OWWidget):
         if not element_id:
             return self.listview.show_all()
         selected_is_edge = element_id.startswith('edge ')
-        nodes = OWFusionGraph._get_selected_nodes(element_id, self.fuser.fusion_graph)
+        nodes = owfusiongraph.OWFusionGraph._get_selected_nodes(element_id, self.fuser.fusion_graph)
         # Update the control listview table
         if selected_is_edge:
             selected = [self.fuser.backbone(rel)
@@ -124,7 +123,7 @@ class OWLatentFactors(widget.OWWidget):
         # Table view of relation details
         info = gui.widgetBox(self.controlArea, 'Factors')
 
-        class HereListWidget(OWFusionGraph.SimpleListWidget):
+        class HereListWidget(owfusiongraph.OWFusionGraph.SimpleListWidget):
             def hash(self, data):
                 return hash(data[0].data.tobytes())
 
@@ -162,8 +161,8 @@ class OWLatentFactors(widget.OWWidget):
         self.n_relations = fuser.fusion_graph.n_relations
 
     def repaint(self):
-        OWFusionGraph.repaint(self, self.fuser.fusion_graph)
-        OWFusionGraph.evalJS(self, JS_FACTORS)
+        owfusiongraph.OWFusionGraph.repaint(self, self.fuser.fusion_graph)
+        owfusiongraph.OWFusionGraph.evalJS(self, JS_FACTORS)
 
 
 def main():

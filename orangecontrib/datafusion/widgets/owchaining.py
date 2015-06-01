@@ -5,13 +5,12 @@ from Orange.widgets import widget, gui, settings
 
 from skfusion import fusion
 from orangecontrib.datafusion.table import Relation
-from orangecontrib.datafusion.widgets.owlatentfactors import (
-    OWLatentFactors, to_orange_data_table, get_otype_names
-)
-from orangecontrib.datafusion.widgets.owfusiongraph import OWFusionGraph
+from orangecontrib.datafusion.widgets import owlatentfactors
+from orangecontrib.datafusion.widgets.owlatentfactors import to_orange_data_table, get_otype_names
+from orangecontrib.datafusion.widgets import owfusiongraph
 
 
-class OWChaining(OWLatentFactors):
+class OWChaining(owlatentfactors.OWLatentFactors):
     name = "Chaining"
     priority = 30000
     icon = "icons/latent-chaining.svg"
@@ -37,7 +36,7 @@ class OWChaining(OWLatentFactors):
                                    oldhandler=self.listview.on_currentItemChanged):
             data = oldhandler(current, previous)
             if not data: return
-            OWFusionGraph.evalJS(self, 'dehighlight(ELEMENTS);')
+            owfusiongraph.OWFusionGraph.evalJS(self, 'dehighlight(ELEMENTS);')
             self._highlight_relations(data)
         self.listview.send = send
         self.listview.on_currentItemChanged = _on_currentItemChanged
@@ -49,7 +48,7 @@ class OWChaining(OWLatentFactors):
             selectors.add('.node[id*={}]'.format(rel.col_type.name))
             selectors.add('.edge[id*={}][id*={}]'.format(rel.row_type.name,
                                                              rel.col_type.name))
-        OWFusionGraph.evalJS(self, 'highlight("{}");'.format(','.join(selectors)))
+        owfusiongraph.OWFusionGraph.evalJS(self, 'highlight("{}");'.format(','.join(selectors)))
 
     def on_fuser_change(self, fuser):
         super().on_fuser_change(fuser)
@@ -60,10 +59,10 @@ class OWChaining(OWLatentFactors):
             self.listview.clear()
             self.in_selection_mode = False
             return
-        nodes = OWFusionGraph._get_selected_nodes(element_id, self.fuser.fusion_graph)
+        nodes = owfusiongraph.OWFusionGraph._get_selected_nodes(element_id, self.fuser.fusion_graph)
         selected_is_edge = len(nodes) > 1
         if selected_is_edge:
-            OWFusionGraph.evalJS(self, 'dehighlight(ELEMENTS);')
+            owfusiongraph.OWFusionGraph.evalJS(self, 'dehighlight(ELEMENTS);')
             self.listview.clear()
             self.in_selection_mode = False
             return
