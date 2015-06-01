@@ -63,6 +63,7 @@ class OWMeanFuser(widget.OWWidget):
     icon = 'icons/mean-fuser.svg'
     inputs = [
         ('Fusion graph', fusion.FusionGraph, 'on_fusion_graph_change'),
+        ('Relation', Relation, 'on_relation_change', widget.Multiple),
     ]
     outputs = [
         (Output.FUSER, MeanFuser, widget.Default),
@@ -73,12 +74,13 @@ class OWMeanFuser(widget.OWWidget):
 
     mean_by = settings.Setting(0)
     selected_relation = settings.Setting([])
-    relations = settings.Setting([])
+    relationes = settings.Setting([])  # Why is this so named? Indeed.
 
 
     def __init__(self):
         super().__init__()
         self._relations = []
+        self.in_relations = {}
         self._create_layout()
         self.commit()
 
@@ -91,7 +93,7 @@ class OWMeanFuser(widget.OWWidget):
         self.controlArea.layout().addWidget(
             gui.listBox(self.controlArea, self, 'selected_relation',
                 box='Output completed relation',
-                labels='relations',
+                labels='relationes',
                 callback=self.commit))
         self.controlArea.layout().addStretch(1)
 
@@ -102,12 +104,39 @@ class OWMeanFuser(widget.OWWidget):
             relation = self._relations[self.selected_relation[0]]
             self.send(Output.RELATION, self.fuser.complete(relation))
 
+    def _process_relation(self, action, relation):
+        getattr(self._relations, action)(relation)
+        getattr(self.relationes, action)(
+            relation_str(relation) +
+            (' (not masked)' if not np.ma.is_masked(relation.data) else ''))
+        self.relationes = self.relationes
+
+    def _add_relation(self, relation):
+        self._process_relation('append', relation)
+
+    def _remove_relation(self, relation):
+        self._process_relation('remove', relation)
+
     def on_fusion_graph_change(self, graph):
-        self._relations = [rel for rel in graph.relations]
-        self.relations = [relation_str(rel) +
-                          (' (not masked)' if not np.ma.is_masked(rel.data) else '')
-                          for rel in self._relations]
+        if graph:
+            self.graph = graph
+            for rel in graph.relations:
+                self._add_relation(rel)
+        else:
+            for rel in self.graph.relations:
+                self._remove_relation(rel)
         self.commit()
+
+    def on_relation_change(self, relation, id):
+        try:
+            rel = self.in_relations.pop(id)
+            self._remove_relation(rel)
+        except KeyError: pass
+        if relation:
+            self.in_relations[id] = relation.relation
+            self._add_relation(relation.relation)
+        self.commit()
+
 
 
 def main():
