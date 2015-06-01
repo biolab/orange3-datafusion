@@ -146,8 +146,6 @@ class OWTableToRelation(OWWidget):
         if self.data:
             domain = self.data.domain
             metadata_cols = list(domain.class_vars) + list(domain.metas)
-            if self.row_names_attribute:
-                metadata_cols.remove(domain[self.row_names_attribute])
             metadata = [{var: var.to_val(value) for var, value in zip(metadata_cols, values.list)}
                         for values in self.data[:, metadata_cols]]
 

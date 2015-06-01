@@ -18,20 +18,27 @@ class Relation(Table):
         relation: An instance of `skfusion.fusion.Relation`
         """
         self.relation = relation
+        meta_vars, self.metas = self._create_metas(relation)
+        self._Y = self.W = np.zeros((len(relation.data), 0))
 
-        empty = self._Y = self.W = np.zeros((len(relation.data), 0))
+        if relation.col_names is not None:
+            attr_names = relation.col_names
+        else:
+            attr_names = range(relation.data.shape[1])
+        self.domain = Domain([ContinuousVariable(name)
+                              for name in map(str, attr_names)],
+                             metas=meta_vars)
+        Table._init_ids(self)
+
+    @staticmethod
+    def _create_metas(relation):
         metas = []
         metas_data = [[] for x in relation.data]
-        if relation.row_names is not None:
-            metas.append(relation.row_type.name)
-            for md, name in zip(metas_data, relation.row_names):
-                md.append(name)
-
         if relation.row_metadata is not None:
             metadata_names = set()
             for md in relation.row_metadata:
                 metadata_names.update(md.keys())
-            metadata_names = sorted(metadata_names)
+            metadata_names = sorted(metadata_names, key=str)
 
             metas.extend(metadata_names)
             for md, v in zip(metas_data, relation.row_metadata):
@@ -45,17 +52,9 @@ class Relation(Table):
                 return StringVariable(str(x))
 
         metas_vars = [create_var(x) for x in metas]
-        self.metas = np.array(metas_data,
-                              dtype='object')
-        print(metas_vars, self.metas.shape)
-        if relation.col_names is not None:
-            var_names = relation.col_names
-        else:
-            var_names = range(relation.data.shape[1])
-        self.domain = Domain([ContinuousVariable(name)
-                              for name in map(str, var_names)],
-                             metas=metas_vars)
-        Table._init_ids(self)
+        metas = np.array(metas_data, dtype='object')
+        return metas_vars, metas
+
 
     @property
     def col_type(self):
