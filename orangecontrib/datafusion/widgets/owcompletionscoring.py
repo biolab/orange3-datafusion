@@ -93,7 +93,7 @@ class OWCompletionScoring(widget.OWWidget):
                     if not rmses: continue
                     min_rmse = min(rmses)
                     for col, rmse in enumerate(rmses):
-                        item = QtGui.QTableWidgetItem(str(rmse or ''))
+                        item = QtGui.QTableWidgetItem('{:.4}'.format(str(rmse or '')))
                         item.setFlags(QtCore.Qt.ItemIsEnabled)
                         if rmse == min_rmse and len(rmses) > 1:
                             item.setFont(BOLD_FONT)
