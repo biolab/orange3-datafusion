@@ -48,7 +48,7 @@ class OWTableToRelation(OWWidget):
     def populate_control_area(self):
         rel = gui.widgetBox(self.controlArea, "Relation")
         gui.lineEdit(rel, self, "relation_name", "Name", callbackOnType=True, callback=self.apply)
-        gui.checkBox(rel, self, "transpose", "Transpose")
+        gui.checkBox(rel, self, "transpose", "Transpose", callback=self.apply)
 
         col = gui.widgetBox(self.controlArea, "Column")
         gui.lineEdit(col, self, "col_type", "Object Type", callbackOnType=True, callback=self.apply)
