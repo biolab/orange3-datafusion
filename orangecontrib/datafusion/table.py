@@ -58,7 +58,6 @@ class Relation(Table):
         metas = np.array(metas_data, dtype='object')
         return metas_vars, metas
 
-
     @property
     def col_type(self):
         return self.relation.col_type

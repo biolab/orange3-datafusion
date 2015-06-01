@@ -27,7 +27,7 @@ class OWTableToRelation(OWWidget):
     transpose = ContextSetting(False)
 
     row_type = ContextSetting("")
-    row_names_attribute = ContextSetting("")
+    selected_meta = ContextSetting(0)
     row_names = None
 
     col_type = ContextSetting("")
@@ -55,8 +55,7 @@ class OWTableToRelation(OWWidget):
 
         row = gui.widgetBox(self.controlArea, "Row")
         gui.lineEdit(row, self, "row_type", "Object Type", callbackOnType=True, callback=self.apply)
-        self.row_names_combo = gui.comboBox(row, self, "row_names_attribute", label="Object Names",
-                                            sendSelectedValue=True, emptyString="(None)",
+        self.row_names_combo = gui.comboBox(row, self, "selected_meta", label="Object Names",
                                             callback=self.update_row_names)
 
         gui.rubber(self.controlArea)
@@ -101,22 +100,23 @@ class OWTableToRelation(OWWidget):
 
         if candidates:
             self.row_type = candidates[0].name
-            self.row_names_attribute = candidates[0]
+            self.selected_meta = 1
         else:
             self.row_type = ""
-            self.row_names_attribute = ""
+            self.selected_meta = 0
             self.row_names = None
 
         self.row_names_combo.clear()
         self.row_names_combo.addItem('(None)')
         for var in candidates:
             self.row_names_combo.addItem(self.icons[var], var.name)
+        self.row_names_combo.setCurrentIndex(self.selected_meta)
 
     def update_row_names(self):
-        if not self.row_names_attribute:
-            self.row_names = None
+        if self.selected_meta:
+            self.row_names = list(self.data[:, -self.selected_meta].metas.flatten())
         else:
-            self.row_names = list(self.data[:, self.row_names_attribute].metas.flatten())
+            self.row_names = None
 
         if self.model:
             self.model.headerDataChanged.emit(
