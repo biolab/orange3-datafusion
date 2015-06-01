@@ -144,16 +144,26 @@ class OWTableToRelation(OWWidget):
 
     def commit(self):
         if self.data:
+            domain = self.data.domain
+            metadata_cols = list(domain.class_vars) + list(domain.metas)
+            if self.row_names_attribute:
+                metadata_cols.remove(domain[self.row_names_attribute])
+            metadata = [{var: var.to_val(value) for var, value in zip(metadata_cols, values.list)}
+                        for values in self.data[:, metadata_cols]]
+
             if self.transpose:
                 relation = fusion.Relation(
-                    self.data.X, name=self.relation_name,
+                    self.data.X.T, name=self.relation_name,
                     row_type=fusion.ObjectType(self.col_type or 'Unknown'), row_names=self.col_names,
-                    col_type=fusion.ObjectType(self.row_type or 'Unknown'), col_names=self.row_names)
+                    col_type=fusion.ObjectType(self.row_type or 'Unknown'), col_names=self.row_names,
+                    col_metadata=metadata)
             else:
                 relation = fusion.Relation(
                     self.data.X, name=self.relation_name,
                     row_type=fusion.ObjectType(self.row_type or 'Unknown'), row_names=self.row_names,
-                    col_type=fusion.ObjectType(self.col_type or 'Unknown'), col_names=self.col_names)
+                    row_metadata=metadata,
+                    col_type=fusion.ObjectType(self.col_type or 'Unknown'), col_names=self.col_names,
+                )
             self.send(Output.RELATION, Relation(relation))
 
 

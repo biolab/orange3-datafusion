@@ -1,4 +1,4 @@
-from Orange.data import Table, Domain, ContinuousVariable, StringVariable
+from Orange.data import Table, Domain, ContinuousVariable, StringVariable, Variable
 
 import numpy as np
 
@@ -20,14 +20,34 @@ class Relation(Table):
         self.relation = relation
 
         empty = self._Y = self.W = np.zeros((len(relation.data), 0))
+        metas = []
+        metas_data = [[] for x in relation.data]
         if relation.row_names is not None:
-            self.metas = np.array([str(x) for x in relation.row_names],
-                                  dtype='object')[:, None]
-            metas_vars = [StringVariable(str(relation.row_type))]
-        else:
-            self.metas = empty
-            metas_vars = []
+            metas.append(relation.row_type.name)
+            for md, name in zip(metas_data, relation.row_names):
+                md.append(name)
 
+        if relation.row_metadata is not None:
+            metadata_names = set()
+            for md in relation.row_metadata:
+                metadata_names.update(md.keys())
+            metadata_names = sorted(metadata_names)
+
+            metas.extend(metadata_names)
+            for md, v in zip(metas_data, relation.row_metadata):
+                for k in metadata_names:
+                    md.append(v.get(k, np.nan))
+
+        def create_var(x):
+            if isinstance(x, Variable):
+                return x
+            else:
+                return StringVariable(str(x))
+
+        metas_vars = [create_var(x) for x in metas]
+        self.metas = np.array(metas_data,
+                              dtype='object')
+        print(metas_vars, self.metas.shape)
         if relation.col_names is not None:
             var_names = relation.col_names
         else:
