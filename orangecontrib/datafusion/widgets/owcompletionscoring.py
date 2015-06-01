@@ -32,6 +32,7 @@ def _find_completion(fuser, relation):
 
 class OWCompletionScoring(widget.OWWidget):
     name = 'Completion Scoring'
+    priority = 40000
     icon = 'icons/completion-scoring.svg'
     inputs = [
         ('Fitted fusion graph', fusion.FusionFit, 'on_fuser_change', widget.Multiple),

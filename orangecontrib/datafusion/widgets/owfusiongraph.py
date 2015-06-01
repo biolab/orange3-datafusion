@@ -53,6 +53,7 @@ class WebviewWidget(QtWebKit.QWebView):
 
 class OWFusionGraph(widget.OWWidget):
     name = "Fusion Graph"
+    priority = 10000
     icon = "icons/fusion-graph.svg"
     inputs = [("Relation", Relation, "on_relation_change", widget.Multiple)]
     outputs = [
