@@ -7,7 +7,7 @@ from skfusion import fusion
 from orangecontrib.datafusion.table import Relation
 from orangecontrib.datafusion.widgets import owlatentfactors
 from orangecontrib.datafusion.widgets.owlatentfactors import to_orange_data_table, get_otype_names
-from orangecontrib.datafusion.widgets import owfusiongraph
+from orangecontrib.datafusion.widgets.owfusiongraph import _get_selected_nodes
 
 
 class OWChaining(owlatentfactors.OWLatentFactors):
@@ -36,7 +36,7 @@ class OWChaining(owlatentfactors.OWLatentFactors):
                                    oldhandler=self.listview.on_currentItemChanged):
             data = oldhandler(current, previous)
             if not data: return
-            owfusiongraph.OWFusionGraph.evalJS(self, 'dehighlight(ELEMENTS);')
+            self.webview.evalJS('dehighlight(ELEMENTS);')
             self._highlight_relations(data)
         self.listview.send = send
         self.listview.on_currentItemChanged = _on_currentItemChanged
@@ -48,7 +48,7 @@ class OWChaining(owlatentfactors.OWLatentFactors):
             selectors.add('.node[id*={}]'.format(rel.col_type.name))
             selectors.add('.edge[id*={}][id*={}]'.format(rel.row_type.name,
                                                              rel.col_type.name))
-        owfusiongraph.OWFusionGraph.evalJS(self, 'highlight("{}");'.format(','.join(selectors)))
+        self.webview.evalJS('highlight("{}");'.format(','.join(selectors)))
 
     def on_fuser_change(self, fuser):
         super().on_fuser_change(fuser)
@@ -59,10 +59,10 @@ class OWChaining(owlatentfactors.OWLatentFactors):
             self.listview.clear()
             self.in_selection_mode = False
             return
-        nodes = owfusiongraph.OWFusionGraph._get_selected_nodes(element_id, self.fuser.fusion_graph)
+        nodes = _get_selected_nodes(element_id, self.fuser.fusion_graph)
         selected_is_edge = len(nodes) > 1
         if selected_is_edge:
-            owfusiongraph.OWFusionGraph.evalJS(self, 'dehighlight(ELEMENTS);')
+            self.webview.evalJS('dehighlight(ELEMENTS);')
             self.listview.clear()
             self.in_selection_mode = False
             return

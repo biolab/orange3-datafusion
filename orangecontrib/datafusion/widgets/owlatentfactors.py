@@ -5,7 +5,8 @@ from Orange.widgets import widget, gui, settings
 
 from skfusion import fusion
 from orangecontrib.datafusion.widgets import owfusiongraph
-from orangecontrib.datafusion.widgets.owfusiongraph import WebviewWidget, relation_str
+from orangecontrib.datafusion.widgets.owfusiongraph import \
+    WebviewWidget, relation_str, _get_selected_nodes
 from orangecontrib.datafusion.table import Relation
 
 from os import path
@@ -77,7 +78,7 @@ class OWLatentFactors(widget.OWWidget):
             (node(=factor) or edge(=backbone)).
         """
         selected_is_edge = element_id.startswith('edge ')
-        nodes = owfusiongraph.OWFusionGraph._get_selected_nodes(element_id, self.fuser.fusion_graph)
+        nodes = _get_selected_nodes(element_id, self.fuser.fusion_graph)
         from math import log2
 
         def _norm(s):
@@ -89,7 +90,7 @@ class OWLatentFactors(widget.OWWidget):
                      for rel in filterfalse(is_constraint, rels)]
         else:
             sizes = [_norm(self.fuser.factor(nodes[0]).shape[0])]
-        owfusiongraph.OWFusionGraph.evalJS(self, 'SIZES = {};'.format(repr(sizes)))
+        self.webview.evalJS('SIZES = {};'.format(repr(sizes)))
 
     @QtCore.pyqtSlot(str)
     def _on_graph_element_selected(self, element_id):
@@ -104,7 +105,7 @@ class OWLatentFactors(widget.OWWidget):
         if not element_id:
             return self.listview.show_all()
         selected_is_edge = element_id.startswith('edge ')
-        nodes = owfusiongraph.OWFusionGraph._get_selected_nodes(element_id, self.fuser.fusion_graph)
+        nodes = _get_selected_nodes(element_id, self.fuser.fusion_graph)
         # Update the control listview table
         if selected_is_edge:
             selected = [self.fuser.backbone(rel)
@@ -161,8 +162,8 @@ class OWLatentFactors(widget.OWWidget):
         self.n_relations = fuser.fusion_graph.n_relations
 
     def repaint(self):
-        owfusiongraph.OWFusionGraph.repaint(self, self.fuser.fusion_graph)
-        owfusiongraph.OWFusionGraph.evalJS(self, JS_FACTORS)
+        self.webview.repaint(self.fuser.fusion_graph, self)
+        self.webview.evalJS(JS_FACTORS)
 
 
 def main():

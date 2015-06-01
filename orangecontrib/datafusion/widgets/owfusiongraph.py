@@ -37,6 +37,19 @@ def relation_str(relation, dimensions=True):
     return name
 
 
+def _get_selected_nodes(element_id, graph):
+    """ Return ObjectTypes from FusionGraph `graph` that correspond to
+        selected `element_id` in the webview.
+    """
+    selected_is_edge = element_id.startswith('edge ')
+    assert element_id.startswith('edge ') or element_id.startswith('node ')
+    # Assumes SVG element's id attributes specify nodes `-delimited
+    node_names = re.findall('`([^`]+)`', element_id)
+    nodes = [graph.get_object_type(name) for name in node_names]
+    assert len(nodes) == 2 if selected_is_edge else len(nodes) == 1
+    return nodes
+
+
 class WebviewWidget(QtWebKit.QWebView):
     def __init__(self, parent):
         super().__init__(parent)
@@ -49,6 +62,19 @@ class WebviewWidget(QtWebKit.QWebView):
 
     def sizeHint(self):
         return QtCore.QSize(500, 500)
+
+    def evalJS(self, javascript):
+        self.page().mainFrame().evaluateJavaScript(javascript)
+
+    def repaint(self, graph, parent):
+        stream = BytesIO()
+        graph.draw_graphviz(stream, 'svg')
+        stream.seek(0)
+        stream = QtCore.QByteArray(stream.read())
+        self.setContent(stream, 'image/svg+xml')
+        webframe = self.page().mainFrame()
+        webframe.addToJavaScriptWindowObject('pybridge', parent)
+        webframe.evaluateJavaScript(JS_GRAPH)
 
 
 class OWFusionGraph(widget.OWWidget):
@@ -82,16 +108,6 @@ class OWFusionGraph(widget.OWWidget):
         self.webview = WebviewWidget(self.mainArea)
         self._create_layout()
 
-    @staticmethod
-    def _get_selected_nodes(element_id, graph):
-        selected_is_edge = element_id.startswith('edge ')
-        assert element_id.startswith('edge ') or element_id.startswith('node ')
-        # Assumes SVG element's id attributes specify nodes `-delimited
-        node_names = re.findall('`([^`]+)`', element_id)
-        nodes = [graph.get_object_type(name) for name in node_names]
-        assert len(nodes) == 2 if selected_is_edge else len(nodes) == 1
-        return nodes
-
     @QtCore.pyqtSlot(str)
     def on_graph_element_selected(self, element_id):
         """Handle self.graph_element_selected signal, and highlight also:
@@ -102,14 +118,14 @@ class OWFusionGraph(widget.OWWidget):
         if not element_id:
             return self.listview.show_all()
         selected_is_edge = element_id.startswith('edge ')
-        nodes = self._get_selected_nodes(element_id, self.graph)
+        nodes = _get_selected_nodes(element_id, self.graph)
         # CSS selector query for selection-relevant nodes
         selector = ','.join('[id^="node "][id*="`%s`"]' % n.name for n in nodes)
         # If a node was selected, include the edges that connect to it
         if not selected_is_edge:
             selector += ',[id^="edge "][id*="`%s`"]' % nodes[0].name
         # Highlight these additional elements
-        self.evalJS("highlight('%s');" % selector)
+        self.webview.evalJS("highlight('%s');" % selector)
         # Update the control listview table
         if selected_is_edge:
             selected_relations = set(self.listview.hash(i)
@@ -253,24 +269,11 @@ class OWFusionGraph(widget.OWWidget):
             _on_add_relation(relation.relation, id)
         else:
             _on_remove_relation(id)
-        self.repaint(self.graph)
+        self.webview.repaint(self.graph, self)
         self.send(Output.FUSION_GRAPH, self.graph)
         # this ensures gui.label-s get updated
         self.n_object_types = self.graph.n_object_types
         self.n_relations = self.graph.n_relations
-
-    def evalJS(self, javascript):
-        self.webview.page().mainFrame().evaluateJavaScript(javascript)
-
-    def repaint(self, graph):
-        stream = BytesIO()
-        graph.draw_graphviz(stream, 'svg')
-        stream.seek(0)
-        stream = QtCore.QByteArray(stream.read())
-        self.webview.setContent(stream, 'image/svg+xml')
-        webframe = self.webview.page().mainFrame()
-        webframe.addToJavaScriptWindowObject('pybridge', self)
-        webframe.evaluateJavaScript(JS_GRAPH)
 
 
 def main():
