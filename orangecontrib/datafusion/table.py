@@ -44,6 +44,9 @@ class Relation(Table):
             for md, v in zip(metas_data, relation.row_metadata):
                 for k in metadata_names:
                     md.append(v.get(k, np.nan))
+        elif relation.row_names is not None:
+            metas = [relation.row_type.name]
+            metas_data = [[name] for name in relation.row_names]
 
         def create_var(x):
             if isinstance(x, Variable):
