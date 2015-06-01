@@ -33,7 +33,7 @@ def _find_completion(fuser, relation):
     for fuser_relation in fuser.fusion_graph.get_relations(relation.row_type,
                                                            relation.col_type):
         if fuser_relation._id == relation._id:
-            return fuser.complete(fuser_relation)
+            return fuser.complete(relation)
     return None
 
 
