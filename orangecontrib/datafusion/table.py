@@ -84,3 +84,7 @@ class Relation(Table):
         :return: number of rows in relation
         """
         return len(self.relation.data)
+
+    @classmethod
+    def from_table(cls, domain, source, row_indices=...):
+        return Table.from_table(domain, source, row_indices)
