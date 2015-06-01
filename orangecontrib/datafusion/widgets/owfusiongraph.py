@@ -213,7 +213,7 @@ class OWFusionGraph(widget.OWWidget):
                      self, 'pref_algo_name', 'Fuser name',
                      callback=self.checkcommit, enterPlaceholder=True)
         gui.radioButtons(self.controlArea,
-                         self, 'pref_algorithm', dict(DECOMPOSITION_ALGO).keys(),
+                         self, 'pref_algorithm', [i[0] for i in DECOMPOSITION_ALGO],
                          box='Decomposition algorithm',
                          callback=self.checkcommit)
         gui.radioButtons(self.controlArea,
