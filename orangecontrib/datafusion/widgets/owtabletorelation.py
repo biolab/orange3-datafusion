@@ -135,9 +135,12 @@ class OWTableToRelation(OWWidget):
                 else:
                     return super().headerData(section, orientation, role)
 
-        domain = Domain(self.data.domain.attributes)
-        preview_data = Table(domain, self.data)
-        self.model = MyTableModel(preview_data)
+        if self.data:
+            domain = Domain(self.data.domain.attributes)
+            preview_data = Table(domain, self.data)
+            self.model = MyTableModel(preview_data)
+        else:
+            self.model = None
         self.view.setModel(self.model)
 
     def apply(self):
