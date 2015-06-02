@@ -1,4 +1,4 @@
-from Orange.data import Table, Domain, ContinuousVariable, StringVariable
+from Orange.data import Table, Domain, ContinuousVariable, StringVariable, Variable
 
 import numpy as np
 
@@ -18,24 +18,45 @@ class Relation(Table):
         relation: An instance of `skfusion.fusion.Relation`
         """
         self.relation = relation
-
-        empty = self._Y = self.W = np.zeros((len(relation.data), 0))
-        if relation.row_names is not None:
-            self.metas = np.array([str(x) for x in relation.row_names],
-                                  dtype='object')[:, None]
-            metas_vars = [StringVariable(str(relation.row_type))]
-        else:
-            self.metas = empty
-            metas_vars = []
+        meta_vars, self.metas = self._create_metas(relation)
+        self._Y = self.W = np.zeros((len(relation.data), 0))
 
         if relation.col_names is not None:
-            var_names = relation.col_names
+            attr_names = relation.col_names
         else:
-            var_names = range(relation.data.shape[1])
+            attr_names = range(relation.data.shape[1])
         self.domain = Domain([ContinuousVariable(name)
-                              for name in map(str, var_names)],
-                             metas=metas_vars)
+                              for name in map(str, attr_names)],
+                             metas=meta_vars)
         Table._init_ids(self)
+
+    @staticmethod
+    def _create_metas(relation):
+        metas = []
+        metas_data = [[] for x in relation.data]
+        if relation.row_metadata is not None:
+            metadata_names = set()
+            for md in relation.row_metadata:
+                metadata_names.update(md.keys())
+            metadata_names = sorted(metadata_names, key=str)
+
+            metas.extend(metadata_names)
+            for md, v in zip(metas_data, relation.row_metadata):
+                for k in metadata_names:
+                    md.append(v.get(k, np.nan))
+        elif relation.row_names is not None:
+            metas = [relation.row_type.name]
+            metas_data = [[name] for name in relation.row_names]
+
+        def create_var(x):
+            if isinstance(x, Variable):
+                return x
+            else:
+                return StringVariable(str(x))
+
+        metas_vars = [create_var(x) for x in metas]
+        metas = np.array(metas_data, dtype='object')
+        return metas_vars, metas
 
     @property
     def col_type(self):
@@ -64,3 +85,7 @@ class Relation(Table):
         :return: number of rows in relation
         """
         return len(self.relation.data)
+
+    @classmethod
+    def from_table(cls, domain, source, row_indices=...):
+        return Table.from_table(domain, source, row_indices)

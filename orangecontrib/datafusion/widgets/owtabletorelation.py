@@ -1,4 +1,4 @@
-from PyQt4.QtGui import QTableView, QSizePolicy, QHeaderView, QGridLayout, QWidget
+from PyQt4.QtGui import QTableView, QGridLayout, QWidget
 from PyQt4.QtCore import Qt, QSize
 from Orange.data import Table, Domain
 from Orange.widgets.settings import Setting, ContextSetting, PerfectDomainContextHandler
@@ -28,7 +28,7 @@ class OWTableToRelation(OWWidget):
     transpose = ContextSetting(False)
 
     row_type = ContextSetting("")
-    row_names_attribute = ContextSetting("")
+    selected_meta = ContextSetting(0)
     row_names = None
 
     col_type = ContextSetting("")
@@ -39,23 +39,30 @@ class OWTableToRelation(OWWidget):
     def __init__(self):
         super().__init__()
 
+        self.model = None
+        self.view = None
+        self.row_names_combo = None
+        self.icons = gui.attributeIconDict
+        self.populate_control_area()
+        self.populate_main_area()
+
+    def populate_control_area(self):
         rel = gui.widgetBox(self.controlArea, "Relation")
-        gui.lineEdit(rel, self, "relation_name", "Name", callbackOnType=True, callback=self.commit)
-        gui.checkBox(rel, self, "transpose", "Transpose")
+        gui.lineEdit(rel, self, "relation_name", "Name", callbackOnType=True, callback=self.apply)
+        gui.checkBox(rel, self, "transpose", "Transpose", callback=self.apply)
 
         col = gui.widgetBox(self.controlArea, "Column")
-        gui.lineEdit(col, self, "col_type", "Object Type", callbackOnType=True, callback=self.commit)
+        gui.lineEdit(col, self, "col_type", "Object Type", callbackOnType=True, callback=self.apply)
 
         row = gui.widgetBox(self.controlArea, "Row")
-        gui.lineEdit(row, self, "row_type", "Object Type", callbackOnType=True, callback=self.commit)
-        self.row_names_combo = gui.comboBox(row, self, "row_names_attribute", label="Object Names",
-                                            sendSelectedValue=True, emptyString="(None)",
+        gui.lineEdit(row, self, "row_type", "Object Type", callbackOnType=True, callback=self.apply)
+        self.row_names_combo = gui.comboBox(row, self, "selected_meta", label="Object Names",
                                             callback=self.update_row_names)
 
         gui.rubber(self.controlArea)
         gui.auto_commit(self.controlArea, self, "auto_commit", "Send")
-        self.icons = gui.attributeIconDict
 
+    def populate_main_area(self):
         grid = QWidget()
         grid.setLayout(QGridLayout(grid))
         self.mainArea.layout().addWidget(grid)
@@ -94,22 +101,23 @@ class OWTableToRelation(OWWidget):
 
         if candidates:
             self.row_type = candidates[0].name
-            self.row_names_attribute = candidates[0]
+            self.selected_meta = 1
         else:
             self.row_type = ""
-            self.row_names_attribute = ""
+            self.selected_meta = 0
             self.row_names = None
 
         self.row_names_combo.clear()
         self.row_names_combo.addItem('(None)')
         for var in candidates:
             self.row_names_combo.addItem(self.icons[var], var.name)
+        self.row_names_combo.setCurrentIndex(self.selected_meta)
 
     def update_row_names(self):
-        if not self.row_names_attribute:
-            self.row_names = None
+        if self.selected_meta:
+            self.row_names = list(self.data[:, -self.selected_meta].metas.flatten())
         else:
-            self.row_names = list(self.data[:, self.row_names_attribute].metas.flatten())
+            self.row_names = None
 
         if self.model:
             self.model.headerDataChanged.emit(
@@ -132,18 +140,29 @@ class OWTableToRelation(OWWidget):
         self.model = MyTableModel(preview_data)
         self.view.setModel(self.model)
 
+    def apply(self):
+        self.commit()
+
     def commit(self):
         if self.data:
+            domain = self.data.domain
+            metadata_cols = list(domain.class_vars) + list(domain.metas)
+            metadata = [{var: var.to_val(value) for var, value in zip(metadata_cols, values.list)}
+                        for values in self.data[:, metadata_cols]]
+
             if self.transpose:
                 relation = fusion.Relation(
-                    self.data.X, name=self.relation_name,
+                    self.data.X.T, name=self.relation_name,
                     row_type=fusion.ObjectType(self.col_type or 'Unknown'), row_names=self.col_names,
-                    col_type=fusion.ObjectType(self.row_type or 'Unknown'), col_names=self.row_names)
+                    col_type=fusion.ObjectType(self.row_type or 'Unknown'), col_names=self.row_names,
+                    col_metadata=metadata)
             else:
                 relation = fusion.Relation(
                     self.data.X, name=self.relation_name,
                     row_type=fusion.ObjectType(self.row_type or 'Unknown'), row_names=self.row_names,
-                    col_type=fusion.ObjectType(self.col_type or 'Unknown'), col_names=self.col_names)
+                    row_metadata=metadata,
+                    col_type=fusion.ObjectType(self.col_type or 'Unknown'), col_names=self.col_names,
+                )
             self.send(Output.RELATION, Relation(relation))
 
 
