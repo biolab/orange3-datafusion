@@ -1,13 +1,18 @@
 import numpy as np
 
-from PyQt4 import QtCore, QtGui, QtSvg, QtWebKit
+from PyQt4 import QtCore, QtGui
 from Orange.widgets import widget, gui, settings
 
 from skfusion import fusion
 from orangecontrib.datafusion.table import Relation
 from orangecontrib.datafusion.widgets import owlatentfactors
-from orangecontrib.datafusion.widgets.owlatentfactors import to_orange_data_table, get_otype_names
-from orangecontrib.datafusion.widgets.owfusiongraph import _get_selected_nodes
+from orangecontrib.datafusion.widgets.owlatentfactors import \
+    to_orange_data_table, SimpleTableWidget
+from orangecontrib.datafusion.widgets.owfusiongraph import _get_selected_nodes, rel_cols
+
+
+class Output:
+    RELATION = 'Relation'
 
 
 class OWChaining(owlatentfactors.OWLatentFactors):
@@ -15,57 +20,91 @@ class OWChaining(owlatentfactors.OWLatentFactors):
     priority = 30000
     icon = "icons/latent-chaining.svg"
     inputs = [("Fusion graph", fusion.FusionFit, "on_fuser_change")]
-    outputs = [("Data", Relation)]
+    outputs = [(Output.RELATION, Relation)]
+
+    pref_complete = settings.Setting(0)  # Complete chaining to feature space
 
     def __init__(self):
         super().__init__()
         self.in_selection_mode = False
 
     def _create_layout(self):
-        super()._create_layout()
-        def send(data):
-            if data:
-                otype = data[0].row_type
-                result = self.fuser.factor(otype)
-                for rel in data:
-                    result = np.dot(result, self.fuser.backbone(rel))
-                data = to_orange_data_table((result, otype), self.fuser.fusion_graph)
-            self.send('Data', data)
-        def _on_currentItemChanged(current,
-                                   previous,
-                                   oldhandler=self.listview.on_currentItemChanged):
-            data = oldhandler(current, previous)
-            if not data: return
-            self.webview.evalJS('dehighlight(ELEMENTS);')
-            self._highlight_relations(data)
-        self.listview.send = send
-        self.listview.on_currentItemChanged = _on_currentItemChanged
+        self.controlArea = self
+        box = gui.widgetBox(self.controlArea, margin=7)
+        box.layout().addWidget(self.webview)
+        box = gui.widgetBox(self.controlArea, 'Latent chains')
+        self.table = SimpleTableWidget(box, callback=self.on_selected_chain)
+        self.controlArea.layout().addWidget(box)
+        gui.radioButtons(box, self, 'pref_complete',
+            label='Complete chain to:',
+            btnLabels=('latent space', 'feature space'),
+            callback=self.on_change_pref_complete)
+        self.controlArea.layout().addStretch(1)
+
+    def on_change_pref_complete(self):
+        ranges = self.table.selectedRanges()
+        self._populate_table(self.chains)
+        # Re-apply selection
+        if ranges:
+            self.table.selectRow(ranges[0].topRow())
+
+    def on_selected_chain(self, item):
+        chain = item.data(QtCore.Qt.UserRole)
+
+        self.webview.evalJS('dehighlight(ELEMENTS);')
+        self._highlight_relations(chain)
+
+        row_type = chain[0].row_type
+        result = self.fuser.factor(row_type)
+        for rel in chain:
+            result = np.dot(result, self.fuser.backbone(rel))
+        col_type = None
+        if self.pref_complete:
+            col_type = chain[-1].col_type
+            result = np.dot(result, self.fuser.factor(col_type).T)
+        self.send(Output.RELATION,
+                  to_orange_data_table((result, row_type, col_type), self.fuser.fusion_graph))
 
     def _highlight_relations(self, relations):
         selectors = set()
         for rel in relations:
             selectors.add('.node[id*={}]'.format(rel.row_type.name))
             selectors.add('.node[id*={}]'.format(rel.col_type.name))
-            selectors.add('.edge[id*={}][id*={}]'.format(rel.row_type.name,
-                                                             rel.col_type.name))
+            selectors.add('.edge[id*={}][id*={}]'.format(rel.row_type.name, rel.col_type.name))
         self.webview.evalJS('highlight("{}");'.format(','.join(selectors)))
 
+    def _populate_table(self, chains=[]):
+        self.table.clear()
+        self.send(Output.RELATION, None)
+        for chain in chains:
+            columns = [str(self.selected_start)]
+            for rel in chain:
+                columns += rel_cols(rel)[1:]
+            assert columns[-1] == str(self.selected_end)
+            shape = (chain[ 0].data.shape[0],
+                     chain[-1].data.shape[1] if self.pref_complete else chain[-1].col_type.rank)
+            self.table.add([('{}×{}'.format(*shape), chain)] + columns,
+                           bold=set(range(1, 1 + len(columns), 2)))
+            self._highlight_relations(chain)
+
     def on_fuser_change(self, fuser):
-        super().on_fuser_change(fuser)
-        self.listview.clear()
+        self.fuser = fuser
+        self._populate_table()
+        self.repaint()
+        # this ensures gui.label-s get updated
+        self.n_object_types = fuser.fusion_graph.n_object_types
+        self.n_relations = fuser.fusion_graph.n_relations
 
     def on_graph_element_selected(self, element_id):
         if not element_id:
-            self.listview.clear()
             self.in_selection_mode = False
-            return
+            return self._populate_table()
         nodes = _get_selected_nodes(element_id, self.fuser.fusion_graph)
         selected_is_edge = len(nodes) > 1
         if selected_is_edge:
             self.webview.evalJS('dehighlight(ELEMENTS);')
-            self.listview.clear()
             self.in_selection_mode = False
-            return
+            return self._populate_table()
         if not self.in_selection_mode:
             self.selected_start, self.selected_end = nodes[0], None
             self.in_selection_mode = True
@@ -97,15 +136,8 @@ class OWChaining(owlatentfactors.OWLatentFactors):
         chains = _get_chains(self.selected_start, self.selected_end)
 
         # Populate the listview
-        self.listview.clear()
-        for chain in chains:
-            parts = [str(self.selected_start)]
-            for rel in chain:
-                parts.append(rel.name or '→')
-                parts.append(str(rel.col_type))
-            assert parts[-1] == str(self.selected_end)
-            self.listview.add_item(chain, ' '.join(parts))
-            self._highlight_relations(chain)
+        self.chains = chains
+        self._populate_table(chains)
 
         # If no chains lead from start to end, reinterpret end as start
         if not chains:

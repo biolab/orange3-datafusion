@@ -1,20 +1,13 @@
-from io import BytesIO
-
-from PyQt4 import QtCore, QtGui, QtSvg, QtWebKit
+from PyQt4 import QtCore, QtGui
 from Orange.widgets import widget, gui, settings
 
 from skfusion import fusion
-from orangecontrib.datafusion.widgets import owfusiongraph
 from orangecontrib.datafusion.widgets.owfusiongraph import \
-    WebviewWidget, relation_str, _get_selected_nodes
+    WebviewWidget, rel_shape, rel_cols, _get_selected_nodes, SimpleTableWidget
 from orangecontrib.datafusion.table import Relation
 
 from os import path
 JS_FACTORS = open(path.join(path.dirname(__file__), 'factors_script.js')).read()
-
-import re
-
-from itertools import filterfalse
 
 
 def is_constraint(relation):
@@ -27,26 +20,16 @@ GENERATE_OTYPE = (fusion.ObjectType('LatentSpace' + str(i)) for i in count())
 
 
 def to_orange_data_table(data, graph):
-    arr, otype = data
-    col_type = next(GENERATE_OTYPE)
-    row_type = otype or next(GENERATE_OTYPE)
-    row_names = get_otype_names(otype, arr, graph) if otype else None
-    return Relation(fusion.Relation(arr, row_type, col_type, row_names=row_names))
+    R, row_type, col_type = data
+    if row_type: row_names = graph.get_names(row_type)
+    else: row_type, row_names = next(GENERATE_OTYPE), None
+    if col_type: col_names = graph.get_names(col_type)
+    else: col_type, col_names = next(GENERATE_OTYPE), None
+    return Relation(fusion.Relation(R, row_type, col_type, row_names=row_names, col_names=col_names))
 
 
-from itertools import chain
-
-
-def get_otype_names(otype, arr, graph):
-    """Return row_names from the `otype`s first shape-matching relation"""
-    for rel in chain(graph.out_relations(otype), graph.in_relations(otype)):
-        if rel.row_type == otype:
-            if rel.data.shape[0] == arr.shape[0] and rel.row_names:
-                return rel.row_names
-        elif rel.col_type == otype:
-            if rel.data.shape[1] == arr.shape[1] and rel.col_names:
-                return rel.col_names
-    return None
+class Output:
+    RELATION = 'Relation'
 
 
 class OWLatentFactors(widget.OWWidget):
@@ -54,7 +37,7 @@ class OWLatentFactors(widget.OWWidget):
     priority = 20000
     icon = "icons/latent-factors.svg"
     inputs = [("Fusion graph", fusion.FusionFit, "on_fuser_change")]
-    outputs = [("Data", Relation)]
+    outputs = [(Output.RELATION, Relation)]
 
     # Signal emitted when a node in the SVG is selected, carrying its id
     graph_element_selected = QtCore.pyqtSignal(str)
@@ -62,6 +45,13 @@ class OWLatentFactors(widget.OWWidget):
     graph_element_get_size = QtCore.pyqtSignal(str)
 
     autorun = settings.Setting(True)
+
+    completions = settings.Setting([])
+    selected_completions = settings.Setting([])
+    factors = settings.Setting([])
+    selected_factors = settings.Setting([])
+    backbones = settings.Setting([])
+    selected_backbones = settings.Setting([])
 
     def __init__(self):
         super().__init__()
@@ -87,7 +77,8 @@ class OWLatentFactors(widget.OWWidget):
         if selected_is_edge:
             rels = self.fuser.fusion_graph.get_relations(nodes[0], nodes[1])
             sizes = [_norm(self.fuser.backbone(rel).shape[0])
-                     for rel in filterfalse(is_constraint, rels)]
+                     for rel in rels
+                     if not is_constraint(rel)]
         else:
             sizes = [_norm(self.fuser.factor(nodes[0]).shape[0])]
         self.webview.evalJS('SIZES = {};'.format(repr(sizes)))
@@ -97,65 +88,88 @@ class OWLatentFactors(widget.OWWidget):
         self.on_graph_element_selected(element_id)
 
     def on_graph_element_selected(self, element_id):
-        """Handle self.graph_element_selected signal, and highlight also:
-           * if edge was selected, the two related nodes,
-           * if node was selected, all its edges.
-           Additionally, update the info box.
-        """
+        """Handle graph_element_selected signal, and update the info boxen"""
         if not element_id:
-            return self.listview.show_all()
+            return self._populate_tables(reset=True)
         selected_is_edge = element_id.startswith('edge ')
         nodes = _get_selected_nodes(element_id, self.fuser.fusion_graph)
         # Update the control listview table
         if selected_is_edge:
-            selected = [self.fuser.backbone(rel)
-                        for rel in filterfalse(is_constraint,
-                                               self.fuser.fusion_graph.get_relations(*nodes))]
+            backbones = [(rel, (self.fuser.backbone(rel),))
+                         for rel in self.fuser.fusion_graph.get_relations(*nodes)
+                         if not is_constraint(rel)]
+            self._populate_tables(backbones=backbones)
+            self.table_backbones.select_first()
         else:
-            selected = [self.fuser.factor(nodes[0])]
-        selected = set(self.listview.hash((d, None)) for d in selected)
-        self.listview.show_only(selected)
+            self._populate_tables(factors=[(nodes[0], (self.fuser.factor(nodes[0]),))])
+            self.table_factors.select_first()
 
     def _create_layout(self):
         self.mainArea.layout().addWidget(self.webview)
         info = gui.widgetBox(self.controlArea, 'Info')
         gui.label(info, self, '%(n_object_types)d object types')
         gui.label(info, self, '%(n_relations)d relations')
-        # Table view of relation details
-        info = gui.widgetBox(self.controlArea, 'Factors')
-
-        class HereListWidget(owfusiongraph.OWFusionGraph.SimpleListWidget):
-            def hash(self, data):
-                return hash(data[0].data.tobytes())
-
-            def send(_, data):
-                data = to_orange_data_table(data, self.fuser.fusion_graph)
-                self.send('Data', data)
-
-        self.listview = HereListWidget(info)
+        box = gui.widgetBox(self.controlArea, 'Recipe factors')
+        self.table_factors = SimpleTableWidget(box, callback=self.on_selected_factor)
+        self.controlArea.layout().addWidget(box)
+        box = gui.widgetBox(self.controlArea, 'Backbone factors')
+        self.table_backbones = SimpleTableWidget(box, callback=self.on_selected_backbone)
+        self.controlArea.layout().addWidget(box)
+        box = gui.widgetBox(self.controlArea, 'Completed relations')
+        self.table_completions = SimpleTableWidget(box, callback=self.on_selected_completion)
+        self.controlArea.layout().addWidget(box)
         self.controlArea.layout().addStretch(1)
+
+    def on_selected_completion(self, item):
+        self.table_factors.clearSelection()
+        self.table_backbones.clearSelection()
+        self.commit(item)
+
+    def on_selected_factor(self, item):
+        self.table_completions.clearSelection()
+        self.table_backbones.clearSelection()
+        self.commit(item)
+
+    def on_selected_backbone(self, item):
+        self.table_completions.clearSelection()
+        self.table_factors.clearSelection()
+        self.commit(item)
+
+    def commit(self, item):
+        data = item.data(QtCore.Qt.UserRole)
+        self.send(Output.RELATION, to_orange_data_table(data, self.fuser.fusion_graph))
+
+    def _populate_tables(self, factors=None, backbones=None, reset=False):
+        self.table_factors.clear()
+        self.table_backbones.clear()
+        self.send(Output.RELATION, None)
+        if factors or reset:
+            for otype, matrices in factors or self.fuser.factors_.items():
+                M = matrices[0]
+                self.table_factors.add(((rel_shape(M.data), (M, otype, None)),
+                                        otype.name),
+                                       bold=(1,))
+        if backbones or reset:
+            for relation, matrices in backbones or self.fuser.backbones_.items():
+                M = matrices[0]
+                self.table_backbones.add([(rel_shape(M.data), (M, None, None))]
+                                         + rel_cols(relation),
+                                         bold=(1,3))
+        if reset:
+            self.table_completions.clear()
+            self.table_completions.setRowCount(0)
+            for relation, matrices in self.fuser.backbones_.items():
+                M = self.fuser.complete(relation)
+                self.table_completions.add([(rel_shape(M.data),
+                                             (M,
+                                              relation.row_type,
+                                              relation.col_type))]
+                                           + rel_cols(relation),
+                                           bold=(1,3))
 
     def on_fuser_change(self, fuser):
         self.fuser = fuser
-        self.listview.clear()
-        for otype, matrices in fuser.factors_.items():
-            matrix = matrices[0]
-            self.listview.add_item((matrix, otype),
-                                   '[{}×{}] {}'.format(matrix.shape[0],
-                                                       matrix.shape[1],
-                                                       otype.name))
-        for relation, matrices in fuser.backbones_.items():
-            matrix = matrices[0]
-            relation_string = relation_str(relation, False)
-            self.listview.add_item((matrix, None),
-                                   '[{}×{}] {}'.format(matrix.shape[0],
-                                                       matrix.shape[1],
-                                                       relation_string))
-            matrix = fuser.complete(relation)
-            self.listview.add_item((matrix, None),
-                                   '[{}×{}] {} (completed)'.format(matrix.shape[0],
-                                                                   matrix.shape[1],
-                                                                   relation_string))
+        self._populate_tables(reset=True)
         self.repaint()
         # this ensures gui.label-s get updated
         self.n_object_types = fuser.fusion_graph.n_object_types

@@ -29,12 +29,13 @@ class Output:
     FUSER = 'Fitted Fusion Graph'
 
 
-def relation_str(relation, dimensions=True):
-    name = ('[%dx%d] ' % relation.data.shape) if dimensions else ''
-    name += '%s %s %s' % (relation.row_type.name,
-                          relation.name or '→',
-                          relation.col_type.name)
-    return name
+def rel_shape(relation):
+    return '{}×{}'.format(*relation.shape)
+
+def rel_cols(relation):
+    return [relation.row_type.name,
+            relation.name or '→',
+            relation.col_type.name]
 
 
 def _get_selected_nodes(element_id, graph):
@@ -77,6 +78,61 @@ class WebviewWidget(QtWebKit.QWebView):
         webframe.evaluateJavaScript(JS_GRAPH)
 
 
+class SimpleTableWidget(QtGui.QTableWidget):
+    """ A wrapper around QTableWidget """
+    def __init__(self, parent=None, callback=None):
+        """`callback` is a function that accepts first selected row item"""
+        super().__init__(parent)
+        self.callback = callback
+        self.horizontalHeader().setStretchLastSection(True)
+        self.horizontalHeader().setVisible(False)
+        self.verticalHeader().setVisible(False)
+        self.setHorizontalScrollMode(self.ScrollPerPixel)
+        self.setVerticalScrollMode(self.ScrollPerPixel)
+        self.setSelectionMode(self.SingleSelection)
+        self.setSelectionBehavior(self.SelectRows)
+        self.setEditTriggers(self.NoEditTriggers);
+        self.setAlternatingRowColors(True)
+        self.setShowGrid(False)
+        self.currentItemChanged.connect(self._on_currentItemChanged)
+        if parent: parent.layout().addWidget(self)
+
+    def add(self, items, bold=()):
+        """Appends iterable of `items` as the next row.
+
+        `bold` is a list of columns that are to be set in bold face.
+        """
+        row = self.rowCount()
+        self.insertRow(row)
+        self.setColumnCount(max(len(items), self.columnCount()))
+        for col, data in enumerate(items):
+            try: name, data = data
+            except ValueError: name = str(data)
+            item = QtGui.QTableWidgetItem(name)
+            item.setData(QtCore.Qt.UserRole, data)
+            if col in bold:
+                font = item.font()
+                font.setBold(True)
+                item.setFont(font)
+            self.setItem(row, col, item)
+        self.resizeColumnsToContents()
+        self.resizeRowsToContents()
+
+    def clear(self):
+        super().clear()
+        self.setRowCount(0)
+        self.setColumnCount(0)
+
+    def select_first(self):
+        if self.rowCount() > 0:
+            self.selectRow(0)
+
+    def _on_currentItemChanged(self, current, previous):
+        if self.callback and current:
+            item = self.item(current.row(), 0)
+            return self.callback(item)
+
+
 class OWFusionGraph(widget.OWWidget):
     name = "Fusion Graph"
     priority = 10000
@@ -116,7 +172,7 @@ class OWFusionGraph(widget.OWWidget):
            Additionally, update the info box.
         """
         if not element_id:
-            return self.listview.show_all()
+            return self._populate_table()
         selected_is_edge = element_id.startswith('edge ')
         nodes = _get_selected_nodes(element_id, self.graph)
         # CSS selector query for selection-relevant nodes
@@ -126,80 +182,13 @@ class OWFusionGraph(widget.OWWidget):
             selector += ',[id^="edge "][id*="`%s`"]' % nodes[0].name
         # Highlight these additional elements
         self.webview.evalJS("highlight('%s');" % selector)
-        # Update the control listview table
+        # Update the control table table
         if selected_is_edge:
-            selected_relations = set(self.listview.hash(i)
-                                     for i in self.graph.get_relations(*nodes))
+            relations = self.graph.get_relations(*nodes)
         else:
-            selected_relations = (set(self.listview.hash(i)
-                                      for i in self.graph.in_relations(nodes[0])) |
-                                  set(self.listview.hash(i)
-                                      for i in self.graph.out_relations(nodes[0])))
-        self.listview.show_only(selected_relations)
-
-    class SimpleListWidget(QtGui.QListWidget):
-        """ A wrapper around QListWidget. Adapt by overriding some of its
-            methods.
-        """
-        def __init__(self, parent=None, owwidget=None):
-            super().__init__(parent)
-            self.owwidget = owwidget
-            self.setHorizontalScrollMode(self.ScrollPerPixel)
-            self.setSelectionMode(self.SingleSelection)
-            self.setAlternatingRowColors(True)
-            self.currentItemChanged.connect(self._on_currentItemChanged)
-            if parent: parent.layout().addWidget(self)
-
-        def add_item(self, relation, name=''):
-            name = name or str(relation)
-            item = QtGui.QListWidgetItem(name, self)
-            item.setData(QtCore.Qt.UserRole, relation)
-            self.addItem(item)
-
-        def remove_item(self, relation, name=''):
-            name = name or str(relation)
-            for item in self.findItems(name, QtCore.Qt.MatchFixedString):
-                if relation == item.data(QtCore.Qt.UserRole):
-                    self.takeItem(self.row(item))
-                    break
-            else: raise KeyError('Item not in ListWidget')
-
-        def hash(self, data):
-            """Override this in subclass to have for unhashable item datas."""
-            return data
-
-        def show_only(self, shown):
-            for i in range(self.count()):
-                item = self.item(i)
-                data = self.hash(item.data(QtCore.Qt.UserRole))
-                item.setHidden(data not in shown)
-            self.select_first()
-
-        def show_all(self):
-            for i in range(self.count()):
-                self.item(i).setHidden(False)
-
-        def select_first(self):
-            for i in range(self.count()):
-                item = self.item(i)
-                if not item.isHidden():
-                    item.setSelected(True)
-                    self.on_currentItemChanged(item, None)
-                    break
-
-        def send(self, data):
-            """Override to OWWidget.send() something else."""
-            if self.owwidget:
-                self.owwidget.send(Output.RELATION, Relation(data))
-
-        def on_currentItemChanged(self, current, previous):
-            """Override"""
-            relation = current.data(QtCore.Qt.UserRole) if current else None
-            self.send(relation)
-            return relation
-
-        def _on_currentItemChanged(self, current, previous):
-            return self.on_currentItemChanged(current, previous)
+            relations = (set(i for i in self.graph.in_relations(nodes[0])) |
+                         set(i for i in self.graph.out_relations(nodes[0])))
+        self._populate_table(relations)
 
     def _create_layout(self):
         info = gui.widgetBox(self.controlArea, 'Info')
@@ -207,7 +196,10 @@ class OWFusionGraph(widget.OWWidget):
         gui.label(info, self, '%(n_relations)d relations')
         # Table view of relation details
         info = gui.widgetBox(self.controlArea, 'Relations')
-        self.listview = self.__class__.SimpleListWidget(info, self)
+        def send_relation(item):
+            data = item.data(QtCore.Qt.UserRole)
+            self.send(Output.RELATION, Relation(data))
+        self.table = SimpleTableWidget(info, callback=send_relation)
         self.controlArea.layout().addStretch(1)
         gui.lineEdit(self.controlArea,
                      self, 'pref_algo_name', 'Fuser name',
@@ -252,23 +244,28 @@ class OWFusionGraph(widget.OWWidget):
         self.fuser.name = self.pref_algo_name
         self.send(Output.FUSER, self.fuser)
 
+    def _populate_table(self, relations=None):
+        self.table.clear()
+        for i in relations or self.graph.relations:
+            self.table.add([(rel_shape(i.data), i)] + rel_cols(i), bold=(1,3))
+        self.table.select_first()
+
     def on_relation_change(self, relation, id):
         def _on_remove_relation(id):
             try: relation = self.relations.pop(id)
             except KeyError: return
             self.graph.remove_relation(relation)
-            self.listview.remove_item(relation, relation_str(relation))
 
         def _on_add_relation(relation, id):
             _on_remove_relation(id)
             self.relations[id] = relation
             self.graph.add_relation(relation)
-            self.listview.add_item(relation, relation_str(relation))
 
         if relation:
             _on_add_relation(relation.relation, id)
         else:
             _on_remove_relation(id)
+        self._populate_table()
         self.webview.repaint(self.graph, self)
         self.send(Output.FUSION_GRAPH, self.graph)
         # this ensures gui.label-s get updated
