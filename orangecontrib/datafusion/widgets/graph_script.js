@@ -6,6 +6,7 @@ NodeList.prototype.forEach = Array.prototype.forEach;
 var svg = $('svg')[0];
 svg.style.cursor = 'default';
 svg.style.webkitUserSelect = 'none';
+svg.style.margin = 'auto';
 
 // Handle mousewheel zooming
 curZoom = 1;
