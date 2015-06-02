@@ -15,9 +15,13 @@ $('.node, .edge').forEach(function(elem) {
 $('.node, .edge').forEach(function(elem) {
     var type = elem.getAttribute('class');
     if (type == 'edge') {
-        // Don't draw sqares on Theta relations (Type→(same)Type)
         var match = elem.getAttribute('id').match(/`[^`]+`/g);
-        if (match[0] == match[1]) return;
+        // Don't draw sqares on Theta relations (Type→(same)Type)
+        // and don't trigger click event
+        if (match[0] == match[1]) {
+            elem.removeEventListener('click', clickEventHandler);
+            return;
+        }
     }
     if (type == 'node') {
         var text = elem.querySelectorAll('ellipse + text')[0];
