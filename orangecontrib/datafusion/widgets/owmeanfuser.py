@@ -7,7 +7,7 @@ from Orange.widgets import widget, gui, settings
 from skfusion import fusion
 from orangecontrib.datafusion.table import Relation
 from orangecontrib.datafusion.widgets.owfusiongraph import \
-    SimpleTableWidget, rel_shape, rel_cols
+    SimpleTableWidget, rel_shape, rel_cols, RelationCompleter
 
 import numpy as np
 
@@ -24,7 +24,7 @@ class MeanBy:
     all = (ROWS, COLUMNS, VALUES)
 
 
-class MeanFuser:
+class MeanFuser(RelationCompleter):
     def __init__(self, mean_by):
         self.axis = {
             MeanBy.ROWS: 0,
