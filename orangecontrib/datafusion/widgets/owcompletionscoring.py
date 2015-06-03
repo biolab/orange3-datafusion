@@ -92,7 +92,7 @@ class OWCompletionScoring(widget.OWWidget):
                     if not rmses: continue
                     min_rmse = min(rmses)
                     for col, rmse in enumerate(rmses):
-                        item = QtGui.QTableWidgetItem('{:.4}'.format(str(rmse or '')))
+                        item = QtGui.QTableWidgetItem('{:.6}'.format(str(rmse or '')))
                         item.setFlags(QtCore.Qt.ItemIsEnabled)
                         if rmse == min_rmse and len(rmses) > 1:
                             item.setFont(BOLD_FONT)
@@ -107,7 +107,7 @@ class OWCompletionScoring(widget.OWWidget):
 
     def on_fuser_change(self, fuser, id):
         if fuser:
-            N_RUNS = 5
+            N_RUNS = 3
             self.fusers[id] = [fuser.fuse(fuser.fusion_graph) for _ in range(N_RUNS)]
         else: del self.fusers[id]
         self.update()
