@@ -64,24 +64,32 @@ class OWCompletionScoring(widget.OWWidget):
         class HereTableWidget(QtGui.QTableWidget):
             def __init__(self, parent):
                 super().__init__(parent)
+                self.n_run = 5
                 parent.layout().addWidget(self)
 
             def update_table(self, fusers, relations):
                 self.clear()
                 self.setRowCount(0)
                 self.setColumnCount(len(fusers))
-                self.setHorizontalHeaderLabels([getattr(fuser, 'name', str(id))
-                                                for id, fuser in fusers.items()])
+                fuser_ids = fusers.keys()
+                self.setHorizontalHeaderLabels([getattr(fusers[fuser_id], 'name', str(fuser_id))
+                                                for fuser_id in fuser_ids])
                 for id, relation in relations.items():
                     row = self.rowCount()
                     self.insertRow(row)
                     if not np.ma.is_masked(relation.data):
-                        widget.warning(id, 'Relation "{}" has no missing values (mask)'.format(relation_str(relation)))
+                        widget.warning(id, 'Relation "{}" has no missing values '
+                                           '(mask)'.format(relation_str(relation)))
                     rmses = []
-                    for fuser in fusers.values():
-                        completion = _find_completion(fuser, relation)
-                        if completion is not None:
-                            rmses.append(RMSE(relation.data, completion))
+                    for fuser_id in fuser_ids:
+                        fuser = fusers[fuser_id]
+                        rep_rmse = []
+                        for _ in range(self.n_run):
+                            fuser_new = fuser.fuse(fuser.fusion_graph)
+                            completion = _find_completion(fuser_new, relation)
+                            rep_rmse.append(RMSE(relation.data, completion))
+                        if rep_rmse:
+                            rmses.append(np.mean(rep_rmse))
                         else:
                             rmses.append(None)
                     rmses = [e for e in rmses if e is not None]
