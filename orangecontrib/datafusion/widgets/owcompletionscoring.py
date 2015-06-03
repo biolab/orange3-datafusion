@@ -64,16 +64,14 @@ class OWCompletionScoring(widget.OWWidget):
         class HereTableWidget(QtGui.QTableWidget):
             def __init__(self, parent):
                 super().__init__(parent)
-                self.n_run = 5
                 parent.layout().addWidget(self)
 
             def update_table(self, fusers, relations):
                 self.clear()
                 self.setRowCount(0)
                 self.setColumnCount(len(fusers))
-                fuser_ids = fusers.keys()
-                self.setHorizontalHeaderLabels([getattr(fusers[fuser_id], 'name', str(fuser_id))
-                                                for fuser_id in fuser_ids])
+                self.setHorizontalHeaderLabels([getattr(fuser[0], 'name', str(id))
+                                                for id, fuser in fusers.items()])
                 for id, relation in relations.items():
                     row = self.rowCount()
                     self.insertRow(row)
@@ -81,17 +79,14 @@ class OWCompletionScoring(widget.OWWidget):
                         widget.warning(id, 'Relation "{}" has no missing values '
                                            '(mask)'.format(relation_str(relation)))
                     rmses = []
-                    for fuser_id in fuser_ids:
-                        fuser = fusers[fuser_id]
+                    for fuser in fusers.values():
                         rep_rmse = []
-                        for _ in range(self.n_run):
-                            fuser_new = fuser.fuse(fuser.fusion_graph)
-                            completion = _find_completion(fuser_new, relation)
+                        for fuserfit in fuser:
+                            completion = _find_completion(fuserfit, relation)
+                            if completion is None:
+                                break
                             rep_rmse.append(RMSE(relation.data, completion))
-                        if rep_rmse:
-                            rmses.append(np.mean(rep_rmse))
-                        else:
-                            rmses.append(None)
+                        rmses.append(np.mean(rep_rmse) if rep_rmse else None)
                     rmses = [e for e in rmses if e is not None]
                     if not rmses: continue
                     min_rmse = min(rmses)
@@ -110,7 +105,9 @@ class OWCompletionScoring(widget.OWWidget):
         self.table.update_table(self.fusers, self.relations)
 
     def on_fuser_change(self, fuser, id):
-        if fuser: self.fusers[id] = fuser
+        if fuser:
+            N_RUNS = 5
+            self.fusers[id] = [fuser.fuse(fuser.fusion_graph) for _ in range(N_RUNS)]
         else: del self.fusers[id]
         self.update()
 
