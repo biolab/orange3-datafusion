@@ -6,6 +6,7 @@ NodeList.prototype.forEach = Array.prototype.forEach;
 var svg = $('svg')[0];
 svg.style.cursor = 'default';
 svg.style.webkitUserSelect = 'none';
+svg.style.margin = 'auto';
 
 // Handle mousewheel zooming
 curZoom = 1;
@@ -35,21 +36,22 @@ $('title').forEach(function(title) {
 
 // Highlight nodes when clicked
 var ELEMENTS = $('.node, .edge');
+function clickEventHandler(event) {
+    // Deselect all elements
+    dehighlight(ELEMENTS);
+    // Only (re)select thus clicked element
+    highlightOne(event.currentTarget);
+    try {
+        // Send the selection via pybridge for further processing
+        window.pybridge.graph_element_selected(event.currentTarget.id);
+        // And this is it for now
+        event.stopPropagation();
+    } catch (err) {
+        // Do something else elsewhere
+    };
+}
 ELEMENTS.forEach(function(elem) {
-    elem.addEventListener('click', function(event) {
-        // Deselect all elements
-        dehighlight(ELEMENTS);
-        // Only (re)select thus clicked element
-        highlightOne(elem);
-        try {
-            // Send the selection via pybridge for further processing
-            window.pybridge.graph_element_selected(elem.id);
-            // And this is it for now
-            event.stopPropagation();
-        } catch (err) {
-            // Do something else elsewhere
-        };
-    });
+    elem.addEventListener('click', clickEventHandler);
 });
 // Dehighlight all nodes when background clicked
 window.addEventListener('click', function(event) {

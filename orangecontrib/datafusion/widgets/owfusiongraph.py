@@ -29,12 +29,44 @@ class Output:
     FUSER = 'Fitted Fusion Graph'
 
 
-def relation_str(relation, dimensions=True):
-    name = ('[%dx%d] ' % relation.data.shape) if dimensions else ''
-    name += '%s %s %s' % (relation.row_type.name,
-                          relation.name or '→',
-                          relation.col_type.name)
-    return name
+def rel_shape(relation):
+    return '{}×{}'.format(*relation.shape)
+
+
+def rel_cols(relation):
+    return [relation.row_type.name,
+            relation.name or '→',
+            relation.col_type.name]
+
+
+def relation_str(relation):
+    return '[{}] {}'.format(rel_shape(relation.data), ' '.join(rel_cols(relation)))
+
+
+def _get_selected_nodes(element_id, graph):
+    """ Return ObjectTypes from FusionGraph `graph` that correspond to
+        selected `element_id` in the webview.
+    """
+    selected_is_edge = element_id.startswith('edge ')
+    assert element_id.startswith('edge ') or element_id.startswith('node ')
+    # Assumes SVG element's id attributes specify nodes `-delimited
+    node_names = re.findall('`([^`]+)`', element_id)
+    nodes = [graph.get_object_type(name) for name in node_names]
+    assert len(nodes) == 2 if selected_is_edge else len(nodes) == 1
+    return nodes
+
+
+class RelationCompleter:
+    pass
+
+
+class FittedFusionGraph(fusion.FusionFit, RelationCompleter):
+    pass
+
+
+def to_fitted_fusion_graph(fusionfit):
+    fusionfit.__class__ = FittedFusionGraph
+    return fusionfit
 
 
 class WebviewWidget(QtWebKit.QWebView):
@@ -50,6 +82,77 @@ class WebviewWidget(QtWebKit.QWebView):
     def sizeHint(self):
         return QtCore.QSize(500, 500)
 
+    def evalJS(self, javascript):
+        self.page().mainFrame().evaluateJavaScript(javascript)
+
+    def repaint(self, graph, parent):
+        stream = BytesIO()
+        graph.draw_graphviz(stream, 'svg')
+        stream.seek(0)
+        stream = QtCore.QByteArray(stream.read())
+        self.setContent(stream, 'image/svg+xml')
+        webframe = self.page().mainFrame()
+        webframe.addToJavaScriptWindowObject('pybridge', parent)
+        webframe.evaluateJavaScript(JS_GRAPH)
+
+
+class SimpleTableWidget(QtGui.QTableWidget):
+    """ A wrapper around QTableWidget """
+    def __init__(self, parent=None, callback=None):
+        """`callback` is a function that accepts first selected row item"""
+        super().__init__(parent)
+        self.callback = callback
+        self.horizontalHeader().setStretchLastSection(True)
+        self.horizontalHeader().setVisible(False)
+        self.verticalHeader().setVisible(False)
+        self.setHorizontalScrollMode(self.ScrollPerPixel)
+        self.setVerticalScrollMode(self.ScrollPerPixel)
+        self.setSelectionMode(self.SingleSelection)
+        self.setSelectionBehavior(self.SelectRows)
+        self.setEditTriggers(self.NoEditTriggers)
+        self.setAlternatingRowColors(True)
+        self.setShowGrid(False)
+        self.currentItemChanged.connect(self._on_currentItemChanged)
+        if parent: parent.layout().addWidget(self)
+
+    def add(self, items, bold=()):
+        """Appends iterable of `items` as the next row.
+
+        `bold` is a list of columns that are to be set in bold face.
+        """
+        row = self.rowCount()
+        self.insertRow(row)
+        self.setColumnCount(max(len(items), self.columnCount()))
+        for col, data in enumerate(items):
+            try: name, data = data
+            except ValueError: name = str(data)
+            item = QtGui.QTableWidgetItem(name)
+            item.setData(QtCore.Qt.UserRole, data)
+            if col in bold:
+                font = item.font()
+                font.setBold(True)
+                item.setFont(font)
+            self.setItem(row, col, item)
+        self.resizeColumnsToContents()
+        self.resizeRowsToContents()
+
+    def clear(self):
+        super().clear()
+        self.setRowCount(0)
+        self.setColumnCount(0)
+
+    def select_first(self):
+        if self.rowCount() > 0:
+            self.selectRow(0)
+
+    def _on_currentItemChanged(self, current, previous):
+        if self.callback and current:
+            item = self.item(current.row(), 0)
+            return self.callback(item)
+
+
+LIMIT_RANK_THRESHOLD = 1000  # If so many objects or more, limit maximum rank
+
 
 class OWFusionGraph(widget.OWWidget):
     name = "Fusion Graph"
@@ -58,7 +161,7 @@ class OWFusionGraph(widget.OWWidget):
     inputs = [("Relation", Relation, "on_relation_change", widget.Multiple)]
     outputs = [
         (Output.RELATION, Relation),
-        (Output.FUSER, fusion.FusionFit, widget.Default),
+        (Output.FUSER, FittedFusionGraph, widget.Default),
         (Output.FUSION_GRAPH, fusion.FusionGraph),
     ]
 
@@ -82,16 +185,6 @@ class OWFusionGraph(widget.OWWidget):
         self.webview = WebviewWidget(self.mainArea)
         self._create_layout()
 
-    @staticmethod
-    def _get_selected_nodes(element_id, graph):
-        selected_is_edge = element_id.startswith('edge ')
-        assert element_id.startswith('edge ') or element_id.startswith('node ')
-        # Assumes SVG element's id attributes specify nodes `-delimited
-        node_names = re.findall('`([^`]+)`', element_id)
-        nodes = [graph.get_object_type(name) for name in node_names]
-        assert len(nodes) == 2 if selected_is_edge else len(nodes) == 1
-        return nodes
-
     @QtCore.pyqtSlot(str)
     def on_graph_element_selected(self, element_id):
         """Handle self.graph_element_selected signal, and highlight also:
@@ -100,90 +193,23 @@ class OWFusionGraph(widget.OWWidget):
            Additionally, update the info box.
         """
         if not element_id:
-            return self.listview.show_all()
+            return self._populate_table()
         selected_is_edge = element_id.startswith('edge ')
-        nodes = self._get_selected_nodes(element_id, self.graph)
+        nodes = _get_selected_nodes(element_id, self.graph)
         # CSS selector query for selection-relevant nodes
         selector = ','.join('[id^="node "][id*="`%s`"]' % n.name for n in nodes)
         # If a node was selected, include the edges that connect to it
         if not selected_is_edge:
             selector += ',[id^="edge "][id*="`%s`"]' % nodes[0].name
         # Highlight these additional elements
-        self.evalJS("highlight('%s');" % selector)
-        # Update the control listview table
+        self.webview.evalJS("highlight('%s');" % selector)
+        # Update the control table table
         if selected_is_edge:
-            selected_relations = set(self.listview.hash(i)
-                                     for i in self.graph.get_relations(*nodes))
+            relations = self.graph.get_relations(*nodes)
         else:
-            selected_relations = (set(self.listview.hash(i)
-                                      for i in self.graph.in_relations(nodes[0])) |
-                                  set(self.listview.hash(i)
-                                      for i in self.graph.out_relations(nodes[0])))
-        self.listview.show_only(selected_relations)
-
-    class SimpleListWidget(QtGui.QListWidget):
-        """ A wrapper around QListWidget. Adapt by overriding some of its
-            methods.
-        """
-        def __init__(self, parent=None, owwidget=None):
-            super().__init__(parent)
-            self.owwidget = owwidget
-            self.setHorizontalScrollMode(self.ScrollPerPixel)
-            self.setSelectionMode(self.SingleSelection)
-            self.setAlternatingRowColors(True)
-            self.currentItemChanged.connect(self._on_currentItemChanged)
-            if parent: parent.layout().addWidget(self)
-
-        def add_item(self, relation, name=''):
-            name = name or str(relation)
-            item = QtGui.QListWidgetItem(name, self)
-            item.setData(QtCore.Qt.UserRole, relation)
-            self.addItem(item)
-
-        def remove_item(self, relation, name=''):
-            name = name or str(relation)
-            for item in self.findItems(name, QtCore.Qt.MatchFixedString):
-                if relation == item.data(QtCore.Qt.UserRole):
-                    self.takeItem(self.row(item))
-                    break
-            else: raise KeyError('Item not in ListWidget')
-
-        def hash(self, data):
-            """Override this in subclass to have for unhashable item datas."""
-            return data
-
-        def show_only(self, shown):
-            for i in range(self.count()):
-                item = self.item(i)
-                data = self.hash(item.data(QtCore.Qt.UserRole))
-                item.setHidden(data not in shown)
-            self.select_first()
-
-        def show_all(self):
-            for i in range(self.count()):
-                self.item(i).setHidden(False)
-
-        def select_first(self):
-            for i in range(self.count()):
-                item = self.item(i)
-                if not item.isHidden():
-                    item.setSelected(True)
-                    self.on_currentItemChanged(item, None)
-                    break
-
-        def send(self, data):
-            """Override to OWWidget.send() something else."""
-            if self.owwidget:
-                self.owwidget.send(Output.RELATION, Relation(data))
-
-        def on_currentItemChanged(self, current, previous):
-            """Override"""
-            relation = current.data(QtCore.Qt.UserRole) if current else None
-            self.send(relation)
-            return relation
-
-        def _on_currentItemChanged(self, current, previous):
-            return self.on_currentItemChanged(current, previous)
+            relations = (set(i for i in self.graph.in_relations(nodes[0])) |
+                         set(i for i in self.graph.out_relations(nodes[0])))
+        self._populate_table(relations)
 
     def _create_layout(self):
         info = gui.widgetBox(self.controlArea, 'Info')
@@ -191,13 +217,18 @@ class OWFusionGraph(widget.OWWidget):
         gui.label(info, self, '%(n_relations)d relations')
         # Table view of relation details
         info = gui.widgetBox(self.controlArea, 'Relations')
-        self.listview = self.__class__.SimpleListWidget(info, self)
+
+        def send_relation(item):
+            data = item.data(QtCore.Qt.UserRole)
+            self.send(Output.RELATION, Relation(data))
+
+        self.table = SimpleTableWidget(info, callback=send_relation)
         self.controlArea.layout().addStretch(1)
         gui.lineEdit(self.controlArea,
                      self, 'pref_algo_name', 'Fuser name',
                      callback=self.checkcommit, enterPlaceholder=True)
         gui.radioButtons(self.controlArea,
-                         self, 'pref_algorithm', dict(DECOMPOSITION_ALGO).keys(),
+                         self, 'pref_algorithm', [i[0] for i in DECOMPOSITION_ALGO],
                          box='Decomposition algorithm',
                          callback=self.checkcommit)
         gui.radioButtons(self.controlArea,
@@ -208,10 +239,11 @@ class OWFusionGraph(widget.OWWidget):
                     'Maximum number of iterations',
                     minValue=10, maxValue=500, createLabel=True,
                     callback=self.checkcommit)
-        gui.hSlider(self.controlArea, self, 'pref_rank',
-                    'Factorization rank',
-                    minValue=1, maxValue=100, createLabel=True, labelFormat=" %d%%",
-                    callback=self.checkcommit)
+        self.slider_rank = gui.hSlider(self.controlArea, self, 'pref_rank',
+                                       'Factorization rank',
+                                       minValue=1, maxValue=100, createLabel=True,
+                                       labelFormat=" %d%%",
+                                       callback=self.checkcommit)
         gui.auto_commit(self.controlArea, self, "autorun", "Run",
                         checkbox_label="Run after any change  ")
 
@@ -234,43 +266,40 @@ class OWFusionGraph(widget.OWWidget):
         self.fuser = Algo(init_type=init_type,
                           max_iter=self.pref_n_iterations).fuse(self.graph)
         self.fuser.name = self.pref_algo_name
-        self.send(Output.FUSER, self.fuser)
+        self.send(Output.FUSER, to_fitted_fusion_graph(self.fuser))
+
+    def _populate_table(self, relations=None):
+        self.table.clear()
+        for i in relations or self.graph.relations:
+            self.table.add([(rel_shape(i.data), i)] + rel_cols(i), bold=(1, 3))
+        self.table.select_first()
 
     def on_relation_change(self, relation, id):
         def _on_remove_relation(id):
             try: relation = self.relations.pop(id)
             except KeyError: return
             self.graph.remove_relation(relation)
-            self.listview.remove_item(relation, relation_str(relation))
 
         def _on_add_relation(relation, id):
             _on_remove_relation(id)
             self.relations[id] = relation
             self.graph.add_relation(relation)
-            self.listview.add_item(relation, relation_str(relation))
 
         if relation:
             _on_add_relation(relation.relation, id)
         else:
             _on_remove_relation(id)
-        self.repaint(self.graph)
+        self._populate_table()
+        self.slider_rank.setMaximum(30
+                                    if any(max(rel.data.shape) > LIMIT_RANK_THRESHOLD
+                                           for rel in self.graph.relations)
+                                    else
+                                    100)
+        self.webview.repaint(self.graph, self)
         self.send(Output.FUSION_GRAPH, self.graph)
         # this ensures gui.label-s get updated
         self.n_object_types = self.graph.n_object_types
         self.n_relations = self.graph.n_relations
-
-    def evalJS(self, javascript):
-        self.webview.page().mainFrame().evaluateJavaScript(javascript)
-
-    def repaint(self, graph):
-        stream = BytesIO()
-        graph.draw_graphviz(stream, 'svg')
-        stream.seek(0)
-        stream = QtCore.QByteArray(stream.read())
-        self.webview.setContent(stream, 'image/svg+xml')
-        webframe = self.webview.page().mainFrame()
-        webframe.addToJavaScriptWindowObject('pybridge', self)
-        webframe.evaluateJavaScript(JS_GRAPH)
 
 
 def main():
