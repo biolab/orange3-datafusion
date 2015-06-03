@@ -7,7 +7,7 @@ from skfusion import fusion
 from orangecontrib.datafusion.table import Relation
 from orangecontrib.datafusion.widgets import owlatentfactors
 from orangecontrib.datafusion.widgets.owlatentfactors import \
-    to_orange_data_table, SimpleTableWidget
+    to_orange_data_table, SimpleTableWidget, FittedFusionGraph
 from orangecontrib.datafusion.widgets.owfusiongraph import _get_selected_nodes, rel_cols
 
 
@@ -19,7 +19,7 @@ class OWChaining(owlatentfactors.OWLatentFactors):
     name = "Chaining"
     priority = 30000
     icon = "icons/latent-chaining.svg"
-    inputs = [("Fusion graph", fusion.FusionFit, "on_fuser_change")]
+    inputs = [("Fitted fusion graph", FittedFusionGraph, "on_fuser_change")]
     outputs = [(Output.RELATION, Relation)]
 
     pref_complete = settings.Setting(0)  # Complete chaining to feature space

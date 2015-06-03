@@ -3,7 +3,8 @@ from Orange.widgets import widget, gui, settings
 
 from skfusion import fusion
 from orangecontrib.datafusion.widgets.owfusiongraph import \
-    WebviewWidget, rel_shape, rel_cols, _get_selected_nodes, SimpleTableWidget
+    WebviewWidget, rel_shape, rel_cols, _get_selected_nodes, SimpleTableWidget, \
+    FittedFusionGraph
 from orangecontrib.datafusion.table import Relation
 
 from os import path
@@ -36,7 +37,7 @@ class OWLatentFactors(widget.OWWidget):
     name = "Latent Factors"
     priority = 20000
     icon = "icons/latent-factors.svg"
-    inputs = [("Fusion graph", fusion.FusionFit, "on_fuser_change")]
+    inputs = [("Fitted fusion graph", FittedFusionGraph, "on_fuser_change")]
     outputs = [(Output.RELATION, Relation)]
 
     # Signal emitted when a node in the SVG is selected, carrying its id

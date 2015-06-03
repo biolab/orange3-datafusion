@@ -56,6 +56,19 @@ def _get_selected_nodes(element_id, graph):
     return nodes
 
 
+class RelationCompleter:
+    pass
+
+
+class FittedFusionGraph(fusion.FusionFit, RelationCompleter):
+    pass
+
+
+def to_fitted_fusion_graph(fusionfit):
+    fusionfit.__class__ = FittedFusionGraph
+    return fusionfit
+
+
 class WebviewWidget(QtWebKit.QWebView):
     def __init__(self, parent):
         super().__init__(parent)
@@ -148,7 +161,7 @@ class OWFusionGraph(widget.OWWidget):
     inputs = [("Relation", Relation, "on_relation_change", widget.Multiple)]
     outputs = [
         (Output.RELATION, Relation),
-        (Output.FUSER, fusion.FusionFit, widget.Default),
+        (Output.FUSER, FittedFusionGraph, widget.Default),
         (Output.FUSION_GRAPH, fusion.FusionGraph),
     ]
 
@@ -253,7 +266,7 @@ class OWFusionGraph(widget.OWWidget):
         self.fuser = Algo(init_type=init_type,
                           max_iter=self.pref_n_iterations).fuse(self.graph)
         self.fuser.name = self.pref_algo_name
-        self.send(Output.FUSER, self.fuser)
+        self.send(Output.FUSER, to_fitted_fusion_graph(self.fuser))
 
     def _populate_table(self, relations=None):
         self.table.clear()

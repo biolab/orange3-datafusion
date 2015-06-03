@@ -5,8 +5,8 @@ from Orange.widgets import widget, gui
 
 from skfusion import fusion
 from orangecontrib.datafusion.table import Relation
-from orangecontrib.datafusion.widgets.owmeanfuser import MeanFuser
-from orangecontrib.datafusion.widgets.owfusiongraph import relation_str
+from orangecontrib.datafusion.widgets.owfusiongraph import \
+    relation_str, RelationCompleter
 
 import numpy as np
 
@@ -43,8 +43,7 @@ class OWCompletionScoring(widget.OWWidget):
     priority = 40000
     icon = 'icons/completion-scoring.svg'
     inputs = [
-        ('Fitted fusion graph', fusion.FusionFit, 'on_fuser_change', widget.Multiple),
-        ('Mean-fitted fusion graph', MeanFuser, 'on_fuser_change', widget.Multiple),
+        ('Fitted fusion graph', RelationCompleter, 'on_fuser_change', widget.Multiple),
         ('Relation', Relation, 'on_relation_change', widget.Multiple),
     ]
 
@@ -123,6 +122,7 @@ class OWCompletionScoring(widget.OWWidget):
 def main():
     from sklearn.datasets import make_blobs
     import numpy as np
+    from orangecontrib.datafusion.widgets.owmeanfuser import MeanFuser
     X, y = make_blobs(100, 3, centers=2, center_box=(-100, 100), cluster_std=10)
     X = X.astype(int)
     X += abs(X.min())
@@ -161,6 +161,7 @@ def main():
     w = OWCompletionScoring()
     w.on_fuser_change(fuserF, fuserF.__class__.__name__)
     w.on_fuser_change(fuserC, fuserC.__class__.__name__)
+    w.on_fuser_change(MeanFuser(0), 'meanfuser')
     for i, relation in enumerate(relations, 1):
         w.on_relation_change(Relation(relation), i)
     w.show()
