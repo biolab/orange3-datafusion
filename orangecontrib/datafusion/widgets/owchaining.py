@@ -36,9 +36,9 @@ class OWChaining(owlatentfactors.OWLatentFactors):
         self.table = SimpleTableWidget(box, callback=self.on_selected_chain)
         self.controlArea.layout().addWidget(box)
         gui.radioButtons(box, self, 'pref_complete',
-            label='Complete chain to:',
-            btnLabels=('latent space', 'feature space'),
-            callback=self.on_change_pref_complete)
+                         label='Complete chain to:',
+                         btnLabels=('latent space', 'feature space'),
+                         callback=self.on_change_pref_complete)
         self.controlArea.layout().addStretch(1)
 
     def on_change_pref_complete(self):
@@ -81,7 +81,7 @@ class OWChaining(owlatentfactors.OWLatentFactors):
             for rel in chain:
                 columns += rel_cols(rel)[1:]
             assert columns[-1] == str(self.selected_end)
-            shape = (chain[ 0].data.shape[0],
+            shape = (chain[0]. data.shape[0],
                      chain[-1].data.shape[1] if self.pref_complete else chain[-1].col_type.rank)
             self.table.add([('{}×{}'.format(*shape), chain)] + columns,
                            bold=set(range(1, 1 + len(columns), 2)))

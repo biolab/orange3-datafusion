@@ -32,13 +32,16 @@ class Output:
 def rel_shape(relation):
     return '{}×{}'.format(*relation.shape)
 
+
 def rel_cols(relation):
     return [relation.row_type.name,
             relation.name or '→',
             relation.col_type.name]
 
+
 def relation_str(relation):
     return '[{}] {}'.format(rel_shape(relation), ' '.join(rel_cols(relation)))
+
 
 def _get_selected_nodes(element_id, graph):
     """ Return ObjectTypes from FusionGraph `graph` that correspond to
@@ -93,7 +96,7 @@ class SimpleTableWidget(QtGui.QTableWidget):
         self.setVerticalScrollMode(self.ScrollPerPixel)
         self.setSelectionMode(self.SingleSelection)
         self.setSelectionBehavior(self.SelectRows)
-        self.setEditTriggers(self.NoEditTriggers);
+        self.setEditTriggers(self.NoEditTriggers)
         self.setAlternatingRowColors(True)
         self.setShowGrid(False)
         self.currentItemChanged.connect(self._on_currentItemChanged)
@@ -201,9 +204,11 @@ class OWFusionGraph(widget.OWWidget):
         gui.label(info, self, '%(n_relations)d relations')
         # Table view of relation details
         info = gui.widgetBox(self.controlArea, 'Relations')
+
         def send_relation(item):
             data = item.data(QtCore.Qt.UserRole)
             self.send(Output.RELATION, Relation(data))
+
         self.table = SimpleTableWidget(info, callback=send_relation)
         self.controlArea.layout().addStretch(1)
         gui.lineEdit(self.controlArea,
@@ -222,9 +227,10 @@ class OWFusionGraph(widget.OWWidget):
                     minValue=10, maxValue=500, createLabel=True,
                     callback=self.checkcommit)
         self.slider_rank = gui.hSlider(self.controlArea, self, 'pref_rank',
-                    'Factorization rank',
-                    minValue=1, maxValue=100, createLabel=True, labelFormat=" %d%%",
-                    callback=self.checkcommit)
+                                       'Factorization rank',
+                                       minValue=1, maxValue=100, createLabel=True,
+                                       labelFormat=" %d%%",
+                                       callback=self.checkcommit)
         gui.auto_commit(self.controlArea, self, "autorun", "Run",
                         checkbox_label="Run after any change  ")
 
@@ -252,7 +258,7 @@ class OWFusionGraph(widget.OWWidget):
     def _populate_table(self, relations=None):
         self.table.clear()
         for i in relations or self.graph.relations:
-            self.table.add([(rel_shape(i.data), i)] + rel_cols(i), bold=(1,3))
+            self.table.add([(rel_shape(i.data), i)] + rel_cols(i), bold=(1, 3))
         self.table.select_first()
 
     def on_relation_change(self, relation, id):

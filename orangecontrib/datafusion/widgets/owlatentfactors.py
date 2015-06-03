@@ -154,7 +154,7 @@ class OWLatentFactors(widget.OWWidget):
                 M = matrices[0]
                 self.table_backbones.add([(rel_shape(M.data), (M, None, None))]
                                          + rel_cols(relation),
-                                         bold=(1,3))
+                                         bold=(1, 3))
         if reset:
             self.table_completions.clear()
             self.table_completions.setRowCount(0)
@@ -165,7 +165,7 @@ class OWLatentFactors(widget.OWWidget):
                                               relation.row_type,
                                               relation.col_type))]
                                            + rel_cols(relation),
-                                           bold=(1,3))
+                                           bold=(1, 3))
 
     def on_fuser_change(self, fuser):
         self.fuser = fuser
