@@ -60,13 +60,14 @@ class RelationCompleter:
     pass
 
 
-class FittedFusionGraph(fusion.FusionFit, RelationCompleter):
+class FittedFusionGraph(fusion.Dfmf, fusion.Dfmc, RelationCompleter):
     pass
 
 
 def to_fitted_fusion_graph(fusionfit):
-    fusionfit.__class__ = FittedFusionGraph
-    return fusionfit
+    fuser = FittedFusionGraph()
+    fuser.__dict__.update(fusionfit.__dict__)
+    return fuser
 
 
 class WebviewWidget(QtWebKit.QWebView):
