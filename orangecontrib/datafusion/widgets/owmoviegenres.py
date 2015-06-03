@@ -13,7 +13,7 @@ from skfusion import fusion
 class OWMovieGenres(OWWidget):
     name = "Movie Genres"
     priority = 80000
-    icon = "icons/genres.svg"
+    icon = "icons/MovieGenres.svg"
     want_main_area = False
     description = "Get a movies-genres or actors-genres matrix"
     inputs = [("Row Type", Relation, "set_data", widget.Default)]

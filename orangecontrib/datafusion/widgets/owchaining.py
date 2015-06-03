@@ -18,7 +18,7 @@ class Output:
 class OWChaining(owlatentfactors.OWLatentFactors):
     name = "Chaining"
     priority = 30000
-    icon = "icons/latent-chaining.svg"
+    icon = "icons/LatentChaining.svg"
     inputs = [("Fitted fusion graph", FittedFusionGraph, "on_fuser_change")]
     outputs = [(Output.RELATION, Relation)]
 

@@ -69,7 +69,7 @@ class MeanFuser(RelationCompleter):
 
 class OWMeanFuser(widget.OWWidget):
     name = 'Mean Fuser'
-    icon = 'icons/mean-fuser.svg'
+    icon = 'icons/MeanFuser.svg'
     inputs = [
         ('Fusion graph', fusion.FusionGraph, 'on_fusion_graph_change'),
         ('Relation', Relation, 'on_relation_change', widget.Multiple),

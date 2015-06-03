@@ -36,7 +36,7 @@ class Output:
 class OWLatentFactors(widget.OWWidget):
     name = "Latent Factors"
     priority = 20000
-    icon = "icons/latent-factors.svg"
+    icon = "icons/LatentFactors.svg"
     inputs = [("Fitted fusion graph", FittedFusionGraph, "on_fuser_change")]
     outputs = [(Output.RELATION, Relation)]
 

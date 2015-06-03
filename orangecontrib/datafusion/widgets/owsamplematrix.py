@@ -20,7 +20,7 @@ class Output:
 class OWSampleMatrix(OWWidget):
     name = "Matrix Sampler"
     priority = 90000
-    icon = "icons/sampling.svg"
+    icon = "icons/MatrixSampler.svg"
     want_main_area = False
     description = "Sample a data matrix"
     inputs = [("Data", Orange.data.table.Table, "set_data", widget.Default)]

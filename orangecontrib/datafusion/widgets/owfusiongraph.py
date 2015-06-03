@@ -158,7 +158,7 @@ LIMIT_RANK_THRESHOLD = 1000  # If so many objects or more, limit maximum rank
 class OWFusionGraph(widget.OWWidget):
     name = "Fusion Graph"
     priority = 10000
-    icon = "icons/fusion-graph.svg"
+    icon = "icons/FusionGraph.svg"
     inputs = [("Relation", Relation, "on_relation_change", widget.Multiple)]
     outputs = [
         (Output.RELATION, Relation),

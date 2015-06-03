@@ -10,7 +10,7 @@ from skfusion import fusion
 class OWMovieRatings(OWWidget):
     name = "Movie Ratings"
     priority = 60000
-    icon = "icons/movielens.svg"
+    icon = "icons/MovieRatings.svg"
     want_main_area = False
     description = "Get a matrix of user ratings for movies."
     outputs = [("Ratings", Relation, widget.Default)]
