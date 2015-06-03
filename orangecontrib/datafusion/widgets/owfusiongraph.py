@@ -37,6 +37,8 @@ def rel_cols(relation):
             relation.name or '→',
             relation.col_type.name]
 
+def relation_str(relation):
+    return '[{}] {}'.format(rel_shape(relation), ' '.join(rel_cols(relation)))
 
 def _get_selected_nodes(element_id, graph):
     """ Return ObjectTypes from FusionGraph `graph` that correspond to
