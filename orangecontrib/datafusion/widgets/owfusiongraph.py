@@ -40,7 +40,7 @@ def rel_cols(relation):
 
 
 def relation_str(relation):
-    return '[{}] {}'.format(rel_shape(relation), ' '.join(rel_cols(relation)))
+    return '[{}] {}'.format(rel_shape(relation.data), ' '.join(rel_cols(relation)))
 
 
 def _get_selected_nodes(element_id, graph):

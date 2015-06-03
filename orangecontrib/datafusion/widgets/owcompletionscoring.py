@@ -98,7 +98,7 @@ class OWCompletionScoring(widget.OWWidget):
                             item.setFont(BOLD_FONT)
                         self.setItem(row, col, item)
                 self.resizeColumnsToContents()
-                self.setVerticalHeaderLabels([relation_str(i, False) for i in relations.values()])
+                self.setVerticalHeaderLabels([relation_str(i) for i in relations.values()])
 
         self.table = HereTableWidget(box)
 
