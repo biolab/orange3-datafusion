@@ -265,7 +265,7 @@ class OWFusionGraph(widget.OWWidget):
                 maxrank[col_type] = col_type.rank = max(5, int(cols * (self.pref_rank / 100)))
         # Run the algo ...
         self.fuser = Algo(init_type=init_type,
-                          max_iter=self.pref_n_iterations).fuse(self.graph)
+                          max_iter=self.pref_n_iterations, random_state=0).fuse(self.graph)
         self.fuser.name = self.pref_algo_name
         self.send(Output.FUSER, to_fitted_fusion_graph(self.fuser))
 

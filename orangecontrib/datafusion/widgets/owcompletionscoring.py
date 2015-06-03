@@ -107,7 +107,7 @@ class OWCompletionScoring(widget.OWWidget):
 
     def on_fuser_change(self, fuser, id):
         if fuser:
-            N_RUNS = 3
+            N_RUNS = 1
             self.fusers[id] = [fuser.fuse(fuser.fusion_graph) for _ in range(N_RUNS)]
         else: del self.fusers[id]
         self.update()
