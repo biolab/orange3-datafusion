@@ -133,6 +133,9 @@ class SimpleTableWidget(QtGui.QTableWidget):
             return self.callback(item)
 
 
+LIMIT_RANK_THRESHOLD = 1000  # If so many objects or more, limit maximum rank
+
+
 class OWFusionGraph(widget.OWWidget):
     name = "Fusion Graph"
     priority = 10000
@@ -216,7 +219,7 @@ class OWFusionGraph(widget.OWWidget):
                     'Maximum number of iterations',
                     minValue=10, maxValue=500, createLabel=True,
                     callback=self.checkcommit)
-        gui.hSlider(self.controlArea, self, 'pref_rank',
+        self.slider_rank = gui.hSlider(self.controlArea, self, 'pref_rank',
                     'Factorization rank',
                     minValue=1, maxValue=100, createLabel=True, labelFormat=" %d%%",
                     callback=self.checkcommit)
@@ -266,6 +269,11 @@ class OWFusionGraph(widget.OWWidget):
         else:
             _on_remove_relation(id)
         self._populate_table()
+        self.slider_rank.setMaximum(30
+                                    if any(max(rel.data.shape) > LIMIT_RANK_THRESHOLD
+                                           for rel in self.graph.relations)
+                                    else
+                                    100)
         self.webview.repaint(self.graph, self)
         self.send(Output.FUSION_GRAPH, self.graph)
         # this ensures gui.label-s get updated
