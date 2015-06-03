@@ -116,7 +116,7 @@ def movie_user_matrix(percentage=None, start_year=None, end_year=None):
         years = get_all_movie_years()
         filtered_movies = [movie for movie, year in zip(unique_movies, years) if start_year <= year <= end_year]
     else:
-        raise ValueError("Invalid movie selection method")
+        raise ValueError
 
     movie_idx = {movieId: index for index, movieId in enumerate(filtered_movies)}
     matrix = np.zeros((len(filtered_movies), len(unique_users)))
