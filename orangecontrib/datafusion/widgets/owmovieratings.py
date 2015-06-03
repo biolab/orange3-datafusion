@@ -68,9 +68,13 @@ class OWMovieRatings(OWWidget):
                 self.error(0, "Invalid starting years")
                 self.send("Ratings", None)
 
+        def scale(X):
+            return (X - X.min()) / (X.max() - X.min())
+
         relation = fusion.Relation(matrix.T, name='rate',
                                    row_type=movielens.ObjectType.Users, row_names=users,
-                                   col_type=movielens.ObjectType.Movies, col_names=movies)
+                                   col_type=movielens.ObjectType.Movies, col_names=movies,
+                                   preprocessor=scale)
         self.send("Ratings", Relation(relation))
 
 if __name__ == "__main__":

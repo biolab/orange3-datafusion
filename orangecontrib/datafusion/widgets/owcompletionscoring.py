@@ -9,13 +9,20 @@ from orangecontrib.datafusion.widgets.owfusiongraph import relation_str
 
 import numpy as np
 
+def scale(X, amin, amax):
+    return (X - X.min()) / (X.max() - X.min()) * (amax - amin) + amin
 
 def RMSE(A, B):
-    """ NaN-skipping RMSE of masked values beetween the original relation `A`
+    """ NaN-skipping RMSE of masked values between the original relation `A`
         and fuser-completed relation `B`.
     """
+    n, m = B.shape
+    B += np.tile(np.mean(B, 1).reshape((n, 1)), (1, m))
+    B += np.tile(np.mean(B, 0).reshape((1, m)), (n, 1))
+    B = scale(B, 0, 1)
+    A = scale(A, 0, 1)
     if np.ma.is_masked(A):
-        A, B, size = A.data[A.mask], B[A.mask], A.mask.sum()
+        A, B, size = A.data[~A.mask], B[~A.mask], A.size-A.mask.sum()
     else:
         A, B, size = A.data, B.data, A.size
     return np.sqrt(np.nansum((A - B)**2) / size)
@@ -63,20 +70,23 @@ class OWCompletionScoring(widget.OWWidget):
                 self.clear()
                 self.setRowCount(0)
                 self.setColumnCount(len(fusers))
-                self.setHorizontalHeaderLabels([getattr(fuser, 'name', str(id))
+                self.setHorizontalHeaderLabels([getattr(fuser[0], 'name', str(id))
                                                 for id, fuser in fusers.items()])
                 for id, relation in relations.items():
                     row = self.rowCount()
                     self.insertRow(row)
                     if not np.ma.is_masked(relation.data):
-                        widget.warning(id, 'Relation "{}" has no missing values (mask)'.format(relation_str(relation)))
+                        widget.warning(id, 'Relation "{}" has no missing values '
+                                           '(mask)'.format(relation_str(relation)))
                     rmses = []
                     for fuser in fusers.values():
-                        completion = _find_completion(fuser, relation)
-                        if completion is not None:
-                            rmses.append(RMSE(relation.data, completion))
-                        else:
-                            rmses.append(None)
+                        rep_rmse = []
+                        for fuserfit in fuser:
+                            completion = _find_completion(fuserfit, relation)
+                            if completion is None:
+                                break
+                            rep_rmse.append(RMSE(relation.data, completion))
+                        rmses.append(np.mean(rep_rmse) if rep_rmse else None)
                     rmses = [e for e in rmses if e is not None]
                     if not rmses: continue
                     min_rmse = min(rmses)
@@ -95,7 +105,9 @@ class OWCompletionScoring(widget.OWWidget):
         self.table.update_table(self.fusers, self.relations)
 
     def on_fuser_change(self, fuser, id):
-        if fuser: self.fusers[id] = fuser
+        if fuser:
+            N_RUNS = 5
+            self.fusers[id] = [fuser.fuse(fuser.fusion_graph) for _ in range(N_RUNS)]
         else: del self.fusers[id]
         self.update()
 

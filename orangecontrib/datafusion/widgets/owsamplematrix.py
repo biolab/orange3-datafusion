@@ -13,19 +13,19 @@ import numpy as np
 
 
 class Output:
-    REMAINING_DATA = "Remaining Data"
-    HIDDEN_DATA = "Hidden Data"
+    IN_SAMPLE_DATA = "In-sample Data"
+    OUT_OF_SAMPLE_DATA = "Out-of-sample Data"
 
 
-class OWHideData(OWWidget):
-    name = "Hide Data"
+class OWSampleMatrix(OWWidget):
+    name = "Matrix Sampler"
     priority = 90000
     icon = "icons/sampling.svg"
     want_main_area = False
-    description = "Hide part of relation data"
+    description = "Sample a data matrix"
     inputs = [("Data", Orange.data.table.Table, "set_data", widget.Default)]
-    outputs = [(Output.REMAINING_DATA, Relation),
-               (Output.HIDDEN_DATA, Relation)]
+    outputs = [(Output.IN_SAMPLE_DATA, Relation),
+               (Output.OUT_OF_SAMPLE_DATA, Relation)]
 
     percent = settings.Setting(10)
     method = settings.Setting(0)
@@ -54,9 +54,9 @@ class OWHideData(OWWidget):
         entries = gui.appendRadioButton(methodbox, "Entries", addToLayout=False)
         form.addWidget(entries, 1, 1, Qt.AlignLeft)
 
-        sample_size = gui.widgetBox(self.controlArea, "Sample size")
+        sample_size = gui.widgetBox(self.controlArea, "Proportion of data in the sample")
         percent = gui.hSlider(
-            sample_size, self, 'percent', minValue=1, maxValue=100, step=1,
+            sample_size, self, 'percent', minValue=1, maxValue=100, step=5,
             ticks=10, labelFormat=" %d%%")
 
         gui.button(self.controlArea, self, "&Apply",
@@ -75,21 +75,28 @@ class OWHideData(OWWidget):
 
     def send_output(self):
         if self.relation is not None:
-            remaining_mask, hidden_mask = hide_data(self.relation, percentage=self.percent,
+            oos_mask_mask, is_mask = hide_data(self.relation, percentage=self.percent,
                                                     sampling_type=self.METHOD_NAMES[self.method])
 
-            remaining_data = copy.copy(self.relation.relation)
-            remaining_data.data = np.ma.array(remaining_data.data, mask=remaining_mask)
-            hidden_data = copy.copy(self.relation.relation)
-            hidden_data.data = np.ma.array(hidden_data.data, mask=hidden_mask)
+            out_of_sample_data = copy.deepcopy(self.relation.relation)
+            if np.ma.is_masked(out_of_sample_data.data):
+                oos_mask_mask = np.logical_or(oos_mask_mask, out_of_sample_data.data.mask)
+            oos_mask_mask = np.logical_or(oos_mask_mask, np.isnan(out_of_sample_data.data))
+            out_of_sample_data.data = np.ma.array(out_of_sample_data.data, mask=oos_mask_mask)
 
-            self.send(Output.REMAINING_DATA, Relation(remaining_data))
-            self.send(Output.HIDDEN_DATA, Relation(hidden_data))
+            in_sample_data = copy.deepcopy(self.relation.relation)
+            if np.ma.is_masked(in_sample_data.data):
+                is_mask = np.logical_or(is_mask, in_sample_data.data.mask)
+            is_mask = np.logical_or(is_mask, np.isnan(in_sample_data.data))
+            in_sample_data.data = np.ma.array(in_sample_data.data, mask=is_mask)
+
+            self.send(Output.IN_SAMPLE_DATA, Relation(in_sample_data))
+            self.send(Output.OUT_OF_SAMPLE_DATA, Relation(out_of_sample_data))
 
 
 if __name__ == "__main__":
     app = QtGui.QApplication(sys.argv)
-    ow = OWHideData()
+    ow = OWSampleMatrix()
     # ow.set_data(Orange.data.Table("housing.tab"))
     ow.send_output()
     ow.show()
