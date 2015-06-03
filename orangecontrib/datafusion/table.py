@@ -11,7 +11,7 @@ class Relation(Table):
         return object.__new__(Relation)
 
     def __init__(self, relation):
-        """Create a wraper for fusion.Relation.
+        """Create a wrapper for fusion.Relation.
 
         Parameters:
         -----------

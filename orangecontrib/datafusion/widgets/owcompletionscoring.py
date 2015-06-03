@@ -9,13 +9,20 @@ from orangecontrib.datafusion.widgets.owfusiongraph import relation_str
 
 import numpy as np
 
+def scale(X, amin, amax):
+    return (X - X.min()) / (X.max() - X.min()) * (amax - amin) + amin
 
 def RMSE(A, B):
-    """ NaN-skipping RMSE of masked values beetween the original relation `A`
+    """ NaN-skipping RMSE of masked values between the original relation `A`
         and fuser-completed relation `B`.
     """
+    n, m = B.shape
+    B += np.tile(np.mean(B, 1).reshape((n, 1)), (1, m))
+    B += np.tile(np.mean(B, 0).reshape((1, m)), (n, 1))
+    B = scale(B, 0, 1)
+    A = scale(A, 0, 1)
     if np.ma.is_masked(A):
-        A, B, size = A.data[A.mask], B[A.mask], A.mask.sum()
+        A, B, size = A.data[~A.mask], B[~A.mask], A.size-A.mask.sum()
     else:
         A, B, size = A.data, B.data, A.size
     return np.sqrt(np.nansum((A - B)**2) / size)
