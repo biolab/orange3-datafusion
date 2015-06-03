@@ -39,6 +39,12 @@ class MeanFuser:
     def __getattr__(self, attr):
         return self
 
+    def fuse(self, graph):
+        """Mock ``skfusion.fusion.FusionFit.fuse```ensures
+           comparison with any relation succeeds.
+        """
+        return self
+
     def get_relations(self, *args):
         """Mock ``skfusion.fusion.FusionGraph.get_relations```ensures
            comparison with any relation succeeds.
