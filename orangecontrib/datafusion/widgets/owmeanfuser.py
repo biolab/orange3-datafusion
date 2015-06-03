@@ -1,10 +1,13 @@
 
-from PyQt4 import QtGui
+from collections import defaultdict
+
+from PyQt4 import QtGui, QtCore
 from Orange.widgets import widget, gui, settings
 
 from skfusion import fusion
 from orangecontrib.datafusion.table import Relation
-from orangecontrib.datafusion.widgets.owfusiongraph import relation_str
+from orangecontrib.datafusion.widgets.owfusiongraph import \
+    SimpleTableWidget, rel_shape, rel_cols
 
 import numpy as np
 
@@ -73,49 +76,53 @@ class OWMeanFuser(widget.OWWidget):
     want_main_area = False
 
     mean_by = settings.Setting(0)
-    selected_relation = settings.Setting([])
-    relationes = settings.Setting([])  # Why is this so named? Indeed.
-
+    selected_relation = settings.Setting(0)
 
     def __init__(self):
         super().__init__()
-        self._relations = []
-        self.in_relations = {}
+        self.relations = defaultdict(int)
+        self.id_relations = {}
         self._create_layout()
         self.commit()
 
     def _create_layout(self):
         self.controlArea.layout().addWidget(
             gui.comboBox(self.controlArea, self, 'mean_by',
-                box='Mean fuser',
-                label='Calculate masked values as mean by:',
-                items=MeanBy.all, callback=self.commit))
-        self.controlArea.layout().addWidget(
-            gui.listBox(self.controlArea, self, 'selected_relation',
-                box='Output completed relation',
-                labels='relationes',
-                callback=self.commit))
+                         box='Mean fuser',
+                         label='Calculate masked values as mean by:',
+                         items=MeanBy.all, callback=self.commit))
+        box = gui.widgetBox(self.controlArea, 'Output completed relation')
+        self.table = SimpleTableWidget(box, callback=self.commit)
         self.controlArea.layout().addStretch(1)
 
-    def commit(self):
+    def commit(self, item=None):
         self.fuser = MeanFuser(self.mean_by)
         self.send(Output.FUSER, self.fuser)
-        if self.selected_relation and self._relations:
-            relation = self._relations[self.selected_relation[0]]
+        selection = self.table.selectedRanges()
+        if item or self.table.rowCount() and selection:
+            if not item:
+                row = selection[0].topRow()
+                item = self.table.item(row, 0)
+            else:
+                item = item.tableWidget().item(item.row(), 0)
+            relation = item.data(QtCore.Qt.UserRole)
             self.send(Output.RELATION, self.fuser.complete(relation))
 
-    def _process_relation(self, action, relation):
-        getattr(self._relations, action)(relation)
-        getattr(self.relationes, action)(
-            relation_str(relation) +
-            (' (not masked)' if not np.ma.is_masked(relation.data) else ''))
-        self.relationes = self.relationes
+    def update_table(self):
+        self.table.clear()
+        for rel in self.relations:
+            self.table.add([(rel_shape(rel.data), rel)]
+                           + rel_cols(rel)
+                           + [('(not masked)' if not np.ma.is_masked(rel.data) else '')],
+                           bold=(1, 3))
 
     def _add_relation(self, relation):
-        self._process_relation('append', relation)
+        self.relations[relation] += 1
 
     def _remove_relation(self, relation):
-        self._process_relation('remove', relation)
+        self.relations[relation] -= 1
+        if not self.relations[relation]:
+            del self.relations[relation]
 
     def on_fusion_graph_change(self, graph):
         if graph:
@@ -125,16 +132,16 @@ class OWMeanFuser(widget.OWWidget):
         else:
             for rel in self.graph.relations:
                 self._remove_relation(rel)
+        self.update_table()
         self.commit()
 
     def on_relation_change(self, relation, id):
-        try:
-            rel = self.in_relations.pop(id)
-            self._remove_relation(rel)
+        try: self._remove_relation(self.id_relations.pop(id))
         except KeyError: pass
         if relation:
-            self.in_relations[id] = relation.relation
+            self.id_relations[id] = relation.relation
             self._add_relation(relation.relation)
+        self.update_table()
         self.commit()
 
 
