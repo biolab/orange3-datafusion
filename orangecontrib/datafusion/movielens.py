@@ -125,6 +125,7 @@ def movie_user_matrix(percentage=None, start_year=None, end_year=None):
         if movies[i] in movie_idx:
             matrix[movie_idx[movies[i]], users[i] - 1] = ratings[i]
 
+    matrix = np.ma.masked_equal(matrix, 0)
     return matrix, names_of_movies(map(str, filtered_movies)), list(map(str, list(unique_users)))
 
 
