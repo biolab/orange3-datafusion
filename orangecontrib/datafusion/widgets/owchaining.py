@@ -53,15 +53,7 @@ class OWChaining(owlatentfactors.OWLatentFactors):
         self.webview.evalJS('dehighlight(ELEMENTS);')
         self._highlight_relations(chain)
 
-        row_type = chain[0].row_type
-        result = self.fuser.factor(row_type)
-        for rel in chain:
-            result = np.dot(result, self.fuser.backbone(rel))
-        col_type = None
-        if self.pref_complete:
-            col_type = chain[-1].col_type
-            result = np.dot(result, self.fuser.factor(col_type).T)
-        self.send(Output.RELATION, Relation.create(result, row_type, col_type, self.fuser))
+        self.send(Output.RELATION, self.fuser.compute_chain(chain, self.pref_complete))
 
     def _highlight_relations(self, relations):
         selectors = set()

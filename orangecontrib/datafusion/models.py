@@ -206,6 +206,17 @@ class FittedFusionGraph(FusionGraph, RelationCompleter):
     def factor(self, object_type):
         return self._fusion_fit.factor(object_type)
 
+    def compute_chain(self, chain, end_in_input_space=True):
+        row_type = chain[0].row_type
+        result = self._fusion_fit.factor(row_type)
+        for rel in chain:
+            result = np.dot(result, self._fusion_fit.backbone(rel))
+        col_type = None
+        if end_in_input_space:
+            col_type = chain[-1].col_type
+            result = np.dot(result, self._fusion_fit.factor(col_type).T)
+        return Relation.create(result, row_type, col_type, self)
+
     # Relation Completer members
     def can_complete(self, relation):
         for fuser_relation in self.get_relations(relation.row_type,
