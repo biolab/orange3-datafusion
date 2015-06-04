@@ -1,3 +1,4 @@
+import functools
 from Orange.data import Table, Domain, ContinuousVariable, StringVariable, Variable
 
 import numpy as np
@@ -74,11 +75,19 @@ class Relation(Table):
         return self.relation.name
 
     @property
+    @functools.lru_cache()
     def X(self):
         """
         :return: relation data
         """
-        return self.relation.data
+        data = self.relation.data
+        if np.ma.is_masked(data):
+            mask = data.mask
+            data = data.data.copy()
+            data[mask] = np.nan
+        else:
+            data = data.copy()
+        return data
 
     def __len__(self):
         """
