@@ -5,7 +5,7 @@ from PyQt4 import QtGui
 from PyQt4.QtCore import Qt
 from Orange.widgets.widget import OWWidget
 from Orange.widgets import widget, gui, settings
-from orangecontrib.datafusion.movielens import hide_data
+from orangecontrib.datafusion.movielens import hide_data, SampleBy
 from orangecontrib.datafusion.table import Relation
 from skfusion import fusion
 
@@ -27,11 +27,9 @@ class OWSampleMatrix(OWWidget):
     outputs = [(Output.IN_SAMPLE_DATA, Relation),
                (Output.OUT_OF_SAMPLE_DATA, Relation)]
 
-    percent = settings.Setting(10)
+    percent = settings.Setting(90)
     method = settings.Setting(0)
     bools = settings.Setting([])
-
-    METHOD_NAMES = ["Rows", "Columns", "Rows and columns", "Entries"]
 
     def __init__(self):
         super().__init__()
@@ -75,23 +73,21 @@ class OWSampleMatrix(OWWidget):
 
     def send_output(self):
         if self.relation is not None:
-            oos_mask_mask, is_mask = hide_data(self.relation, percentage=self.percent,
-                                                    sampling_type=self.METHOD_NAMES[self.method])
+            sample_mask, oos_mask = hide_data(self.relation,
+                                              self.percent / 100,
+                                              SampleBy.all[self.method])
+            def _mask_relation(relation, mask):
+                if np.ma.is_masked(relation.data):
+                    mask = np.logical_or(mask, relation.data.mask)
+                data = copy.copy(relation)
+                data.data = np.ma.array(data.data, mask=mask)
+                return data
 
-            out_of_sample_data = copy.deepcopy(self.relation.relation)
-            if np.ma.is_masked(out_of_sample_data.data):
-                oos_mask_mask = np.logical_or(oos_mask_mask, out_of_sample_data.data.mask)
-            oos_mask_mask = np.logical_or(oos_mask_mask, np.isnan(out_of_sample_data.data))
-            out_of_sample_data.data = np.ma.array(out_of_sample_data.data, mask=oos_mask_mask)
+            sample_data = _mask_relation(self.relation.relation, sample_mask)
+            oos_data = _mask_relation(self.relation.relation, oos_mask)
 
-            in_sample_data = copy.deepcopy(self.relation.relation)
-            if np.ma.is_masked(in_sample_data.data):
-                is_mask = np.logical_or(is_mask, in_sample_data.data.mask)
-            is_mask = np.logical_or(is_mask, np.isnan(in_sample_data.data))
-            in_sample_data.data = np.ma.array(in_sample_data.data, mask=is_mask)
-
-            self.send(Output.IN_SAMPLE_DATA, Relation(in_sample_data))
-            self.send(Output.OUT_OF_SAMPLE_DATA, Relation(out_of_sample_data))
+            self.send(Output.IN_SAMPLE_DATA, Relation(sample_data))
+            self.send(Output.OUT_OF_SAMPLE_DATA, Relation(oos_data))
 
 
 if __name__ == "__main__":
