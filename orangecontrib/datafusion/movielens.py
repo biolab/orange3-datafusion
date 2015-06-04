@@ -120,13 +120,12 @@ def movie_user_matrix(percentage=None, start_year=None, end_year=None):
         raise ValueError
 
     movie_idx = {movieId: index for index, movieId in enumerate(filtered_movies)}
-    matrix = np.zeros((len(filtered_movies), len(unique_users)))
+    matrix = np.tile(np.nan, (len(filtered_movies), len(unique_users)))
 
     for i in range(len(ratings)):
         if movies[i] in movie_idx:
             matrix[movie_idx[movies[i]], users[i] - 1] = ratings[i]
 
-    matrix = np.ma.masked_equal(matrix, 0)
     return matrix, names_of_movies(map(str, filtered_movies)), list(map(str, list(unique_users)))
 
 
