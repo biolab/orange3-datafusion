@@ -19,7 +19,7 @@ class Output:
 
 class OWSampleMatrix(OWWidget):
     name = "Matrix Sampler"
-    priority = 90000
+    priority = 60000
     icon = "icons/MatrixSampler.svg"
     want_main_area = False
     description = "Sample a data matrix"

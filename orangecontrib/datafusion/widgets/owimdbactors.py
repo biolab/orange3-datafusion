@@ -13,7 +13,7 @@ ACTORS_ACTORS = "Costarring Actors"
 
 class OWIMDbActors(OWWidget):
     name = "IMDb Actors"
-    priority = 70000
+    priority = 80000
     icon = "icons/IMDbActors.svg"
     want_main_area = False
     description = "Get a movie-actor and actor-actor matrix"
