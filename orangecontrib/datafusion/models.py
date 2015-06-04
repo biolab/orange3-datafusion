@@ -1,13 +1,20 @@
 import functools
 from copy import copy
-from Orange.data import Table, Domain, ContinuousVariable, StringVariable, Variable
+from itertools import count
 
 import numpy as np
+
+from Orange.data import Table, Domain, ContinuousVariable, StringVariable, Variable
+from skfusion import fusion
+
+
+GENERATE_OTYPE = (fusion.ObjectType('LatentSpace' + str(i)) for i in count())
 
 
 class Relation(Table):
     """Wrapper for `skfusion.fusion.Relation`
     """
+
     def __new__(cls, *args, **kwargs):
         """Bypass Table.__new__."""
         return object.__new__(Relation)
@@ -97,6 +104,19 @@ class Relation(Table):
     @classmethod
     def from_table(cls, domain, source, row_indices=...):
         return Table.from_table(domain, source, row_indices)
+
+    @classmethod
+    def create(cls, data, row_type, col_type, graph=None):
+        row_names = col_names = None
+        if row_type:
+            row_names = graph.get_names(row_type)
+        else:
+            row_type = next(GENERATE_OTYPE)
+        if col_type:
+            col_names = graph.get_names(col_type)
+        else:
+            col_type = next(GENERATE_OTYPE), None
+        return Relation(fusion.Relation(data, row_type, col_type, row_names=row_names, col_names=col_names))
 
 
 class RelationCompleter:

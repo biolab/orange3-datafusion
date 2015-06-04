@@ -6,8 +6,7 @@ from Orange.widgets import widget, gui, settings
 from skfusion import fusion
 from orangecontrib.datafusion.models import Relation, FittedFusionGraph
 from orangecontrib.datafusion.widgets import owlatentfactors
-from orangecontrib.datafusion.widgets.owlatentfactors import \
-    to_orange_data_table, SimpleTableWidget
+from orangecontrib.datafusion.widgets.owlatentfactors import SimpleTableWidget
 from orangecontrib.datafusion.widgets.owfusiongraph import _get_selected_nodes, rel_cols
 
 
@@ -62,8 +61,7 @@ class OWChaining(owlatentfactors.OWLatentFactors):
         if self.pref_complete:
             col_type = chain[-1].col_type
             result = np.dot(result, self.fuser.factor(col_type).T)
-        self.send(Output.RELATION,
-                  to_orange_data_table((result, row_type, col_type), self.fuser))
+        self.send(Output.RELATION, Relation.create(result, row_type, col_type, self.fuser))
 
     def _highlight_relations(self, relations):
         selectors = set()

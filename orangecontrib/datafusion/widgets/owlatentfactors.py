@@ -1,31 +1,19 @@
-from PyQt4 import QtCore, QtGui
-from Orange.widgets import widget, gui, settings
+from os import path
 
+from PyQt4 import QtCore, QtGui
+
+from Orange.widgets import widget, gui, settings
 from skfusion import fusion
 from orangecontrib.datafusion.widgets.owfusiongraph import \
     WebviewWidget, rel_shape, rel_cols, _get_selected_nodes, SimpleTableWidget
 from orangecontrib.datafusion.models import Relation, FittedFusionGraph
 
-from os import path
 JS_FACTORS = open(path.join(path.dirname(__file__), 'factors_script.js')).read()
 
 
 def is_constraint(relation):
     """Skip constraint (Theta) relations"""
     return relation.row_type == relation.col_type
-
-
-from itertools import count
-GENERATE_OTYPE = (fusion.ObjectType('LatentSpace' + str(i)) for i in count())
-
-
-def to_orange_data_table(data, graph):
-    R, row_type, col_type = data
-    if row_type: row_names = graph.get_names(row_type)
-    else: row_type, row_names = next(GENERATE_OTYPE), None
-    if col_type: col_names = graph.get_names(col_type)
-    else: col_type, col_names = next(GENERATE_OTYPE), None
-    return Relation(fusion.Relation(R, row_type, col_type, row_names=row_names, col_names=col_names))
 
 
 class Output:
@@ -137,7 +125,7 @@ class OWLatentFactors(widget.OWWidget):
 
     def commit(self, item):
         data = item.data(QtCore.Qt.UserRole)
-        self.send(Output.RELATION, to_orange_data_table(data, self.fuser))
+        self.send(Output.RELATION, Relation.create(*data, graph=self.fuser))
 
     def _populate_tables(self, factors=None, backbones=None, reset=False):
         self.table_factors.clear()
