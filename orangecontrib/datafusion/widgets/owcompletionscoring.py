@@ -4,7 +4,7 @@ from PyQt4 import QtCore, QtGui
 from Orange.widgets import widget, gui
 
 from skfusion import fusion
-from orangecontrib.datafusion.table import Relation
+from orangecontrib.datafusion.models import Relation
 from orangecontrib.datafusion.widgets.owfusiongraph import \
     relation_str, RelationCompleter
 

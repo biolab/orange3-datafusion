@@ -5,7 +5,7 @@ from PyQt4 import QtCore, QtGui, QtSvg, QtWebKit
 from Orange.widgets import widget, gui, settings
 
 from skfusion import fusion
-from orangecontrib.datafusion.table import Relation
+from orangecontrib.datafusion.models import Relation
 
 from os import path
 JS_GRAPH = open(path.join(path.dirname(__file__), 'graph_script.js')).read()

@@ -5,7 +5,7 @@ from skfusion import fusion
 from orangecontrib.datafusion.widgets.owfusiongraph import \
     WebviewWidget, rel_shape, rel_cols, _get_selected_nodes, SimpleTableWidget, \
     FittedFusionGraph
-from orangecontrib.datafusion.table import Relation
+from orangecontrib.datafusion.models import Relation
 
 from os import path
 JS_FACTORS = open(path.join(path.dirname(__file__), 'factors_script.js')).read()

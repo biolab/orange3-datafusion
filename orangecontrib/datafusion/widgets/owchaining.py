@@ -4,7 +4,7 @@ from PyQt4 import QtCore, QtGui
 from Orange.widgets import widget, gui, settings
 
 from skfusion import fusion
-from orangecontrib.datafusion.table import Relation
+from orangecontrib.datafusion.models import Relation
 from orangecontrib.datafusion.widgets import owlatentfactors
 from orangecontrib.datafusion.widgets.owlatentfactors import \
     to_orange_data_table, SimpleTableWidget, FittedFusionGraph

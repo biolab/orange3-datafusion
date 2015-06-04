@@ -6,8 +6,7 @@ from PyQt4.QtCore import Qt
 from Orange.widgets.widget import OWWidget
 from Orange.widgets import widget, gui, settings
 from orangecontrib.datafusion.movielens import hide_data, SampleBy
-from orangecontrib.datafusion.table import Relation
-from skfusion import fusion
+from orangecontrib.datafusion.models import Relation
 
 import numpy as np
 
