@@ -162,13 +162,25 @@ class OWMeanFuser(widget.OWWidget):
 
 
 def main():
-    import numpy as np
-    R1 = np.ma.array(np.random.random((20, 20)))
-    R2 = np.ma.array(np.random.random((40, 40)),
-                     mask=np.random.random((40,40)) > .8)
     t1 = fusion.ObjectType('Users', 10)
     t2 = fusion.ObjectType('Movies', 30)
     t3 = fusion.ObjectType('Actors', 40)
+
+    # test that MeanFuser completes correctly
+    R = np.ma.array([[1, 1, 0],
+                     [3, 0, 0]], mask=[[0, 0, 1],
+                                       [0, 1, 1]], dtype=float)
+    rel = fusion.Relation(R, t1, t2)
+    assert (MeanFuser(0).complete(rel) == [[1, 1, 5/3],
+                                           [3, 1, 5/3]]).all()
+    assert (MeanFuser(1).complete(rel) == [[1, 1, 1],
+                                           [3, 3, 3]]).all()
+    assert (MeanFuser(2).complete(rel) == [[1,   1, 5/3],
+                                           [3, 5/3, 5/3]]).all()
+
+    R1 = np.ma.array(np.random.random((20, 20)))
+    R2 = np.ma.array(np.random.random((40, 40)),
+                     mask=np.random.random((40,40)) > .8)
     relations = [
         fusion.Relation(R1, t1, t2, name='like'),
         fusion.Relation(R2, t3, t2, name='feature in'),
