@@ -302,6 +302,9 @@ class OWFusionGraph(widget.OWWidget):
         self.n_object_types = self.graph.n_object_types
         self.n_relations = self.graph.n_relations
 
+    # called when all signals are received, so the graph is updated only once
+    def handleNewSignals(self):
+        self.unconditional_commit()
 
 def main():
     # example from https://github.com/marinkaz/scikit-fusion
