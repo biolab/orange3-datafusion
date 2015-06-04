@@ -4,9 +4,9 @@ from PyQt4 import QtCore, QtGui
 from Orange.widgets import widget, gui
 
 from skfusion import fusion
-from orangecontrib.datafusion.models import Relation
+from orangecontrib.datafusion.models import Relation, RelationCompleter
 from orangecontrib.datafusion.widgets.owfusiongraph import \
-    relation_str, RelationCompleter
+    relation_str
 
 import numpy as np
 
@@ -27,15 +27,6 @@ def RMSE(A, B):
     else:
         A, B, size = A.data, B.data, A.size
     return np.sqrt(np.nansum((A - B)**2) / size)
-
-
-def _find_completion(fuser, relation):
-    """Returns `fuser`-completed relation that matches `relation`, or None"""
-    for fuser_relation in fuser.fusion_graph.get_relations(relation.row_type,
-                                                           relation.col_type):
-        if fuser_relation._id == relation._id:
-            return fuser.complete(relation)
-    return None
 
 
 class OWCompletionScoring(widget.OWWidget):
@@ -83,9 +74,9 @@ class OWCompletionScoring(widget.OWWidget):
                     for fuser in fusers.values():
                         rep_rmse = []
                         for fuserfit in fuser:
-                            completion = _find_completion(fuserfit, relation)
-                            if completion is None:
+                            if not fuserfit.can_complete(relation):
                                 break
+                            completion = fuserfit.complete(relation)
                             rep_rmse.append(RMSE(relation.data, completion))
                         rmses.append(np.mean(rep_rmse) if rep_rmse else None)
                     rmses = [e for e in rmses if e is not None]
@@ -108,7 +99,7 @@ class OWCompletionScoring(widget.OWWidget):
     def on_fuser_change(self, fuser, id):
         if fuser:
             N_RUNS = 1
-            self.fusers[id] = [fuser.fuse(fuser.fusion_graph) for _ in range(N_RUNS)]
+            self.fusers[id] = [fuser.retrain() for _ in range(N_RUNS)]
         else: del self.fusers[id]
         self.update()
 
@@ -122,6 +113,7 @@ class OWCompletionScoring(widget.OWWidget):
 def main():
     from sklearn.datasets import make_blobs
     import numpy as np
+    from orangecontrib.datafusion.models import FittedFusionGraph
     from orangecontrib.datafusion.widgets.owmeanfuser import MeanFuser
     X, y = make_blobs(100, 3, centers=2, center_box=(-100, 100), cluster_std=10)
     X = X.astype(int)
@@ -159,8 +151,8 @@ def main():
 
     app = QtGui.QApplication([])
     w = OWCompletionScoring()
-    w.on_fuser_change(fuserF, fuserF.__class__.__name__)
-    w.on_fuser_change(fuserC, fuserC.__class__.__name__)
+    w.on_fuser_change(FittedFusionGraph(fuserF), fuserF.__class__.__name__)
+    w.on_fuser_change(FittedFusionGraph(fuserC), fuserC.__class__.__name__)
     w.on_fuser_change(MeanFuser(0), 'meanfuser')
     for i, relation in enumerate(relations, 1):
         w.on_relation_change(Relation(relation), i)

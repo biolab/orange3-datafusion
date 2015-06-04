@@ -1,13 +1,14 @@
 from io import BytesIO
 from collections import defaultdict
-
-from PyQt4 import QtCore, QtGui, QtSvg, QtWebKit
-from Orange.widgets import widget, gui, settings
-
-from skfusion import fusion
-from orangecontrib.datafusion.models import Relation
-
 from os import path
+
+from PyQt4 import QtCore, QtGui, QtWebKit
+
+from Orange.widgets import widget, gui, settings
+from skfusion import fusion
+from orangecontrib.datafusion.models import Relation, FittedFusionGraph
+
+
 JS_GRAPH = open(path.join(path.dirname(__file__), 'graph_script.js')).read()
 
 import re
@@ -54,20 +55,6 @@ def _get_selected_nodes(element_id, graph):
     nodes = [graph.get_object_type(name) for name in node_names]
     assert len(nodes) == 2 if selected_is_edge else len(nodes) == 1
     return nodes
-
-
-class RelationCompleter:
-    pass
-
-
-class FittedFusionGraph(fusion.Dfmf, fusion.Dfmc, RelationCompleter):
-    pass
-
-
-def to_fitted_fusion_graph(fusionfit):
-    fuser = FittedFusionGraph()
-    fuser.__dict__.update(fusionfit.__dict__)
-    return fuser
 
 
 class WebviewWidget(QtWebKit.QWebView):
@@ -267,7 +254,7 @@ class OWFusionGraph(widget.OWWidget):
         self.fuser = Algo(init_type=init_type,
                           max_iter=self.pref_n_iterations, random_state=0).fuse(self.graph)
         self.fuser.name = self.pref_algo_name
-        self.send(Output.FUSER, to_fitted_fusion_graph(self.fuser))
+        self.send(Output.FUSER, FittedFusionGraph(self.fuser))
 
     def _populate_table(self, relations=None):
         self.table.clear()
