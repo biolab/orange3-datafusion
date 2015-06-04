@@ -58,12 +58,20 @@ class MeanFuser(RelationCompleter):
 
     def complete(self, relation):
         """Mock ``skfusion.fusion.FusionFit.complete()``"""
-        A = relation.data
+        assert isinstance(relation, fusion.Relation)
+        A = relation.data.copy()
         if not np.ma.is_masked(A):
             return A
-        mean = np.nanmean(A, axis=self.axis)
-        A = A.copy()
-        A[A.mask] = mean if self.axis is None else np.take(mean, A.mask.nonzero()[not self.axis])
+        mean_value = np.nanmean(A, axis=None)
+        if self.axis is None:
+            # Replace the mask with mean of the matrix
+            A[A.mask] = mean_value
+        else:
+            # Replace the mask with mean by axes
+            mean = np.nanmean(A, axis=self.axis)
+            # Replace any NaNs in mean with mean of the matrix
+            mean[np.isnan(mean)] = mean_value
+            A[A.mask] = np.take(mean, A.mask.nonzero()[not self.axis])
         return A
 
 
