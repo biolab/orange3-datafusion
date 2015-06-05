@@ -5,6 +5,7 @@ from Orange.widgets import widget, gui, settings
 from orangecontrib.datafusion.models import Relation
 from orangecontrib.datafusion import movielens
 
+import numpy as np
 from skfusion import fusion
 
 class OWMovieRatings(OWWidget):
@@ -69,7 +70,7 @@ class OWMovieRatings(OWWidget):
                 self.send("Ratings", None)
 
         def scale(X):
-            return (X - X.min()) / (X.max() - X.min())
+            return (X - np.nanmin(X)) / (np.nanmax(X) - np.nanmin(X))
 
         relation = fusion.Relation(matrix.T, name='rate',
                                    row_type=movielens.ObjectType.Users, row_names=users,
