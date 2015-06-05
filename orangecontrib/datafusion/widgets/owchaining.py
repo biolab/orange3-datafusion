@@ -4,10 +4,9 @@ from PyQt4 import QtCore, QtGui
 from Orange.widgets import widget, gui, settings
 
 from skfusion import fusion
-from orangecontrib.datafusion.table import Relation
+from orangecontrib.datafusion.models import Relation, FittedFusionGraph
 from orangecontrib.datafusion.widgets import owlatentfactors
-from orangecontrib.datafusion.widgets.owlatentfactors import \
-    to_orange_data_table, SimpleTableWidget, FittedFusionGraph
+from orangecontrib.datafusion.widgets.owlatentfactors import SimpleTableWidget
 from orangecontrib.datafusion.widgets.owfusiongraph import _get_selected_nodes, rel_cols
 
 
@@ -54,16 +53,7 @@ class OWChaining(owlatentfactors.OWLatentFactors):
         self.webview.evalJS('dehighlight(ELEMENTS);')
         self._highlight_relations(chain)
 
-        row_type = chain[0].row_type
-        result = self.fuser.factor(row_type)
-        for rel in chain:
-            result = np.dot(result, self.fuser.backbone(rel))
-        col_type = None
-        if self.pref_complete:
-            col_type = chain[-1].col_type
-            result = np.dot(result, self.fuser.factor(col_type).T)
-        self.send(Output.RELATION,
-                  to_orange_data_table((result, row_type, col_type), self.fuser.fusion_graph))
+        self.send(Output.RELATION, self.fuser.compute_chain(chain, self.pref_complete))
 
     def _highlight_relations(self, relations):
         selectors = set()
@@ -92,14 +82,14 @@ class OWChaining(owlatentfactors.OWLatentFactors):
         self._populate_table()
         self.repaint()
         # this ensures gui.label-s get updated
-        self.n_object_types = fuser.fusion_graph.n_object_types
-        self.n_relations = fuser.fusion_graph.n_relations
+        self.n_object_types = fuser.n_object_types
+        self.n_relations = fuser.n_relations
 
     def on_graph_element_selected(self, element_id):
         if not element_id:
             self.in_selection_mode = False
             return self._populate_table()
-        nodes = _get_selected_nodes(element_id, self.fuser.fusion_graph)
+        nodes = _get_selected_nodes(element_id, self.fuser)
         selected_is_edge = len(nodes) > 1
         if selected_is_edge:
             self.webview.evalJS('dehighlight(ELEMENTS);')
@@ -118,7 +108,7 @@ class OWChaining(owlatentfactors.OWLatentFactors):
             """ Return all chains of relations that lead from ObjectType `ot1`
                 to `ot2`.
             """
-            G = self.fuser.fusion_graph
+            G = self.fuser
             results, paths = [], [(ot1, [])]
             while paths:
                 cur, path = paths.pop()
@@ -166,7 +156,7 @@ def main():
     fuser.fuse(G)
     app = QtGui.QApplication([])
     w = OWChaining()
-    w.on_fuser_change(fuser)
+    w.on_fuser_change(FittedFusionGraph(fuser))
     w.show()
     app.exec()
 

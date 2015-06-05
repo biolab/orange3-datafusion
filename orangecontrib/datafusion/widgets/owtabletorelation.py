@@ -5,7 +5,7 @@ from Orange.widgets.settings import Setting, ContextSetting, PerfectDomainContex
 from Orange.widgets.utils.itemmodels import TableModel
 from Orange.widgets.widget import OWWidget
 from Orange.widgets import gui
-from orangecontrib.datafusion.table import Relation
+from orangecontrib.datafusion.models import Relation
 from skfusion import fusion
 
 

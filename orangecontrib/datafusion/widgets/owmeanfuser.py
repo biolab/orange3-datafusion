@@ -5,9 +5,9 @@ from PyQt4 import QtGui, QtCore
 from Orange.widgets import widget, gui, settings
 
 from skfusion import fusion
-from orangecontrib.datafusion.table import Relation
+from orangecontrib.datafusion.models import Relation, RelationCompleter
 from orangecontrib.datafusion.widgets.owfusiongraph import \
-    SimpleTableWidget, rel_shape, rel_cols, RelationCompleter
+    SimpleTableWidget, rel_shape, rel_cols
 
 import numpy as np
 
@@ -39,22 +39,15 @@ class MeanFuser(RelationCompleter):
     def __getattr__(self, attr):
         return self
 
-    def fuse(self, graph):
-        """Mock ``skfusion.fusion.FusionFit.fuse```ensures
-           comparison with any relation succeeds.
+    def retrain(self):
+        """Mean is deterministic, return the same Completer.
         """
         return self
 
-    def get_relations(self, *args):
-        """Mock ``skfusion.fusion.FusionGraph.get_relations```ensures
-           comparison with any relation succeeds.
-        """
-        class AlwaysEqual:
-            def __getattr__(self, attr):
-                return self
-            def __eq__(self, other):
-                return True
-        return [AlwaysEqual()]
+    def can_complete(self, relation):
+        """MeanFuser can complete any relation."""
+
+        return True
 
     def complete(self, relation):
         """Mock ``skfusion.fusion.FusionFit.complete()``"""

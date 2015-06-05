@@ -1,6 +1,6 @@
 import sys
 from PyQt4 import QtGui
-from orangecontrib.datafusion.table import Relation
+from orangecontrib.datafusion.models import Relation
 from Orange.widgets.widget import OWWidget
 from Orange.widgets import widget, gui, settings
 from orangecontrib.datafusion import movielens

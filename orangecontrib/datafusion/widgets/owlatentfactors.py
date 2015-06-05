@@ -1,32 +1,19 @@
-from PyQt4 import QtCore, QtGui
-from Orange.widgets import widget, gui, settings
+from os import path
 
+from PyQt4 import QtCore, QtGui
+
+from Orange.widgets import widget, gui, settings
 from skfusion import fusion
 from orangecontrib.datafusion.widgets.owfusiongraph import \
-    WebviewWidget, rel_shape, rel_cols, _get_selected_nodes, SimpleTableWidget, \
-    FittedFusionGraph
-from orangecontrib.datafusion.table import Relation
+    WebviewWidget, rel_shape, rel_cols, _get_selected_nodes, SimpleTableWidget
+from orangecontrib.datafusion.models import Relation, FittedFusionGraph
 
-from os import path
 JS_FACTORS = open(path.join(path.dirname(__file__), 'factors_script.js')).read()
 
 
 def is_constraint(relation):
     """Skip constraint (Theta) relations"""
     return relation.row_type == relation.col_type
-
-
-from itertools import count
-GENERATE_OTYPE = (fusion.ObjectType('LatentSpace' + str(i)) for i in count())
-
-
-def to_orange_data_table(data, graph):
-    R, row_type, col_type = data
-    if row_type: row_names = graph.get_names(row_type)
-    else: row_type, row_names = next(GENERATE_OTYPE), None
-    if col_type: col_names = graph.get_names(col_type)
-    else: col_type, col_names = next(GENERATE_OTYPE), None
-    return Relation(fusion.Relation(R, row_type, col_type, row_names=row_names, col_names=col_names))
 
 
 class Output:
@@ -69,14 +56,14 @@ class OWLatentFactors(widget.OWWidget):
             (node(=factor) or edge(=backbone)).
         """
         selected_is_edge = element_id.startswith('edge ')
-        nodes = _get_selected_nodes(element_id, self.fuser.fusion_graph)
+        nodes = _get_selected_nodes(element_id, self.fuser)
         from math import log2
 
         def _norm(s):
             return min(max(1.3**log2(s), 8), 20)
 
         if selected_is_edge:
-            rels = self.fuser.fusion_graph.get_relations(nodes[0], nodes[1])
+            rels = self.fuser.get_relations(nodes[0], nodes[1])
             sizes = [_norm(self.fuser.backbone(rel).shape[0])
                      for rel in rels
                      if not is_constraint(rel)]
@@ -138,7 +125,7 @@ class OWLatentFactors(widget.OWWidget):
 
     def commit(self, item):
         data = item.data(QtCore.Qt.UserRole)
-        self.send(Output.RELATION, to_orange_data_table(data, self.fuser.fusion_graph))
+        self.send(Output.RELATION, Relation.create(*data, graph=self.fuser))
 
     def _populate_tables(self, factors=None, backbones=None, reset=False):
         self.table_factors.clear()
@@ -173,11 +160,11 @@ class OWLatentFactors(widget.OWWidget):
         self._populate_tables(reset=True)
         self.repaint()
         # this ensures gui.label-s get updated
-        self.n_object_types = fuser.fusion_graph.n_object_types
-        self.n_relations = fuser.fusion_graph.n_relations
+        self.n_object_types = fuser.n_object_types
+        self.n_relations = fuser.n_relations
 
     def repaint(self):
-        self.webview.repaint(self.fuser.fusion_graph, self)
+        self.webview.repaint(self.fuser, self)
         self.webview.evalJS(JS_FACTORS)
 
 
@@ -201,7 +188,7 @@ def main():
     fuser.fuse(G)
     app = QtGui.QApplication([])
     w = OWLatentFactors()
-    w.on_fuser_change(fuser)
+    w.on_fuser_change(FittedFusionGraph(fuser))
     w.show()
     app.exec()
 
