@@ -100,8 +100,8 @@ def hide_data(table, percentage, sampling_type):
     else:
         raise ValueError("Unknown sampling method.")
 
-    sample_mask, oos_mask = (np.logical_and(rand <  percentage, ~np.isnan(table)),
-                             np.logical_and(rand >= percentage, ~np.isnan(table)))
+    sample_mask, oos_mask = (np.logical_and(rand >= percentage, ~np.isnan(table)),
+                             np.logical_and(rand <  percentage, ~np.isnan(table)))
     return sample_mask, oos_mask
 
 
