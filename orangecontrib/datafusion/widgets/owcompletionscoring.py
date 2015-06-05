@@ -11,7 +11,7 @@ from orangecontrib.datafusion.widgets.owfusiongraph import \
 import numpy as np
 
 def scale(X, amin, amax):
-    return (X - X.min()) / (X.max() - X.min()) * (amax - amin) + amin
+    return (X - X.min()) / (X.max() - X.min() + 1e-8) * (amax - amin) + amin
 
 def _rmse(A, B):
     return np.sqrt(np.sum((A-B)**2) / A.size)
