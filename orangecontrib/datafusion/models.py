@@ -223,10 +223,14 @@ class FittedFusionGraph(FusionGraph, RelationCompleter):
 
     # Relation Completer members
     def can_complete(self, relation):
-        for fuser_relation in self.get_relations(relation.row_type,
-                                                 relation.col_type):
-            if fuser_relation._id == relation._id:
-                return True
+        try:
+            for fuser_relation in self.get_relations(relation.row_type,
+                                                     relation.col_type):
+                if fuser_relation._id == relation._id:
+                    return True
+        except fusion.DataFusionError:
+            pass  # relation.{row,col}_type not in fusion graph
+        return False
 
     def complete(self, relation):
         return self._fusion_fit.complete(relation)
