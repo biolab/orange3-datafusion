@@ -26,14 +26,14 @@ def RMSE(A, B):
     test_idx = np.logical_and(~A.mask, ~np.isnan(A))
     train = A.data[train_idx]
     test = A.data[test_idx]
+    test = scale(test, 0, 1)
 
     pred = np.nan * np.ones(B.shape)
     pred[test_idx] = B[test_idx]
 
     BC = np.nan * np.ones(B.shape)
-    BC[train_idx] = train
+    BC[train_idx] = scale(train, 0, 1)
 
-    test = scale(test, 0, 1)
     n, m = B.shape
     pred += np.tile(np.nan_to_num(np.nanmean(BC, 1)).reshape((n, 1)), (1, m))
     pred += np.tile(np.nan_to_num(np.nanmean(BC, 0)).reshape((1, m)), (n, 1))
