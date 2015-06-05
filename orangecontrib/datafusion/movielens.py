@@ -12,6 +12,14 @@ class ObjectType:
     Genres = fusion.ObjectType('Genres')
 
 
+class SampleBy:
+    ROWS = 'Rows'
+    COLS = 'Columns'
+    ROWS_COLS = 'Rows and columns'
+    ENTRIES = 'Entries'
+    all = [ROWS, COLS, ROWS_COLS, ENTRIES]
+
+
 def actor_genre_matrix(actors):
     movies_genres, genres = movie_concept_matrix(input_movies=None, concept="genre")
     movies_actors, actors = movie_concept_matrix(input_movies=None, concept="actor", actors=actors)
@@ -71,37 +79,30 @@ def actor_matrix(mat):
 
 
 def hide_data(table, percentage, sampling_type):
-    percentage /= 100.0
+    assert not np.ma.is_masked(table)
+    np.random.seed(0)
 
-    if sampling_type == "Rows and columns":
+    if sampling_type == SampleBy.ROWS_COLS:
 
-        row_s_mask, row_oos_mask = hide_data(table, percentage=np.sqrt(percentage) * 100.0, sampling_type="Rows")
-        col_s_mask, col_oos_mask = hide_data(table, percentage=np.sqrt(percentage) * 100.0, sampling_type="Columns")
+        row_s_mask, row_oos_mask = hide_data(table, np.sqrt(percentage), SampleBy.ROWS)
+        col_s_mask, col_oos_mask = hide_data(table, np.sqrt(percentage), SampleBy.COLS)
 
         sample_mask = np.logical_and(row_s_mask, col_s_mask)
-        oos_mask = np.invert(sample_mask)
+        oos_mask = np.logical_and(row_oos_mask, col_oos_mask)
         return sample_mask, oos_mask
 
-    elif sampling_type == "Rows":
-
+    elif sampling_type == SampleBy.ROWS:
         rand = np.repeat(np.random.rand(table.X.shape[0], 1), table.X.shape[1], axis=1)
-        sample_mask, oos_mask = rand < percentage, rand > percentage
-        return sample_mask, oos_mask
-
-    elif sampling_type == "Columns":
-
+    elif sampling_type == SampleBy.COLS:
         rand = np.repeat(np.random.rand(1, table.X.shape[1]), table.X.shape[0], axis=0)
-        sample_mask, oos_mask = rand < percentage, rand > percentage
-        return sample_mask, oos_mask
-
-    elif sampling_type == "Entries":
-
+    elif sampling_type == SampleBy.ENTRIES:
         rand = np.random.rand(*table.X.shape)
-        sample_mask, oos_mask = rand < percentage, rand > percentage
-        return sample_mask, oos_mask
-
     else:
         raise ValueError("Unknown sampling method.")
+
+    sample_mask, oos_mask = (np.logical_and(rand <  percentage, ~np.isnan(table)),
+                             np.logical_and(rand >= percentage, ~np.isnan(table)))
+    return sample_mask, oos_mask
 
 
 def movie_user_matrix(percentage=None, start_year=None, end_year=None):
@@ -119,13 +120,12 @@ def movie_user_matrix(percentage=None, start_year=None, end_year=None):
         raise ValueError
 
     movie_idx = {movieId: index for index, movieId in enumerate(filtered_movies)}
-    matrix = np.zeros((len(filtered_movies), len(unique_users)))
+    matrix = np.tile(np.nan, (len(filtered_movies), len(unique_users)))
 
     for i in range(len(ratings)):
         if movies[i] in movie_idx:
             matrix[movie_idx[movies[i]], users[i] - 1] = ratings[i]
 
-    matrix = np.ma.masked_equal(matrix, 0)
     return matrix, names_of_movies(map(str, filtered_movies)), list(map(str, list(unique_users)))
 
 

@@ -58,12 +58,20 @@ class MeanFuser(RelationCompleter):
 
     def complete(self, relation):
         """Mock ``skfusion.fusion.FusionFit.complete()``"""
-        A = relation.data
+        assert isinstance(relation, fusion.Relation)
+        A = relation.data.copy()
         if not np.ma.is_masked(A):
             return A
-        mean = np.nanmean(A, axis=self.axis)
-        A = A.copy()
-        A[A.mask] = mean if self.axis is None else np.take(mean, A.mask.nonzero()[not self.axis])
+        mean_value = np.nanmean(A, axis=None)
+        if self.axis is None:
+            # Replace the mask with mean of the matrix
+            A[A.mask] = mean_value
+        else:
+            # Replace the mask with mean by axes
+            mean = np.nanmean(A, axis=self.axis)
+            # Replace any NaNs in mean with mean of the matrix
+            mean[np.isnan(mean)] = mean_value
+            A[A.mask] = np.take(mean, A.mask.nonzero()[not self.axis])
         return A
 
 
@@ -154,13 +162,25 @@ class OWMeanFuser(widget.OWWidget):
 
 
 def main():
-    import numpy as np
-    R1 = np.ma.array(np.random.random((20, 20)))
-    R2 = np.ma.array(np.random.random((40, 40)),
-                     mask=np.random.random((40,40)) > .8)
     t1 = fusion.ObjectType('Users', 10)
     t2 = fusion.ObjectType('Movies', 30)
     t3 = fusion.ObjectType('Actors', 40)
+
+    # test that MeanFuser completes correctly
+    R = np.ma.array([[1, 1, 0],
+                     [3, 0, 0]], mask=[[0, 0, 1],
+                                       [0, 1, 1]], dtype=float)
+    rel = fusion.Relation(R, t1, t2)
+    assert (MeanFuser(0).complete(rel) == [[1, 1, 5/3],
+                                           [3, 1, 5/3]]).all()
+    assert (MeanFuser(1).complete(rel) == [[1, 1, 1],
+                                           [3, 3, 3]]).all()
+    assert (MeanFuser(2).complete(rel) == [[1,   1, 5/3],
+                                           [3, 5/3, 5/3]]).all()
+
+    R1 = np.ma.array(np.random.random((20, 20)))
+    R2 = np.ma.array(np.random.random((40, 40)),
+                     mask=np.random.random((40,40)) > .8)
     relations = [
         fusion.Relation(R1, t1, t2, name='like'),
         fusion.Relation(R2, t3, t2, name='feature in'),
