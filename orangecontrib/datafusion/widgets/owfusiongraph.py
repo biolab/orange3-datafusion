@@ -60,7 +60,8 @@ class WebviewWidget(QtWebKit.QWebView):
 
     def repaint(self, graph, parent):
         stream = BytesIO()
-        graph.draw_graphviz(stream, 'svg')
+        if graph:
+            graph.draw_graphviz(stream, 'svg')
         stream.seek(0)
         stream = QtCore.QByteArray(stream.read())
         self.setContent(stream, 'image/svg+xml')
