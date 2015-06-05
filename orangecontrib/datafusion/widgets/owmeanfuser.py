@@ -5,7 +5,7 @@ from PyQt4 import QtGui, QtCore
 from Orange.widgets import widget, gui, settings
 
 from skfusion import fusion
-from orangecontrib.datafusion.models import Relation, RelationCompleter
+from orangecontrib.datafusion.models import Relation, FusionGraph, RelationCompleter
 from orangecontrib.datafusion.widgets.owfusiongraph import \
     SimpleTableWidget, rel_shape, rel_cols
 
@@ -73,7 +73,7 @@ class OWMeanFuser(widget.OWWidget):
     priority = 55000
     icon = 'icons/MeanFuser.svg'
     inputs = [
-        ('Fusion graph', fusion.FusionGraph, 'on_fusion_graph_change'),
+        ('Fusion graph', FusionGraph, 'on_fusion_graph_change'),
         ('Relation', Relation, 'on_relation_change', widget.Multiple),
     ]
     outputs = [

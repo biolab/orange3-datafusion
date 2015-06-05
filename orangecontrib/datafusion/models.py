@@ -1,3 +1,4 @@
+import re
 import functools
 from copy import copy
 from itertools import count
@@ -155,28 +156,20 @@ class FusionGraph:
         super().__init__()
         self._fusion_graph = fusion_graph
 
-    @property
-    def n_object_types(self):
-        return self._fusion_graph.n_object_types
+    def __getattr__(self, attr):
+        return getattr(self._fusion_graph, attr)
 
-    @property
-    def n_relations(self):
-        return self._fusion_graph.n_relations
-
-    def draw_graphviz(self, *args, **kwargs):
-        return self._fusion_graph.draw_graphviz(*args, **kwargs)
-
-    def get_object_type(self, name):
-        return self._fusion_graph.get_object_type(name)
-
-    def get_names(self, object_type):
-        return self._fusion_graph.get_names(object_type)
-
-    def get_relations(self, object_type_1, object_type_2):
-        return self._fusion_graph.get_relations(object_type_1, object_type_2)
-
-    def out_relations(self, o1):
-        return self._fusion_graph.out_relations(o1)
+    def get_selected_nodes(self, element_id):
+        """ Return ObjectTypes from that correspond to selected `element_id`
+            (in the SVG).
+        """
+        assert element_id.startswith('edge ') or element_id.startswith('node ')
+        selected_is_edge = element_id.startswith('edge ')
+        # Assumes SVG element's id attributes specify nodes `-delimited
+        node_names = re.findall('`([^`]+)`', element_id)
+        nodes = [self._fusion_graph.get_object_type(name) for name in node_names]
+        assert len(nodes) == 2 if selected_is_edge else len(nodes) == 1
+        return nodes
 
 
 class FittedFusionGraph(FusionGraph, RelationCompleter):
@@ -191,8 +184,9 @@ class FittedFusionGraph(FusionGraph, RelationCompleter):
     @property
     def name(self):
         return (getattr(self._fusion_fit, 'name', '') or
-                '{cls}(max_iter={mi},init_type={it})'.format(
+                '{cls}(factors={fac}, iter={mi}, init={it})'.format(
                     cls=self._fusion_fit.__class__.__name__,
+                    fac=len(self._fusion_fit.factors_),
                     mi=self._fusion_fit.max_iter,
                     it=self._fusion_fit.init_type))
 
