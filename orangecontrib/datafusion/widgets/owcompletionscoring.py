@@ -57,6 +57,8 @@ class OWCompletionScoring(widget.OWWidget):
             def __init__(self, parent):
                 super().__init__(parent)
                 parent.layout().addWidget(self)
+                self.setHorizontalScrollMode(self.ScrollPerPixel)
+                self.setVerticalScrollMode(self.ScrollPerPixel)
 
             def update_table(self, fusers, relations):
                 self.clear()
@@ -78,17 +80,17 @@ class OWCompletionScoring(widget.OWWidget):
                             completion = fuserfit.complete(relation)
                             rep_rmse.append(RMSE(relation.data, completion))
                         rmses.append(np.mean(rep_rmse) if rep_rmse else None)
-                    rmses = [e for e in rmses if e is not None]
-                    if not rmses: continue
-                    min_rmse = min(rmses)
+                    min_rmse = min(e for e in rmses if e is not None)
                     for col, rmse in enumerate(rmses):
-                        item = QtGui.QTableWidgetItem('{:.6}'.format(str(rmse or '')))
+                        if rmse is None: continue
+                        item = QtGui.QTableWidgetItem('{:.05f}'.format(rmse))
                         item.setFlags(QtCore.Qt.ItemIsEnabled)
                         if rmse == min_rmse and len(rmses) > 1:
                             item.setFont(BOLD_FONT)
                         self.setItem(row, col, item)
-                self.resizeColumnsToContents()
                 self.setVerticalHeaderLabels([relation_str(i) for i in relations.values()])
+                self.resizeColumnsToContents()
+                self.resizeRowsToContents()
 
         self.table = HereTableWidget(box)
 
