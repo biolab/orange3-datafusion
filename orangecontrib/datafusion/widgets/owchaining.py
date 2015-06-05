@@ -7,7 +7,7 @@ from skfusion import fusion
 from orangecontrib.datafusion.models import Relation, FittedFusionGraph
 from orangecontrib.datafusion.widgets import owlatentfactors
 from orangecontrib.datafusion.widgets.owlatentfactors import SimpleTableWidget
-from orangecontrib.datafusion.widgets.owfusiongraph import _get_selected_nodes, rel_cols
+from orangecontrib.datafusion.widgets.owfusiongraph import rel_cols
 
 
 class Output:
@@ -89,7 +89,7 @@ class OWChaining(owlatentfactors.OWLatentFactors):
         if not element_id:
             self.in_selection_mode = False
             return self._populate_table()
-        nodes = _get_selected_nodes(element_id, self.fuser)
+        nodes = self.fuser.get_selected_nodes(element_id)
         selected_is_edge = len(nodes) > 1
         if selected_is_edge:
             self.webview.evalJS('dehighlight(ELEMENTS);')

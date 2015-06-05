@@ -5,7 +5,7 @@ from PyQt4 import QtCore, QtGui
 from Orange.widgets import widget, gui, settings
 from skfusion import fusion
 from orangecontrib.datafusion.widgets.owfusiongraph import \
-    WebviewWidget, rel_shape, rel_cols, _get_selected_nodes, SimpleTableWidget
+    WebviewWidget, rel_shape, rel_cols, SimpleTableWidget
 from orangecontrib.datafusion.models import Relation, FittedFusionGraph
 
 JS_FACTORS = open(path.join(path.dirname(__file__), 'factors_script.js')).read()
@@ -56,7 +56,7 @@ class OWLatentFactors(widget.OWWidget):
             (node(=factor) or edge(=backbone)).
         """
         selected_is_edge = element_id.startswith('edge ')
-        nodes = _get_selected_nodes(element_id, self.fuser)
+        nodes = self.fuser.get_selected_nodes(element_id)
         from math import log2
 
         def _norm(s):
@@ -80,11 +80,11 @@ class OWLatentFactors(widget.OWWidget):
         if not element_id:
             return self._populate_tables(reset=True)
         selected_is_edge = element_id.startswith('edge ')
-        nodes = _get_selected_nodes(element_id, self.fuser.fusion_graph)
+        nodes = self.fuser.get_selected_nodes(element_id)
         # Update the control listview table
         if selected_is_edge:
             backbones = [(rel, (self.fuser.backbone(rel),))
-                         for rel in self.fuser.fusion_graph.get_relations(*nodes)
+                         for rel in self.fuser.get_relations(*nodes)
                          if not is_constraint(rel)]
             self._populate_tables(backbones=backbones)
             self.table_backbones.select_first()

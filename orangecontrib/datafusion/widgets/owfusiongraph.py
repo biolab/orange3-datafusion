@@ -6,12 +6,10 @@ from PyQt4 import QtCore, QtGui, QtWebKit
 
 from Orange.widgets import widget, gui, settings
 from skfusion import fusion
-from orangecontrib.datafusion.models import Relation, FittedFusionGraph
+from orangecontrib.datafusion.models import Relation, FusionGraph, FittedFusionGraph
 
 
 JS_GRAPH = open(path.join(path.dirname(__file__), 'graph_script.js')).read()
-
-import re
 
 DECOMPOSITION_ALGO = [
     ('Matrix tri-factorization', fusion.Dfmf),
@@ -42,19 +40,6 @@ def rel_cols(relation):
 
 def relation_str(relation):
     return '[{}] {}'.format(rel_shape(relation.data), ' '.join(rel_cols(relation)))
-
-
-def _get_selected_nodes(element_id, graph):
-    """ Return ObjectTypes from FusionGraph `graph` that correspond to
-        selected `element_id` in the webview.
-    """
-    selected_is_edge = element_id.startswith('edge ')
-    assert element_id.startswith('edge ') or element_id.startswith('node ')
-    # Assumes SVG element's id attributes specify nodes `-delimited
-    node_names = re.findall('`([^`]+)`', element_id)
-    nodes = [graph.get_object_type(name) for name in node_names]
-    assert len(nodes) == 2 if selected_is_edge else len(nodes) == 1
-    return nodes
 
 
 class WebviewWidget(QtWebKit.QWebView):
@@ -150,7 +135,7 @@ class OWFusionGraph(widget.OWWidget):
     outputs = [
         (Output.RELATION, Relation),
         (Output.FUSER, FittedFusionGraph, widget.Default),
-        (Output.FUSION_GRAPH, fusion.FusionGraph),
+        (Output.FUSION_GRAPH, FusionGraph),
     ]
 
     # Signal emitted when a node in the SVG is selected, carrying its name
@@ -169,7 +154,7 @@ class OWFusionGraph(widget.OWWidget):
         self.n_relations = 0
         self.relations = {}  # id-->relation map
         self.graph_element_selected.connect(self.on_graph_element_selected)
-        self.graph = fusion.FusionGraph()
+        self.graph = FusionGraph(fusion.FusionGraph())
         self.webview = WebviewWidget(self.mainArea)
         self._create_layout()
 
@@ -183,7 +168,7 @@ class OWFusionGraph(widget.OWWidget):
         if not element_id:
             return self._populate_table()
         selected_is_edge = element_id.startswith('edge ')
-        nodes = _get_selected_nodes(element_id, self.graph)
+        nodes = self.graph.get_selected_nodes(element_id)
         # CSS selector query for selection-relevant nodes
         selector = ','.join('[id^="node "][id*="`%s`"]' % n.name for n in nodes)
         # If a node was selected, include the edges that connect to it
@@ -284,7 +269,7 @@ class OWFusionGraph(widget.OWWidget):
                                     else
                                     100)
         self.webview.repaint(self.graph, self)
-        self.send(Output.FUSION_GRAPH, self.graph)
+        self.send(Output.FUSION_GRAPH, FusionGraph(self.graph))
         # this ensures gui.label-s get updated
         self.n_object_types = self.graph.n_object_types
         self.n_relations = self.graph.n_relations
