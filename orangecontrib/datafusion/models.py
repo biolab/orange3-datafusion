@@ -191,8 +191,9 @@ class FittedFusionGraph(FusionGraph, RelationCompleter):
     @property
     def name(self):
         return (getattr(self._fusion_fit, 'name', '') or
-                '{cls}(max_iter={mi},init_type={it})'.format(
+                '{cls}(factors={fac}, iter={mi}, init={it})'.format(
                     cls=self._fusion_fit.__class__.__name__,
+                    fac=len(self._fusion_fit.factors_),
                     mi=self._fusion_fit.max_iter,
                     it=self._fusion_fit.init_type))
 
