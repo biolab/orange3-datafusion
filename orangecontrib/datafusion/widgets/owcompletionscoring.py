@@ -94,7 +94,8 @@ class OWCompletionScoring(widget.OWWidget):
                             completion = fuserfit.complete(relation)
                             rep_rmse.append(RMSE(relation.data, completion))
                         rmses.append(np.mean(rep_rmse) if rep_rmse else None)
-                    min_rmse = min(e for e in rmses if e is not None)
+                    try: min_rmse = min(e for e in rmses if e is not None)
+                    except ValueError: continue # No fuser could complete this relation
                     for col, rmse in enumerate(rmses):
                         if rmse is None: continue
                         item = QtGui.QTableWidgetItem('{:.05f}'.format(rmse))
