@@ -156,10 +156,6 @@ class FusionGraph:
         self._fusion_graph = fusion_graph
 
     @property
-    def name(self):
-        return getattr(self._fusion_graph, 'name', str(self))
-
-    @property
     def n_object_types(self):
         return self._fusion_graph.n_object_types
 
@@ -191,6 +187,14 @@ class FittedFusionGraph(FusionGraph, RelationCompleter):
         """
         super().__init__(fusion_fit.fusion_graph)
         self._fusion_fit = fusion_fit
+
+    @property
+    def name(self):
+        return getattr(self._fusion_fit, 'name',
+                       '{cls}(max_iter={mi},init_type={it})'.format(
+                            cls=self._fusion_fit.__class__.__name__,
+                            mi=self._fusion_fit.max_iter,
+                            it=self._fusion_fit.init_type))
 
     @property
     def backbones_(self):

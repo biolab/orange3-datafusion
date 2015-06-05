@@ -62,8 +62,7 @@ class OWCompletionScoring(widget.OWWidget):
                 self.clear()
                 self.setRowCount(0)
                 self.setColumnCount(len(fusers))
-                self.setHorizontalHeaderLabels([getattr(fuser[0], 'name', str(id))
-                                                for id, fuser in fusers.items()])
+                self.setHorizontalHeaderLabels([fuser[0].name for fuser in fusers.values()])
                 for id, relation in relations.items():
                     row = self.rowCount()
                     self.insertRow(row)
