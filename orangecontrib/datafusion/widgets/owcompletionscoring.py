@@ -13,20 +13,34 @@ import numpy as np
 def scale(X, amin, amax):
     return (X - X.min()) / (X.max() - X.min()) * (amax - amin) + amin
 
+def _rmse(A, B):
+    return np.sqrt(np.sum((A-B)**2) / A.size)
+
 def RMSE(A, B):
     """ NaN-skipping RMSE of masked values between the original relation `A`
         and fuser-completed relation `B`.
     """
+    assert np.ma.is_masked(A)
+
+    train_idx = A.mask
+    test_idx = np.logical_and(~A.mask, ~np.isnan(A))
+    train = A.data[train_idx]
+    test = A.data[test_idx]
+
+    pred = np.nan * np.ones(B.shape)
+    pred[test_idx] = B[test_idx]
+
+    BC = np.nan * np.ones(B.shape)
+    BC[train_idx] = train
+
+    test = scale(test, 0, 1)
     n, m = B.shape
-    B += np.tile(np.mean(B, 1).reshape((n, 1)), (1, m))
-    B += np.tile(np.mean(B, 0).reshape((1, m)), (n, 1))
-    B = scale(B, 0, 1)
-    A = scale(A, 0, 1)
-    if np.ma.is_masked(A):
-        A, B, size = A.data[~A.mask], B[~A.mask], A.size-A.mask.sum()
-    else:
-        A, B, size = A.data, B.data, A.size
-    return np.sqrt(np.nansum((A - B)**2) / size)
+    pred += np.tile(np.nan_to_num(np.nanmean(BC, 1)).reshape((n, 1)), (1, m))
+    pred += np.tile(np.nan_to_num(np.nanmean(BC, 0)).reshape((1, m)), (n, 1))
+    pred = pred[test_idx]
+    pred = scale(pred, 0, 1)
+
+    return _rmse(test, pred)
 
 
 class OWCompletionScoring(widget.OWWidget):
