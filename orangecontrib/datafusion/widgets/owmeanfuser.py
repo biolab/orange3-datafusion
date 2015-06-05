@@ -68,7 +68,8 @@ class MeanFuser(RelationCompleter):
         return A
 
 
-class OWMeanFuser(widget.OWWidget):
+# class OWMeanFuser(widget.OWWidget):
+class OWMeanFuser(widget.ToBeRevisedFixed):
     name = 'Mean Fuser'
     priority = 55000
     icon = 'icons/MeanFuser.svg'
