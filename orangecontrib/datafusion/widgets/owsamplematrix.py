@@ -18,10 +18,10 @@ class Output:
 
 class OWSampleMatrix(OWWidget):
     name = "Matrix Sampler"
+    description = "Sample a relation matrix."
     priority = 60000
     icon = "icons/MatrixSampler.svg"
     want_main_area = False
-    description = "Sample a data matrix"
     inputs = [("Data", Orange.data.table.Table, "set_data", widget.Default)]
     outputs = [(Output.IN_SAMPLE_DATA, Relation),
                (Output.OUT_OF_SAMPLE_DATA, Relation)]

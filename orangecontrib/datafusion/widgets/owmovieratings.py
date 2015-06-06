@@ -10,10 +10,10 @@ from skfusion import fusion
 
 class OWMovieRatings(OWWidget):
     name = "Movie Ratings"
+    description = "Construct a relation matrix of user ratings for movies."
     priority = 70000
     icon = "icons/MovieRatings.svg"
     want_main_area = False
-    description = "Get a matrix of user ratings for movies."
     outputs = [("Ratings", Relation, widget.Default)]
 
     percent = settings.Setting(10)  # 10: default is 10% of data

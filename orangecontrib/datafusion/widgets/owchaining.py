@@ -16,6 +16,8 @@ class Output:
 
 class OWChaining(owlatentfactors.OWLatentFactors):
     name = "Chaining"
+    description = "Profile objects of one type in the feature space of " \
+                  "another type through chaining of latent factors."
     priority = 30000
     icon = "icons/LatentChaining.svg"
     inputs = [("Fitted fusion graph", FittedFusionGraph, "on_fuser_change")]

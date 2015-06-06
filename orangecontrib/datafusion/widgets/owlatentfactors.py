@@ -22,6 +22,8 @@ class Output:
 
 class OWLatentFactors(widget.OWWidget):
     name = "Latent Factors"
+    description = "Visualize data fusion graph with latent factors. Can " \
+                  "select a latent factor for further analysis."
     priority = 20000
     icon = "icons/LatentFactors.svg"
     inputs = [("Fitted fusion graph", FittedFusionGraph, "on_fuser_change")]

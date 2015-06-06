@@ -15,6 +15,7 @@ class Output:
 
 class OWTableToRelation(OWWidget):
     name = "Table to Relation"
+    description = "Convert data table to relation matrix. Label matrix axis."
     priority = 50000
     icon = "icons/TableToRelation.svg"
 

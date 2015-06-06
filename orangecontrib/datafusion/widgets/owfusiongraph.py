@@ -130,6 +130,8 @@ LIMIT_RANK_THRESHOLD = 1000  # If so many objects or more, limit maximum rank
 
 class OWFusionGraph(widget.OWWidget):
     name = "Fusion Graph"
+    description = "Construct data fusion graph and run " \
+                  "collective matrix factorization."
     priority = 10000
     icon = "icons/FusionGraph.svg"
     inputs = [("Relation", Relation, "on_relation_change", widget.Multiple)]

@@ -13,10 +13,10 @@ ACTORS_ACTORS = "Costarring Actors"
 
 class OWIMDbActors(OWWidget):
     name = "IMDb Actors"
+    description = "Construct a movie-actor and actor-actor relation matrix."
     priority = 80000
     icon = "icons/IMDbActors.svg"
     want_main_area = False
-    description = "Get a movie-actor and actor-actor matrix"
     inputs = [("Filter", Relation, "set_data")]
     outputs = [(MOVIE_ACTORS, Relation),
                (ACTORS_ACTORS, Relation)]

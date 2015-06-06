@@ -45,6 +45,8 @@ def RMSE(A, B):
 
 class OWCompletionScoring(widget.OWWidget):
     name = 'Completion Scoring'
+    description = "Score the quality of matrix completion using " \
+                  "root mean squared error (RMSE)."
     priority = 40000
     icon = 'icons/CompletionScoring.svg'
     inputs = [
