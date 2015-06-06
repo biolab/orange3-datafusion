@@ -108,16 +108,19 @@ class Relation(Table):
 
     @classmethod
     def create(cls, data, row_type, col_type, graph=None):
-        row_names = col_names = None
+        row_names = row_metadata = col_names = col_metadata = None
         if row_type:
             row_names = graph.get_names(row_type)
+            row_metadata = graph.get_metadata(row_type)
         else:
             row_type = next(GENERATE_OTYPE)
         if col_type:
             col_names = graph.get_names(col_type)
+            col_metadata = graph.get_metadata(row_type)
         else:
             col_type = next(GENERATE_OTYPE), None
-        return Relation(fusion.Relation(data, row_type, col_type, row_names=row_names, col_names=col_names))
+        return Relation(fusion.Relation(data, row_type, col_type, row_names=row_names, row_metadata=row_metadata,
+                                        col_names=col_names, col_metadata=col_metadata))
 
 
 class RelationCompleter:
