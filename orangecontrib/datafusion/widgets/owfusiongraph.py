@@ -53,7 +53,7 @@ class WebviewWidget(QtWebKit.QWebView):
             self.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
 
     def sizeHint(self):
-        return QtCore.QSize(500, 500)
+        return QtCore.QSize(500, 1000)
 
     def evalJS(self, javascript):
         self.page().mainFrame().evaluateJavaScript(javascript)

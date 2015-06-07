@@ -24,11 +24,12 @@ class OWMovieRatings(OWWidget):
     def __init__(self):
         super().__init__()
 
-        box = gui.widgetBox(self.controlArea, "Select Subset")
+        box = gui.widgetBox(self.controlArea, "Movie Selection (from %d)" % \
+            len(movielens.get_all_movie_names()))
         methodbox = gui.radioButtons(
             box, self, "method", callback=self._on_method_changed)
 
-        gui.appendRadioButton(methodbox, "Percentage:")
+        gui.appendRadioButton(methodbox, "Fraction of movies")
         percent = gui.hSlider(
             gui.indentedBox(methodbox), self, "percent",
             minValue=1, maxValue=100, step=1, ticks=10, labelFormat="%d %%")
