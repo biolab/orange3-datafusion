@@ -1,8 +1,13 @@
 #!/usr/bin/env python
 
 from setuptools import setup, find_packages
+import distutils
+VERSION = '0.1.3'
 
 ENTRY_POINTS = {
+    'orange3.addon': (
+        'datafusion = orangecontrib.datafusion',
+    ),
     # Entry point used to specify packages containing tutorials accessible
     # from welcome screen. Tutorials are saved Orange Workflows (.ows files).
     'orange.widgets.tutorials': (
@@ -21,7 +26,16 @@ ENTRY_POINTS = {
 
 if __name__ == '__main__':
     setup(
-        name="Orange3 Data Fusion",
+        name="Orange3-DataFusion",
+        description="Orange DataFusion add-on.",
+        version=VERSION,
+        author='Bioinformatics Laboratory, FRI UL',
+        author_email='contact@orange.biolab.si',
+        url='http://orange.biolab.si/addons/',
+        keywords=(
+            'data mining',
+            'orange3 add-on',
+        ),
         packages=find_packages(),
         package_data={
             "orangecontrib.datafusion": ["datasets/*.csv"],
