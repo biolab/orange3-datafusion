@@ -31,7 +31,7 @@ if __name__ == '__main__':
         version=VERSION,
         author='Bioinformatics Laboratory, FRI UL',
         author_email='contact@orange.biolab.si',
-        url='http://orange.biolab.si/addons/',
+        url='https://github.com/biolab/orange3-datafusion',
         keywords=(
             'data mining',
             'orange3 add-on',
