@@ -1,3 +1,4 @@
+import codecs
 from os import path
 
 from PyQt4 import QtCore, QtGui
@@ -8,7 +9,7 @@ from orangecontrib.datafusion.widgets.owfusiongraph import \
     WebviewWidget, rel_shape, rel_cols, SimpleTableWidget
 from orangecontrib.datafusion.models import Relation, FittedFusionGraph
 
-JS_FACTORS = open(path.join(path.dirname(__file__), 'factors_script.js')).read()
+JS_FACTORS = codecs.open(path.join(path.dirname(__file__), 'factors_script.js'), 'r', 'utf-8').read()
 
 
 def is_constraint(relation):
