@@ -112,11 +112,15 @@ class Relation(Table):
         if row_type:
             row_names = graph.get_names(row_type)
             row_metadata = graph.get_metadata(row_type)
+            if not any(row_metadata):
+                row_metadata = None
         else:
             row_type = next(GENERATE_OTYPE)
         if col_type:
             col_names = graph.get_names(col_type)
             col_metadata = graph.get_metadata(row_type)
+            if not any(col_metadata):
+                col_metadata = None
         else:
             col_type = next(GENERATE_OTYPE), None
         return Relation(fusion.Relation(data, row_type, col_type, row_names=row_names, row_metadata=row_metadata,
