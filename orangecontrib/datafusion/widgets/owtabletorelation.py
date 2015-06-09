@@ -91,6 +91,9 @@ class OWTableToRelation(OWWidget):
         if data is not None:
             self.init_attr_values(data.domain.metas)
             self.openContext(self.data)
+            self.col_names = [str(a.name) for a in data.domain.attributes]
+            if hasattr(data, 'col_type'):
+                self.col_type = data.col_type
         else:
             self.init_attr_values(())
         self.update_preview()
