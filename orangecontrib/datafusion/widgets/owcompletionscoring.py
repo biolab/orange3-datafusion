@@ -171,7 +171,9 @@ def main():
     w = OWCompletionScoring()
     w.on_fuser_change(FittedFusionGraph(fuserF), fuserF.__class__.__name__)
     w.on_fuser_change(FittedFusionGraph(fuserC), fuserC.__class__.__name__)
-    w.on_fuser_change(MeanFuser(0), 'meanfuser')
+    w.on_fuser_change(MeanFuser(0), 'meanfuser0')
+    w.on_fuser_change(MeanFuser(1), 'meanfuser1')
+    w.on_fuser_change(MeanFuser(2), 'meanfuser2')
     for i, relation in enumerate(relations, 1):
         w.on_relation_change(Relation(relation), i)
     w.show()
