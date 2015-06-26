@@ -6,8 +6,7 @@ from Orange.widgets import widget, gui, settings
 
 from skfusion import fusion
 from orangecontrib.datafusion.models import Relation, FusionGraph, RelationCompleter
-from orangecontrib.datafusion.widgets.owfusiongraph import \
-    SimpleTableWidget, rel_shape, rel_cols
+from orangecontrib.datafusion.widgets.owfusiongraph import bold_item, rel_shape, rel_cols
 
 import numpy as np
 
@@ -40,13 +39,11 @@ class MeanFuser(RelationCompleter):
         return self
 
     def retrain(self):
-        """Mean is deterministic, return the same Completer.
-        """
+        """Mean is deterministic, return the same Completer."""
         return self
 
     def can_complete(self, relation):
         """MeanFuser can complete any relation."""
-
         return True
 
     def complete(self, relation):
@@ -101,29 +98,29 @@ class OWMeanFuser(widget.ToBeRevisedFixed):
                          label='Calculate masked values as mean by:',
                          items=MeanBy.all, callback=self.commit))
         box = gui.widgetBox(self.controlArea, 'Output completed relation')
-        self.table = SimpleTableWidget(box, callback=self.commit)
+        self.table = gui.TableWidget(box, select_rows=True)
+        self.table.selectionChanged = lambda _, __: self.commit()
+        self.table.setColumnFilter(bold_item, (1, 3))
         self.controlArea.layout().addStretch(1)
 
     def commit(self, item=None):
         self.fuser = MeanFuser(self.mean_by)
         self.send(Output.FUSER, self.fuser)
         selection = self.table.selectedRanges()
-        if item or self.table.rowCount() and selection:
-            if not item:
-                row = selection[0].topRow()
-                item = self.table.item(row, 0)
-            else:
-                item = item.tableWidget().item(item.row(), 0)
-            relation = item.data(QtCore.Qt.UserRole)
-            self.send(Output.RELATION, self.fuser.complete(relation))
+        if self.table.rowCount() and selection:
+            relation = self.table.rowData(selection[0].topRow())
+            data = self.fuser.complete(relation)
+        else:
+            data = None
+        self.send(Output.RELATION, data)
 
     def update_table(self):
         self.table.clear()
         for rel in self.relations:
-            self.table.add([(rel_shape(rel.data), rel)]
-                           + rel_cols(rel)
-                           + [('(not masked)' if not np.ma.is_masked(rel.data) else '')],
-                           bold=(1, 3))
+            self.table.addRow([rel_shape(rel.data)]
+                              + rel_cols(rel)
+                              + ['(not masked)' if not np.ma.is_masked(rel.data) else ''],
+                              data=rel)
 
     def _add_relation(self, relation):
         self.relations[relation] += 1
@@ -152,7 +149,6 @@ class OWMeanFuser(widget.ToBeRevisedFixed):
             self._add_relation(relation.relation)
         self.update_table()
         self.commit()
-
 
 
 def main():

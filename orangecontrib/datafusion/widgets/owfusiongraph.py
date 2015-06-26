@@ -42,87 +42,20 @@ def relation_str(relation):
     return '[{}] {}'.format(rel_shape(relation.data), ' '.join(rel_cols(relation)))
 
 
-class WebviewWidget(QtWebKit.QWebView):
-    def __init__(self, parent):
-        super().__init__(parent)
-        parent.layout().addWidget(self)
-        settings = self.settings()
-        if __debug__:  # TODO
-            settings.setAttribute(settings.DeveloperExtrasEnabled, True)
-        else:
-            self.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
-
-    def sizeHint(self):
-        return QtCore.QSize(500, 1000)
-
-    def evalJS(self, javascript):
-        self.page().mainFrame().evaluateJavaScript(javascript)
-
-    def repaint(self, graph, parent):
-        stream = BytesIO()
-        if graph:
-            graph.draw_graphviz(stream, 'svg')
-        stream.seek(0)
-        stream = QtCore.QByteArray(stream.read())
-        self.setContent(stream, 'image/svg+xml')
-        webframe = self.page().mainFrame()
-        webframe.addToJavaScriptWindowObject('pybridge', parent)
-        webframe.evaluateJavaScript(JS_GRAPH)
+def bold_item(item):
+    font = item.font()
+    font.setBold(True)
+    item.setFont(font)
 
 
-class SimpleTableWidget(QtGui.QTableWidget):
-    """ A wrapper around QTableWidget """
-    def __init__(self, parent=None, callback=None):
-        """`callback` is a function that accepts first selected row item"""
-        super().__init__(parent)
-        self.callback = callback
-        self.horizontalHeader().setStretchLastSection(True)
-        self.horizontalHeader().setVisible(False)
-        self.verticalHeader().setVisible(False)
-        self.setHorizontalScrollMode(self.ScrollPerPixel)
-        self.setVerticalScrollMode(self.ScrollPerPixel)
-        self.setSelectionMode(self.SingleSelection)
-        self.setSelectionBehavior(self.SelectRows)
-        self.setEditTriggers(self.NoEditTriggers)
-        self.setAlternatingRowColors(True)
-        self.setShowGrid(False)
-        self.currentItemChanged.connect(self._on_currentItemChanged)
-        if parent: parent.layout().addWidget(self)
-
-    def add(self, items, bold=()):
-        """Appends iterable of `items` as the next row.
-
-        `bold` is a list of columns that are to be set in bold face.
-        """
-        row = self.rowCount()
-        self.insertRow(row)
-        self.setColumnCount(max(len(items), self.columnCount()))
-        for col, data in enumerate(items):
-            try: name, data = data
-            except ValueError: name = str(data)
-            item = QtGui.QTableWidgetItem(name)
-            item.setData(QtCore.Qt.UserRole, data)
-            if col in bold:
-                font = item.font()
-                font.setBold(True)
-                item.setFont(font)
-            self.setItem(row, col, item)
-        self.resizeColumnsToContents()
-        self.resizeRowsToContents()
-
-    def clear(self):
-        super().clear()
-        self.setRowCount(0)
-        self.setColumnCount(0)
-
-    def select_first(self):
-        if self.rowCount() > 0:
-            self.selectRow(0)
-
-    def _on_currentItemChanged(self, current, previous):
-        if self.callback and current:
-            item = self.item(current.row(), 0)
-            return self.callback(item)
+def redraw_graph(webview, graph):
+    stream = BytesIO()
+    if graph:
+        graph.draw_graphviz(stream, 'svg')
+    stream.seek(0)
+    stream = QtCore.QByteArray(stream.read())
+    webview.setContent(stream, 'image/svg+xml')
+    webview.evalJS(JS_GRAPH)
 
 
 class OWFusionGraph(widget.OWWidget):
@@ -155,7 +88,7 @@ class OWFusionGraph(widget.OWWidget):
         self.relations = {}  # id-->relation map
         self.graph_element_selected.connect(self.on_graph_element_selected)
         self.graph = FusionGraph(fusion.FusionGraph())
-        self.webview = WebviewWidget(self.mainArea)
+        self.webview = gui.WebviewWidget(self.mainArea, self)
         self._create_layout()
 
     @QtCore.pyqtSlot(str)
@@ -191,11 +124,20 @@ class OWFusionGraph(widget.OWWidget):
         # Table view of relation details
         info = gui.widgetBox(self.controlArea, 'Relations')
 
-        def send_relation(item):
-            data = item.data(QtCore.Qt.UserRole)
-            self.send(Output.RELATION, Relation(data))
+        def send_relation(selected, deselected):
+            if not selected:
+                assert len(deselected) > 0
+                relation = None
+            else:
+                assert len(selected) == 1
+                data = self.table.rowData(selected[0].top())
+                relation = Relation(data)
+            self.send(Output.RELATION, relation)
 
-        self.table = SimpleTableWidget(info, callback=send_relation)
+        self.table = gui.TableWidget(info, select_rows=True)
+        self.table.selectionChanged = send_relation
+        self.table.setColumnFilter(bold_item, (1, 3))
+
         self.controlArea.layout().addStretch(1)
         gui.lineEdit(self.controlArea,
                      self, 'pref_algo_name', 'Fuser name',
@@ -243,9 +185,9 @@ class OWFusionGraph(widget.OWWidget):
 
     def _populate_table(self, relations=None):
         self.table.clear()
-        for i in relations or self.graph.relations:
-            self.table.add([(rel_shape(i.data), i)] + rel_cols(i), bold=(1, 3))
-        self.table.select_first()
+        for rel in relations or self.graph.relations:
+            self.table.addRow([rel_shape(rel.data)] + rel_cols(rel), data=rel)
+        self.table.selectFirstRow()
 
     def on_relation_change(self, relation, id):
         def _on_remove_relation(id):
@@ -269,7 +211,7 @@ class OWFusionGraph(widget.OWWidget):
                                            for rel in self.graph.relations)
                                     else
                                     100)
-        self.webview.repaint(self.graph, self)
+        redraw_graph(self.webview, self.graph)
         self.send(Output.FUSION_GRAPH, FusionGraph(self.graph))
         # this ensures gui.label-s get updated
         self.n_object_types = self.graph.n_object_types
