@@ -125,9 +125,6 @@ class SimpleTableWidget(QtGui.QTableWidget):
             return self.callback(item)
 
 
-LIMIT_RANK_THRESHOLD = 1000  # If so many objects or more, limit maximum rank
-
-
 class OWFusionGraph(widget.OWWidget):
     name = "Fusion Graph"
     description = "Construct data fusion graph and run " \
@@ -266,6 +263,7 @@ class OWFusionGraph(widget.OWWidget):
         else:
             _on_remove_relation(id)
         self._populate_table()
+        LIMIT_RANK_THRESHOLD = 1000  # If so many objects or more, limit maximum rank
         self.slider_rank.setMaximum(30
                                     if any(max(rel.data.shape) > LIMIT_RANK_THRESHOLD
                                            for rel in self.graph.relations)
@@ -280,6 +278,7 @@ class OWFusionGraph(widget.OWWidget):
     # called when all signals are received, so the graph is updated only once
     def handleNewSignals(self):
         self.unconditional_commit()
+
 
 def main():
     # example from https://github.com/marinkaz/scikit-fusion
