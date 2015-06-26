@@ -9,7 +9,7 @@ from skfusion import fusion
 from orangecontrib.datafusion.models import Relation, FusionGraph, FittedFusionGraph
 
 
-JS_GRAPH = open(path.join(path.dirname(__file__), 'graph_script.js')).read()
+JS_GRAPH = open(path.join(path.dirname(__file__), 'graph_script.js'), encoding='utf-8').read()
 
 DECOMPOSITION_ALGO = [
     ('Matrix tri-factorization', fusion.Dfmf),
