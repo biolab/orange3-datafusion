@@ -6,8 +6,7 @@ from Orange.widgets import widget, gui, settings
 from skfusion import fusion
 from orangecontrib.datafusion.models import Relation, FittedFusionGraph
 from orangecontrib.datafusion.widgets import owlatentfactors
-from orangecontrib.datafusion.widgets.owlatentfactors import SimpleTableWidget
-from orangecontrib.datafusion.widgets.owfusiongraph import rel_cols
+from orangecontrib.datafusion.widgets.owfusiongraph import rel_cols, bold_item
 
 
 class Output:
@@ -34,28 +33,34 @@ class OWChaining(owlatentfactors.OWLatentFactors):
         box = gui.widgetBox(self.controlArea, margin=7)
         box.layout().addWidget(self.webview)
         box = gui.widgetBox(self.controlArea, 'Latent chains')
-        self.table = SimpleTableWidget(box, callback=self.on_selected_chain)
+        self.table = gui.TableWidget(box, select_rows=True)
+        self.table.setColumnFilter(bold_item, lambda col: col % 2)
+
+        def selectionChanged(selected, _):
+            if not selected:
+                data = None
+            else:
+                chain = self.table.rowData(selected[0].top())
+                self.webview.evalJS('dehighlight(ELEMENTS);')
+                self._highlight_relations(chain)
+                data = self.fuser.compute_chain(chain, self.pref_complete)
+            self.send(Output.RELATION, data)
+
+        self.table.selectionChanged = selectionChanged
         self.controlArea.layout().addWidget(box)
+
+        def on_change_pref_complete():
+            ranges = self.table.selectedRanges()
+            self._populate_table(self.chains)
+            # Re-apply selection
+            if ranges:
+                self.table.selectRow(ranges[0].topRow())
+
         gui.radioButtons(box, self, 'pref_complete',
                          label='Complete chain to:',
                          btnLabels=('latent space', 'feature space'),
-                         callback=self.on_change_pref_complete)
+                         callback=on_change_pref_complete)
         self.controlArea.layout().addStretch(1)
-
-    def on_change_pref_complete(self):
-        ranges = self.table.selectedRanges()
-        self._populate_table(self.chains)
-        # Re-apply selection
-        if ranges:
-            self.table.selectRow(ranges[0].topRow())
-
-    def on_selected_chain(self, item):
-        chain = item.data(QtCore.Qt.UserRole)
-
-        self.webview.evalJS('dehighlight(ELEMENTS);')
-        self._highlight_relations(chain)
-
-        self.send(Output.RELATION, self.fuser.compute_chain(chain, self.pref_complete))
 
     def _highlight_relations(self, relations):
         selectors = set()
@@ -75,8 +80,7 @@ class OWChaining(owlatentfactors.OWLatentFactors):
             assert columns[-1] == str(self.selected_end)
             shape = (chain[0]. data.shape[0],
                      chain[-1].data.shape[1] if self.pref_complete else chain[-1].col_type.rank)
-            self.table.add([('{}×{}'.format(*shape), chain)] + columns,
-                           bold=set(range(1, 1 + len(columns), 2)))
+            self.table.addRow(['{}×{}'.format(*shape)] + columns, data=chain)
             self._highlight_relations(chain)
 
     def on_fuser_change(self, fuser):
