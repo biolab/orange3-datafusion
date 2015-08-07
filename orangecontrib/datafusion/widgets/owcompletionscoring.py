@@ -10,36 +10,21 @@ from orangecontrib.datafusion.widgets.owfusiongraph import \
 
 import numpy as np
 
-def scale(X, amin, amax):
-    return (X - X.min()) / (X.max() - X.min() + 1e-8) * (amax - amin) + amin
 
-def _rmse(A, B):
-    return np.sqrt(np.sum((A-B)**2) / A.size)
+def _rmse(true, pred):
+    return np.sqrt(np.sum((true - pred)**2) / true.size)
 
-def RMSE(A, B):
-    """ NaN-skipping RMSE of masked values between the original relation `A`
-        and fuser-completed relation `B`.
+
+def RMSE(rel_true, rel_pred):
+    """ NaN-skipping RMSE of masked values between the original relation `rel_true`
+        and fuser-completed relation `rel_pred`.
     """
-    assert np.ma.is_masked(A)
-
-    train_idx = A.mask
-    test_idx = np.logical_and(~A.mask, ~np.isnan(A))
-    train = A.data[train_idx]
-    test = A.data[test_idx]
-    test = scale(test, 0, 1)
-
-    pred = np.nan * np.ones(B.shape)
-    pred[test_idx] = B[test_idx]
-
-    BC = np.nan * np.ones(B.shape)
-    BC[train_idx] = scale(train, 0, 1)
-
-    n, m = B.shape
-    pred += np.tile(np.nan_to_num(np.nanmean(BC, 1)).reshape((n, 1)), (1, m))
-    pred += np.tile(np.nan_to_num(np.nanmean(BC, 0)).reshape((1, m)), (n, 1))
-    pred = pred[test_idx]
-    pred = scale(pred, 0, 1)
-
+    assert np.ma.is_masked(rel_true)
+    test_idx = np.logical_and(~rel_true.mask, ~np.isnan(rel_true))
+    test = rel_true.data[test_idx]
+    pred = rel_pred[test_idx]
+    mn, mx = np.min(test), np.max(test)
+    pred = np.clip(pred, mn, mx)
     return _rmse(test, pred)
 
 
