@@ -52,6 +52,8 @@ class MeanFuser(RelationCompleter):
         A = relation.data.copy()
         if not np.ma.is_masked(A):
             return A
+        # Compute mean values on training data
+        A.mask = 1 - A.mask
         mean_value = np.nanmean(A, axis=None)
         if self.axis is None:
             # Replace the mask with mean of the matrix
@@ -65,8 +67,7 @@ class MeanFuser(RelationCompleter):
         return A
 
 
-# class OWMeanFuser(widget.OWWidget):
-class OWMeanFuser(widget.ToBeRevisedFixed):
+class OWMeanFuser(widget.OWWidget):
     name = 'Mean Fuser'
     priority = 55000
     icon = 'icons/MeanFuser.svg'
