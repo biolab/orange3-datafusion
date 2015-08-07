@@ -2,9 +2,9 @@ Orange3 Data Fusion
 ===================
 
 This is a data fusion add-on for [Orange3](http://orange.biolab.si). Add-on
-wraps a python library TBD for data fusion and implements a set of widgets
-for loading of the data, definition of data fusion schema, collective matrix
-factorization and exploration of latent factors.
+wraps [scikit-fusion](http://github.com/marinkaz/scikit-fusion), a Python library for 
+data fusion, and implements a set of widgets for loading of the data, definition of 
+data fusion schema, collective matrix factorization and exploration of latent factors.
 
 Installation
 ------------
