@@ -81,7 +81,6 @@ def actor_matrix(mat):
 def hide_data(table, percentage, sampling_type):
     assert not np.ma.is_masked(table)
     np.random.seed(0)
-
     if sampling_type == SampleBy.ROWS_COLS:
 
         row_s_mask, row_oos_mask = hide_data(table, np.sqrt(percentage), SampleBy.ROWS)
@@ -100,7 +99,7 @@ def hide_data(table, percentage, sampling_type):
     else:
         raise ValueError("Unknown sampling method.")
 
-    sample_mask, oos_mask = (np.logical_and(rand >= percentage, ~np.isnan(table)),
+    oos_mask, sample_mask = (np.logical_and(rand >= percentage, ~np.isnan(table)),
                              np.logical_and(rand <  percentage, ~np.isnan(table)))
     return sample_mask, oos_mask
 

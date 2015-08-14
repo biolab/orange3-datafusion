@@ -20,14 +20,14 @@ class MeanBy:
     ROWS = 'Rows'
     COLUMNS = 'Columns'
     VALUES = 'All values'
-    all = (ROWS, COLUMNS, VALUES)
+    all = (COLUMNS, ROWS, VALUES)
 
 
 class MeanFuser(RelationCompleter):
     def __init__(self, mean_by):
         self.axis = {
-            MeanBy.ROWS: 0,
-            MeanBy.COLUMNS: 1,
+            MeanBy.ROWS: 1,
+            MeanBy.COLUMNS: 0,
             MeanBy.VALUES: None}[MeanBy.all[mean_by]]
         self.mean_by = mean_by
 
@@ -52,8 +52,6 @@ class MeanFuser(RelationCompleter):
         A = relation.data.copy()
         if not np.ma.is_masked(A):
             return A
-        # Compute mean values on training data
-        A.mask = 1 - A.mask
         mean_value = np.nanmean(A, axis=None)
         if self.axis is None:
             # Replace the mask with mean of the matrix
