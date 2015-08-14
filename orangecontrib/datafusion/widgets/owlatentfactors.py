@@ -148,6 +148,7 @@ class OWLatentFactors(widget.OWWidget):
         self.send(Output.RELATION, data)
 
     def _populate_tables(self, factors=None, backbones=None, reset=False):
+        if not self.fuser: return
         self.table_factors.clear()
         self.table_backbones.clear()
         self.send(Output.RELATION, None)
@@ -170,8 +171,8 @@ class OWLatentFactors(widget.OWWidget):
         self._populate_tables(reset=True)
         self.repaint()
         # this ensures gui.label-s get updated
-        self.n_object_types = fuser.n_object_types
-        self.n_relations = fuser.n_relations
+        self.n_object_types = fuser.n_object_types if fuser else 0
+        self.n_relations = fuser.n_relations if fuser else 0
 
     def repaint(self):
         redraw_graph(self.webview, self.fuser)
