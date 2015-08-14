@@ -82,11 +82,11 @@ class OWSampleMatrix(OWWidget):
                 data.data = np.ma.array(data.data, mask=mask)
                 return data
 
-            sample_data = _mask_relation(self.relation.relation, sample_mask)
-            oos_data = _mask_relation(self.relation.relation, oos_mask)
+            sample_mask = _mask_relation(self.relation.relation, sample_mask)
+            oos_mask = _mask_relation(self.relation.relation, oos_mask)
 
-            self.send(Output.IN_SAMPLE_DATA, Relation(sample_data))
-            self.send(Output.OUT_OF_SAMPLE_DATA, Relation(oos_data))
+            self.send(Output.OUT_OF_SAMPLE_DATA, Relation(sample_mask))
+            self.send(Output.IN_SAMPLE_DATA, Relation(oos_mask))
 
 
 if __name__ == "__main__":

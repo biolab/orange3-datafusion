@@ -20,7 +20,7 @@ def RMSE(rel_true, rel_pred):
         and fuser-completed relation `rel_pred`.
     """
     assert np.ma.is_masked(rel_true)
-    test_idx = np.logical_and(~rel_true.mask, ~np.isnan(rel_true))
+    test_idx = np.logical_and(rel_true.mask, ~np.isnan(rel_true))
     test = rel_true.data[test_idx]
     pred = rel_pred[test_idx]
     mn, mx = np.min(test), np.max(test)
