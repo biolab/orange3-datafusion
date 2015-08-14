@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='utf-8'?>
+<scheme description="In this analysis we apply matrix tri-factorization to the user movie preference data. We will see that movie ratings data can be extremely sparse, as most users rate only a few, if any, movies out of tens of thousands of movies offered by the online media providers, such as Netflix. We then construct the simplest possible relational scheme, i.e. a data fusion graph, of our domain data space that contains a single data matrix. We apply matrix tri-factorization to the ratings data and estimate latent movie ratings data model. The learnt latent model can be mined further, for example, to profile and cluster the movies into genres." title="Matrix Tri-Factorization" version="2.0">
+	<nodes>
+		<node id="0" name="Fusion Graph" position="(276.0, 451.0)" project_name="Orange3-Data-Fusion" qualified_name="orangecontrib.datafusion.widgets.owfusiongraph.OWFusionGraph" title="Fusion Graph" version="" />
+		<node id="1" name="Latent Factors" position="(572.0, 450.0)" project_name="Orange3-Data-Fusion" qualified_name="orangecontrib.datafusion.widgets.owlatentfactors.OWLatentFactors" title="Latent Factors" version="" />
+		<node id="2" name="Movie Ratings" position="(89.0, 443.0)" project_name="Orange3-Data-Fusion" qualified_name="orangecontrib.datafusion.widgets.owmovieratings.OWMovieRatings" title="Movie Ratings" version="" />
+		<node id="3" name="Distances" position="(765.0, 448.0)" project_name="Orange" qualified_name="Orange.widgets.unsupervised.owdistances.OWDistances" title="Distances" version="" />
+		<node id="4" name="Hierarchical Clustering" position="(933.0, 448.0)" project_name="Orange" qualified_name="Orange.widgets.unsupervised.owhierarchicalclustering.OWHierarchicalClustering" title="Hierarchical Clustering" version="" />
+		<node id="5" name="Data Table" position="(300, 300)" project_name="Orange" qualified_name="Orange.widgets.data.owtable.OWDataTable" title="Data Table (1)" version="" />
+	</nodes>
+	<links>
+		<link enabled="true" id="0" sink_channel="Fitted fusion graph" sink_node_id="1" source_channel="Fitted Fusion Graph" source_node_id="0" />
+		<link enabled="true" id="1" sink_channel="Relation" sink_node_id="0" source_channel="Ratings" source_node_id="2" />
+		<link enabled="true" id="2" sink_channel="Data" sink_node_id="3" source_channel="Relation" source_node_id="1" />
+		<link enabled="true" id="3" sink_channel="Distances" sink_node_id="4" source_channel="Distances" source_node_id="3" />
+		<link enabled="true" id="4" sink_channel="Data" sink_node_id="5" source_channel="Ratings" source_node_id="2" />
+	</links>
+	<annotations>
+		<arrow end="(93.00000000000003, 519.0)" fill="#1F9CDF" id="0" start="(124.00000000000006, 617.0)" />
+		<text font-family="Helvetica" font-size="16" id="1" rect="(62.0, 624.0, 169.0, 139.0)">We use user movie preference data in this example.</text>
+		<arrow end="(328.0, 270.0)" fill="#1F9CDF" id="2" start="(380.0, 185.0)" />
+		<text font-family="Helvetica" font-size="16" id="3" rect="(390.0, 146.0, 227.0, 79.0)">User-by-movie ratings matrix is very sparse. More than 98% of the movie ratings are unknown.</text>
+		<arrow end="(283.99999999999994, 518.0)" fill="#1F9CDF" id="4" start="(318.0, 684.0)" />
+		<text font-family="Helvetica" font-size="16" id="5" rect="(260.0, 692.0, 205.0, 128.0)">Fusion graph represents the relational structure of our data domain space. Nodes correspond to object types and edges to data matrices.</text>
+		<arrow end="(588.1251240679471, 417.46663808150015)" fill="#1F9CDF" id="6" start="(667.1251240679471, 315.46663808150015)" />
+		<text font-family="Helvetica" font-size="16" id="7" rect="(632.0, 258.0, 195.0, 76.0)">Open the Latent Factors widget and select the movie recipe matrix.</text>
+		<arrow end="(922.0, 528.0)" fill="#1F9CDF" id="8" start="(896.0, 664.0)" />
+		<text font-family="Helvetica" font-size="16" id="9" rect="(784.0, 674.0, 199.0, 98.0)">Clustering of the latent movie profiles can reveal groups of related movies, e.g. movies that belong to the same genre.</text>
+	</annotations>
+	<thumbnail />
+	<node_properties>
+		<properties format="pickle" node_id="0">gAN9cQAoWBEAAABwcmVmX25faXRlcmF0aW9uc3EBS4BYEwAAAHNhdmVkV2lkZ2V0R2VvbWV0cnlx
+AmNzaXAKX3VucGlja2xlX3R5cGUKcQNYDAAAAFB5UXQ0LlF0Q29yZXEEWAoAAABRQnl0ZUFycmF5
+cQVDLgHZ0MsAAQAA///35////l7///uWAAABXP//9+f///50///7lgAAAVwAAAABAABxBoVxB4dx
+CFJxCVgOAAAAcHJlZl9hbGdvcml0aG1xCksAWAkAAABwcmVmX3JhbmtxC0sFWA4AAABwcmVmX2Fs
+Z29fbmFtZXEMWAoAAABPbmUgc291cmNlcQ1YBwAAAGF1dG9ydW5xDolYEwAAAHByZWZfaW5pdGlh
+bGl6YXRpb25xD0sCdS4=
+</properties>
+		<properties format="pickle" node_id="1">gAN9cQAoWBIAAABzZWxlY3RlZF9iYWNrYm9uZXNxAV1xAlgLAAAAY29tcGxldGlvbnNxA11xBFgQ
+AAAAc2VsZWN0ZWRfZmFjdG9yc3EFXXEGWBQAAABzZWxlY3RlZF9jb21wbGV0aW9uc3EHXXEIWBMA
+AABzYXZlZFdpZGdldEdlb21ldHJ5cQljc2lwCl91bnBpY2tsZV90eXBlCnEKWAwAAABQeVF0NC5R
+dENvcmVxC1gKAAAAUUJ5dGVBcnJheXEMQy4B2dDLAAEAAP//+Fj///0////8CgAAAHj///hY///9
+Vf///AoAAAB4AAAAAQAAcQ2FcQ6HcQ9ScRBYBwAAAGZhY3RvcnNxEV1xElgJAAAAYmFja2JvbmVz
+cRNdcRRYBwAAAGF1dG9ydW5xFYh1Lg==
+</properties>
+		<properties format="pickle" node_id="2">gAN9cQAoWAcAAABwZXJjZW50cQFLBVgTAAAAc2F2ZWRXaWRnZXRHZW9tZXRyeXECY3NpcApfdW5w
+aWNrbGVfdHlwZQpxA1gMAAAAUHlRdDQuUXRDb3JlcQRYCgAAAFFCeXRlQXJyYXlxBUMuAdnQywAB
+AAD///sc///+aP///BX///9K///7HP///n7///wV////SgAAAAEAAHEGhXEHh3EIUnEJWAMAAABl
+bmRxCk3XB1gGAAAAbWV0aG9kcQtLAFgFAAAAc3RhcnRxDE3VB3Uu
+</properties>
+		<properties format="pickle" node_id="3">gAN9cQAoWBMAAABzYXZlZFdpZGdldEdlb21ldHJ5cQFjc2lwCl91bnBpY2tsZV90eXBlCnECWAwA
+AABQeVF0NC5RdENvcmVxA1gKAAAAUUJ5dGVBcnJheXEEQy4B2dDLAAEAAP///h7///u4///+3///
+/Kn///4e///7zv///t////ypAAAAAQAAcQWFcQaHcQdScQhYCgAAAGF1dG9jb21taXRxCYlYBAAA
+AGF4aXNxCksAWAoAAABtZXRyaWNfaWR4cQtLBHUu
+</properties>
+		<properties format="pickle" node_id="4">gAN9cQAoWAcAAABsaW5rYWdlcQFLAVgMAAAAY2x1c3Rlcl9uYW1lcQJYBwAAAENsdXN0ZXJxA1gQ
+AAAAc2VsZWN0aW9uX21ldGhvZHEESwBYCQAAAG1heF9kZXB0aHEFSwFYDgAAAGFubm90YXRpb25f
+aWR4cQZLAVgJAAAAY3V0X3JhdGlvcQdjbnVtcHkuY29yZS5tdWx0aWFycmF5CnNjYWxhcgpxCGNu
+dW1weQpkdHlwZQpxCVgCAAAAZjhxCksASwGHcQtScQwoSwNYAQAAADxxDU5OTkr/////Sv////9L
+AHRxDmJDCKi9Kp1D7lRAcQ+GcRBScRFYDwAAAGFwcGVuZF9jbHVzdGVyc3ESiFgFAAAAdG9wX25x
+E0sDWAwAAABjbHVzdGVyX3JvbGVxFEsCWBMAAABzYXZlZFdpZGdldEdlb21ldHJ5cRVjc2lwCl91
+bnBpY2tsZV90eXBlCnEWWAwAAABQeVF0NC5RdENvcmVxF1gKAAAAUUJ5dGVBcnJheXEYQy4B2dDL
+AAEAAP//+xP///4o////OgAAApf///sT///+Pv///zoAAAKXAAAAAQAAcRmFcRqHcRtScRxYCgAA
+AGF1dG9jb21taXRxHYhYBwAAAHBydW5pbmdxHksAdS4=
+</properties>
+		<properties format="pickle" node_id="5">gAN9cQAoWA4AAABjb2xvcl9zZXR0aW5nc3EBTlgSAAAAc2hvd19kaXN0cmlidXRpb25zcQKJWBUA
+AABzaG93X2F0dHJpYnV0ZV9sYWJlbHNxA4hYCwAAAGF1dG9fY29tbWl0cQSIWBMAAABzYXZlZFdp
+ZGdldEdlb21ldHJ5cQVjc2lwCl91bnBpY2tsZV90eXBlCnEGWAwAAABQeVF0NC5RdENvcmVxB1gK
+AAAAUUJ5dGVBcnJheXEIQy4B2dDLAAEAAAAAAAQAAAAXAAAE5gAAAx8AAAAEAAAALQAABOYAAAMf
+AAAAAAAAcQmFcQqHcQtScQxYFQAAAHNlbGVjdGVkX3NjaGVtYV9pbmRleHENSwBYCwAAAHNlbGVj
+dF9yb3dzcQ6IWA4AAABkaXN0X2NvbG9yX1JHQnEPKEvcS9xL3Ev/dHEQWA4AAABjb2xvcl9ieV9j
+bGFzc3ERiHUu
+</properties>
+	</node_properties>
+</scheme>

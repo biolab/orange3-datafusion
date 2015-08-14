@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding='utf-8'?>
+<scheme description="In this analysis we collectively tri-factorize multiple related data matrices including movie ratings matrix, information about movie genres and actors. In total, we consider four data sets describing relationships between four types of objects as we can see in the fusion graph. We estimate the quality of a collective latent model by scoring how well the latent model reconstructs relationships between objects that were hidden during model estimation." title="Collective Matrix Tri-Factorization" version="2.0">
+	<nodes>
+		<node id="0" name="Movie Ratings" position="(150, 450)" project_name="Orange3-Data-Fusion" qualified_name="orangecontrib.datafusion.widgets.owmovieratings.OWMovieRatings" title="Movie Ratings" version="" />
+		<node id="1" name="Matrix Sampler" position="(450, 600)" project_name="Orange3-Data-Fusion" qualified_name="orangecontrib.datafusion.widgets.owsamplematrix.OWSampleMatrix" title="Matrix Sampler" version="" />
+		<node id="2" name="Movie Genres" position="(450, 450)" project_name="Orange3-Data-Fusion" qualified_name="orangecontrib.datafusion.widgets.owmoviegenres.OWMovieGenres" title="Movie Genres" version="" />
+		<node id="3" name="Completion Scoring" position="(1069.0, 615.0)" project_name="Orange3-Data-Fusion" qualified_name="orangecontrib.datafusion.widgets.owcompletionscoring.OWCompletionScoring" title="Completion Scoring" version="" />
+		<node id="4" name="IMDb Actors" position="(450, 300)" project_name="Orange3-Data-Fusion" qualified_name="orangecontrib.datafusion.widgets.owimdbactors.OWIMDbActors" title="IMDb Actors" version="" />
+		<node id="5" name="Fusion Graph" position="(750, 450)" project_name="Orange3-Data-Fusion" qualified_name="orangecontrib.datafusion.widgets.owfusiongraph.OWFusionGraph" title="Fusion Graph" version="" />
+		<node id="6" name="Mean Fuser" position="(753.0, 800.0)" project_name="Orange3-Data-Fusion" qualified_name="orangecontrib.datafusion.widgets.owmeanfuser.OWMeanFuser" title="Mean Fuser" version="" />
+	</nodes>
+	<links>
+		<link enabled="true" id="0" sink_channel="Data" sink_node_id="1" source_channel="Ratings" source_node_id="0" />
+		<link enabled="true" id="1" sink_channel="Row Type" sink_node_id="2" source_channel="Ratings" source_node_id="0" />
+		<link enabled="true" id="2" sink_channel="Filter" sink_node_id="4" source_channel="Ratings" source_node_id="0" />
+		<link enabled="true" id="3" sink_channel="Relation" sink_node_id="5" source_channel="In-sample Data" source_node_id="1" />
+		<link enabled="true" id="4" sink_channel="Relation" sink_node_id="5" source_channel="Genres" source_node_id="2" />
+		<link enabled="true" id="5" sink_channel="Relation" sink_node_id="5" source_channel="Movie Actors" source_node_id="4" />
+		<link enabled="true" id="6" sink_channel="Relation" sink_node_id="5" source_channel="Costarring Actors" source_node_id="4" />
+		<link enabled="true" id="7" sink_channel="Fitted fusion graph" sink_node_id="3" source_channel="Mean-fitted fusion graph" source_node_id="6" />
+		<link enabled="true" id="8" sink_channel="Relation" sink_node_id="3" source_channel="Out-of-sample Data" source_node_id="1" />
+		<link enabled="true" id="9" sink_channel="Fitted fusion graph" sink_node_id="3" source_channel="Fitted Fusion Graph" source_node_id="5" />
+	</links>
+	<annotations>
+		<arrow end="(148.0, 510.0)" fill="#1F9CDF" id="0" start="(172.0, 619.0)" />
+		<arrow end="(766.0, 407.0)" fill="#1F9CDF" id="1" start="(843.0, 289.0)" />
+		<arrow end="(1068.9999999999998, 580.0000000000001)" fill="#1F9CDF" id="2" start="(1094.0, 489.0000000000001)" />
+		<arrow end="(749.9999999999999, 860.0)" fill="#1F9CDF" id="3" start="(687.0, 976.0)" />
+		<arrow end="(447.0, 659.0)" fill="#1F9CDF" id="4" start="(402.0, 795.0)" />
+		<text font-family="Helvetica" font-size="16" id="5" rect="(115.0, 626.0, 179.0, 87.0)">We load movie preference information, i.e. the "rate" relation.</text>
+		<arrow end="(449.0, 265.0)" fill="#1F9CDF" id="6" start="(558.0, 157.0)" />
+		<text font-family="Helvetica" font-size="16" id="7" rect="(453.0, 99.0, 284.0, 85.0)">In the analysis we consider
+movie cast information, i.e. the "play in" and the "co-star with" relations. </text>
+		<text font-family="Helvetica" font-size="16" id="8" rect="(750.0, 217.0, 301.0, 92.0)">Collective matrix factorization decomposes the entire data compendium and shares latent information between related data sets.</text>
+		<text font-family="Helvetica" font-size="16" id="9" rect="(287.0, 799.0, 254.0, 108.0)">Randomly sample 80% of movie ratings and use them for model estimation. The remaining entries will be used for model evaluation.</text>
+		<text font-family="Helvetica" font-size="16" id="10" rect="(572.0, 980.0, 220.0, 92.0)">Mean fuser always predicts the average rating computed across all movies and users.</text>
+		<text font-family="Helvetica" font-size="16" id="11" rect="(1001.0, 433.0, 177.0, 60.0)">Report the RMSE score for the out-of-sample movie ratings.</text>
+	</annotations>
+	<thumbnail />
+	<node_properties>
+		<properties format="pickle" node_id="0">gAN9cQAoWAMAAABlbmRxAU3XB1gHAAAAcGVyY2VudHECSwJYBgAAAG1ldGhvZHEDSwBYBQAAAHN0
+YXJ0cQRN1QdYEwAAAHNhdmVkV2lkZ2V0R2VvbWV0cnlxBWNzaXAKX3VucGlja2xlX3R5cGUKcQZY
+DAAAAFB5UXQ0LlF0Q29yZXEHWAoAAABRQnl0ZUFycmF5cQhDLgHZ0MsAAQAA///66AAAAxT///vh
+AAAD9v//+ugAAAMq///74QAAA/YAAAABAABxCYVxCodxC1JxDHUu
+</properties>
+		<properties format="pickle" node_id="1">gAN9cQAoWAcAAABwZXJjZW50cQFLYFgTAAAAc2F2ZWRXaWRnZXRHZW9tZXRyeXECY3NpcApfdW5w
+aWNrbGVfdHlwZQpxA1gMAAAAUHlRdDQuUXRDb3JlcQRYCgAAAFFCeXRlQXJyYXlxBUMuAdnQywAB
+AAD///vz////TP///VAAAAAc///78////2L///1QAAAAHAAAAAEAAHEGhXEHh3EIUnEJWAUAAABi
+b29sc3EKXXELWAYAAABtZXRob2RxDEsDdS4=
+</properties>
+		<properties format="pickle" node_id="2">gAN9cQBYEwAAAHNhdmVkV2lkZ2V0R2VvbWV0cnlxAWNzaXAKX3VucGlja2xlX3R5cGUKcQJYDAAA
+AFB5UXQ0LlF0Q29yZXEDWAoAAABRQnl0ZUFycmF5cQRDLgHZ0MsAAQAAAAAABAAAAB4AAAD9AAAD
+HwAAAAQAAAA0AAAA/QAAAx8AAAAAAABxBYVxBodxB1JxCHMu
+</properties>
+		<properties format="pickle" node_id="3">gAN9cQBYEwAAAHNhdmVkV2lkZ2V0R2VvbWV0cnlxAWNzaXAKX3VucGlja2xlX3R5cGUKcQJYDAAA
+AFB5UXQ0LlF0Q29yZXEDWAoAAABRQnl0ZUFycmF5cQRDLgHZ0MsAAQAA///9Lv///FX////P///+
+D////S7///xr////z////g8AAAABAABxBYVxBodxB1JxCHMu
+</properties>
+		<properties format="pickle" node_id="4">gAN9cQAoWAcAAABwZXJjZW50cQFLCFgTAAAAc2F2ZWRXaWRnZXRHZW9tZXRyeXECY3NpcApfdW5w
+aWNrbGVfdHlwZQpxA1gMAAAAUHlRdDQuUXRDb3JlcQRYCgAAAFFCeXRlQXJyYXlxBUMuAdnQywAB
+AAAAAAAEAAAAFwAAAP0AAACZAAAABAAAAC0AAAD9AAAAmQAAAAAAAHEGhXEHh3EIUnEJdS4=
+</properties>
+		<properties format="pickle" node_id="5">gAN9cQAoWA4AAABwcmVmX2FsZ29yaXRobXEBSwBYCQAAAHByZWZfcmFua3ECSyBYDgAAAHByZWZf
+YWxnb19uYW1lcQNYDQAAAE1vdmllIEZ1c2lvbiBxBFgTAAAAcHJlZl9pbml0aWFsaXphdGlvbnEF
+SwBYEQAAAHByZWZfbl9pdGVyYXRpb25zcQZLglgHAAAAYXV0b3J1bnEHiVgTAAAAc2F2ZWRXaWRn
+ZXRHZW9tZXRyeXEIY3NpcApfdW5waWNrbGVfdHlwZQpxCVgMAAAAUHlRdDQuUXRDb3JlcQpYCgAA
+AFFCeXRlQXJyYXlxC0MuAdnQywABAAD///ul///9Af///1T////////7pf///Rf///9U/////wAA
+AAEAAHEMhXENh3EOUnEPdS4=
+</properties>
+		<properties format="pickle" node_id="6">gAN9cQAoWBEAAABzZWxlY3RlZF9yZWxhdGlvbnEBSwBYBwAAAG1lYW5fYnlxAksBWBMAAABzYXZl
+ZFdpZGdldEdlb21ldHJ5cQNjc2lwCl91bnBpY2tsZV90eXBlCnEEWAwAAABQeVF0NC5RdENvcmVx
+BVgKAAAAUUJ5dGVBcnJheXEGQy4B2dDLAAEAAP//+rL///7A///8tgAAAEz///qy///+1v///LYA
+AABMAAAAAQAAcQeFcQiHcQlScQp1Lg==
+</properties>
+	</node_properties>
+</scheme>
