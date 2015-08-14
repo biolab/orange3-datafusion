@@ -108,7 +108,10 @@ class OWMeanFuser(widget.OWWidget):
         selection = self.table.selectedRanges()
         if self.table.rowCount() and selection:
             relation = self.table.rowData(selection[0].topRow())
-            data = self.fuser.complete(relation)
+            data = Relation.create(self.fuser.complete(relation),
+                                   relation.row_type,
+                                   relation.col_type,
+                                   self.graph)
         else:
             data = None
         self.send(Output.RELATION, data)
