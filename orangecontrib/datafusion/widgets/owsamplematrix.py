@@ -5,7 +5,6 @@ from PyQt4 import QtGui
 from PyQt4.QtCore import Qt
 from Orange.widgets.widget import OWWidget
 from Orange.widgets import widget, gui, settings
-from orangecontrib.datafusion.movielens import hide_data, SampleBy
 from orangecontrib.datafusion.models import Relation
 
 import numpy as np
@@ -14,6 +13,38 @@ import numpy as np
 class Output:
     IN_SAMPLE_DATA = "In-sample Data"
     OUT_OF_SAMPLE_DATA = "Out-of-sample Data"
+
+
+class SampleBy:
+    ROWS = 'Rows'
+    COLS = 'Columns'
+    ROWS_COLS = 'Rows and columns'
+    ENTRIES = 'Entries'
+    all = [ROWS, COLS, ROWS_COLS, ENTRIES]
+
+
+def hide_data(table, percentage, sampling_type):
+    assert not np.ma.is_masked(table)
+    np.random.seed(0)
+    if sampling_type == SampleBy.ROWS_COLS:
+
+        row_s_mask, row_oos_mask = hide_data(table, np.sqrt(percentage), SampleBy.ROWS)
+        col_s_mask, col_oos_mask = hide_data(table, np.sqrt(percentage), SampleBy.COLS)
+
+        oos_mask = np.logical_and(row_oos_mask, col_oos_mask)
+        return oos_mask
+
+    elif sampling_type == SampleBy.ROWS:
+        rand = np.repeat(np.random.rand(table.X.shape[0], 1), table.X.shape[1], axis=1)
+    elif sampling_type == SampleBy.COLS:
+        rand = np.repeat(np.random.rand(1, table.X.shape[1]), table.X.shape[0], axis=0)
+    elif sampling_type == SampleBy.ENTRIES:
+        rand = np.random.rand(*table.X.shape)
+    else:
+        raise ValueError("Unknown sampling method.")
+
+    oos_mask = np.logical_and(rand >= percentage, ~np.isnan(table))
+    return oos_mask
 
 
 class OWSampleMatrix(OWWidget):
@@ -72,9 +103,9 @@ class OWSampleMatrix(OWWidget):
 
     def send_output(self):
         if self.relation is not None:
-            sample_mask, oos_mask = hide_data(self.relation,
-                                              self.percent / 100,
-                                              SampleBy.all[self.method])
+            oos_mask = hide_data(self.relation,
+                                 self.percent / 100,
+                                 SampleBy.all[self.method])
             def _mask_relation(relation, mask):
                 if np.ma.is_masked(relation.data):
                     mask = np.logical_or(mask, relation.data.mask)
@@ -82,11 +113,10 @@ class OWSampleMatrix(OWWidget):
                 data.data = np.ma.array(data.data, mask=mask)
                 return data
 
-            sample_mask = _mask_relation(self.relation.relation, sample_mask)
             oos_mask = _mask_relation(self.relation.relation, oos_mask)
 
-            self.send(Output.OUT_OF_SAMPLE_DATA, Relation(sample_mask))
             self.send(Output.IN_SAMPLE_DATA, Relation(oos_mask))
+            self.send(Output.OUT_OF_SAMPLE_DATA, Relation(oos_mask))
 
 
 if __name__ == "__main__":

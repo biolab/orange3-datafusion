@@ -12,14 +12,6 @@ class ObjectType:
     Genres = fusion.ObjectType('Genres')
 
 
-class SampleBy:
-    ROWS = 'Rows'
-    COLS = 'Columns'
-    ROWS_COLS = 'Rows and columns'
-    ENTRIES = 'Entries'
-    all = [ROWS, COLS, ROWS_COLS, ENTRIES]
-
-
 def actor_genre_matrix(actors):
     movies_genres, genres = movie_concept_matrix(input_movies=None, concept="genre")
     movies_actors, actors = movie_concept_matrix(input_movies=None, concept="actor", actors=actors)
@@ -76,32 +68,6 @@ def actor_matrix(mat):
             for j in np.nonzero(row)[0]:
                 actors[i, j] += 1 if i != j else 0
     return actors
-
-
-def hide_data(table, percentage, sampling_type):
-    assert not np.ma.is_masked(table)
-    np.random.seed(0)
-    if sampling_type == SampleBy.ROWS_COLS:
-
-        row_s_mask, row_oos_mask = hide_data(table, np.sqrt(percentage), SampleBy.ROWS)
-        col_s_mask, col_oos_mask = hide_data(table, np.sqrt(percentage), SampleBy.COLS)
-
-        sample_mask = np.logical_and(row_s_mask, col_s_mask)
-        oos_mask = np.logical_and(row_oos_mask, col_oos_mask)
-        return sample_mask, oos_mask
-
-    elif sampling_type == SampleBy.ROWS:
-        rand = np.repeat(np.random.rand(table.X.shape[0], 1), table.X.shape[1], axis=1)
-    elif sampling_type == SampleBy.COLS:
-        rand = np.repeat(np.random.rand(1, table.X.shape[1]), table.X.shape[0], axis=0)
-    elif sampling_type == SampleBy.ENTRIES:
-        rand = np.random.rand(*table.X.shape)
-    else:
-        raise ValueError("Unknown sampling method.")
-
-    oos_mask, sample_mask = (np.logical_and(rand >= percentage, ~np.isnan(table)),
-                             np.logical_and(rand <  percentage, ~np.isnan(table)))
-    return sample_mask, oos_mask
 
 
 def movie_user_matrix(percentage=None, start_year=None, end_year=None):
