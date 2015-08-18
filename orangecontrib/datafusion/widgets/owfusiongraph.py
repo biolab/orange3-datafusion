@@ -166,6 +166,7 @@ class OWFusionGraph(widget.OWWidget):
         return self.commit()
 
     def commit(self):
+        self.progressbar = gui.ProgressBar(self, self.pref_n_iterations)
         Algo = DECOMPOSITION_ALGO[self.pref_algorithm][1]
         init_type = INITIALIZATION_ALGO[self.pref_initialization].lower().replace(' ', '_')
         # Update rank on object-types
@@ -179,7 +180,10 @@ class OWFusionGraph(widget.OWWidget):
                 maxrank[col_type] = col_type.rank = max(5, int(cols * (self.pref_rank / 100)))
         # Run the algo ...
         self.fuser = Algo(init_type=init_type,
-                          max_iter=self.pref_n_iterations, random_state=0).fuse(self.graph)
+                          max_iter=self.pref_n_iterations,
+                          random_state=0,
+                          callback=lambda *args: self.progressbar.advance()).fuse(self.graph)
+        self.progressbar.finish()
         self.fuser.name = self.pref_algo_name
         self.send(Output.FUSER, FittedFusionGraph(self.fuser))
 
