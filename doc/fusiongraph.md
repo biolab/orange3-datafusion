@@ -16,7 +16,7 @@ Signals
 
 **Outputs**:
 
-- **Relation*
+- **Relation**
 
   Relations between two groups of objects.
 
@@ -43,9 +43,9 @@ and return a relational structure of the entire data system in a matrix.
    - **matrix tri-factorization** will decompose the matrix into three latent matrices and fuse them into a 
      reconstructed matrix (missing values will be imputed as a specific value)
    - **matrix tri-completion** works the same as tri-factorization, but it ignores the missing values
-5. Select the initialization algorithm for matrix optimization.
-6. Set the maximum number of iterations for matrix optimization. Default is 10.
-7. Set the factorization rank (the ratio of data compression based on the input data). Default is 10%.
+5. Select the *initialization algorithm* for matrix optimization.
+6. Set the *maximum number of iterations* for matrix optimization. Default is 10.
+7. Set the *factorization rank* (the ratio of data compression based on the input data). Default is 10%.
 8. If *Run after every change* is ticked, the widget will automatically commit changes. Alternatively press *Run*. 
   For large data sets we recommend to commit the changes manually.
 
