@@ -52,6 +52,10 @@ and return a relational structure of the entire data system in a matrix.
 Example
 -------
 
+The example below shows how to fuse several data sets together. Say we have the data on
+ontology terms for several genes, literature on ontology terms and literature on genes.
+To fuse these data together we use **Table to Relation** widget, where you manually set
+the attribute and relation names. **Fusion Graph** will draw relations between these names,
+display the connections and perform a selected decomposition method.
 
-
-<img src="images/GEODataSets-Example2.png" alt="image" width="600">
+<img src="images/FusionGraph-Example.png" alt="image" width="600">
