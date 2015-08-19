@@ -25,11 +25,13 @@ Signals
 Description
 -----------
 
+This widget compares the quality of matrix optimization based on root mean squared error value
+([RMSE](https://en.wikipedia.org/wiki/Root-mean-square_deviation)). Scores will be displayed as
+attributes, which you can name in previous widgets (**Fusion Graph**).
 
+![Completion Scoring widget](images/CompletionScoring-stamped.png)
 
-![Completion Scoring widget](images/GEOdataset-stamped.png)
-
-
+1. The RMSE value chart for the input relation matrix.
 
 Example
 -------
