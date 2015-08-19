@@ -31,11 +31,14 @@ Signals
 Description
 -----------
 
+The widget calculates latent mean values from the input matrix.
 
+![Mean Fuser widget](images/MeanFuser-stamped.png)
 
-![Mean Fuser widget](images/GEOdataset-stamped.png)
-
-
+1. Select the factor for mean calculation:
+   - **rows**
+   - **columns**
+   - **all**
 
 Example
 -------
