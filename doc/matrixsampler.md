@@ -27,10 +27,17 @@ Signals
 Description
 -----------
 
+This widget samples the input data and sends both the sample and the remaining
+data to the output. It is especially useful for testing the performance of recommendation
+systems.
 
-![Matrix Sampler widget](images/GEOdataset-stamped.png)
+![Matrix Sampler widget](images/MatrixSampler-stamped.png)
 
-
+1. Select the desired *sampling method*:
+   - **rows** (samples from the matrix by y-axis)
+   - **columns** (samples from the matrix by x-axis)
+   - **rows and columns** (samples from the entire matrix)
+   - **entries** (samples from all the entries)
 
 Example
 -------
