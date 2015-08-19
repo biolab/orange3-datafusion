@@ -223,7 +223,7 @@ class OWFusionGraph(widget.OWWidget):
 
     # called when all signals are received, so the graph is updated only once
     def handleNewSignals(self):
-        self.unconditional_commit()
+        self.commit()
 
 
 def main():
