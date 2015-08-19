@@ -3,7 +3,7 @@ Fusion Graph
 
 ![Fusion Graph widget icon](icons/fusion-graph.png)
 
-Fusion of input data sets into a relational graph.
+Constructs data fusion graph and runs a collective matrix factorization.
 
 Signals
 -------
@@ -31,8 +31,8 @@ Signals
 Description
 -----------
 
-**Fusion Graph** widget fuses multiple data sets into one comprehensive structure. The widget can take 
-several data sets as input, return a relational structure of the entire data system and perform a decomposition
+**Fusion Graph** widget fuses multiple data sets into one comprehensive structure. The widget
+returns a relational structure of the entire data system and performs a decomposition
 method.
 
 ![Fusion Graph widget](images/FusionGraph1-stamped.png)
