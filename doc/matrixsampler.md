@@ -38,6 +38,8 @@ systems.
    - **columns** (samples from the matrix by x-axis)
    - **rows and columns** (samples from the entire matrix)
    - **entries** (samples from all the entries)
+2. Select the proportion of the data you want in the output.
+3. Press **Apply** to commit the changes.
 
 Example
 -------
