@@ -27,10 +27,13 @@ Signals
 Description
 -----------
 
+This widget gives you the access IMDb data sets on actors and movies. It output either a
+movie-actor relation matrix, an actor-actor relation matrix or both.
 
-![IMDb widget](images/GEOdataset-stamped.png)
+![IMDb widget](images/IMDbActors-stamped.png)
 
-
+1. Set the percentage of the actors you want to source from the IMDb database.
+2. Click *Apply* to commit your data.
 
 Example
 -------
