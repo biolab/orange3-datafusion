@@ -3,7 +3,7 @@ Completion Scoring
 
 ![Completion Scoring widget icon](icons/completion-scoring.png)
 
-Scroes the quality of matrix completion using root mean squared error (RSME).
+Scores the quality of matrix completion using root mean squared error (RSME).
 
 Signals
 -------
