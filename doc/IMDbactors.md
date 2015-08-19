@@ -1,7 +1,7 @@
 IMDb Actors
 ===========
 
-![IMDB Actors widget icon](icons/geo-data-sets.png)
+![IMDB Actors widget icon](icons/imdb-actors.png)
 
 Constructs a movie-actor and actor-actor relation matrix.
 
