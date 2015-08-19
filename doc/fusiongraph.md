@@ -31,8 +31,9 @@ Signals
 Description
 -----------
 
-**Fusion Graph** widget fuses multiple graphs into a single unified matrix. It can take several data sets as input
-and return a relational structure of the entire data system in a matrix.
+**Fusion Graph** widget fuses multiple data sets into one comprehensive structure. The widget can take 
+several data sets as input, return a relational structure of the entire data system and perform a decomposition
+method.
 
 ![Fusion Graph widget](images/FusionGraph1-stamped.png)
 
@@ -53,7 +54,9 @@ Example
 -------
 
 The example below shows how to fuse several data sets together. Say we have the data on
-ontology terms for several genes, literature on ontology terms and literature on genes.
+[ontology terms for several genes](data-yeast/gene_annotations.tab), 
+[literature on ontology terms](data-yeast/literature_go.tab) and 
+[literature on genes](data-yeast/gene_literature.tab).
 To fuse these data together we use **Table to Relation** widget, where you manually set
 the attribute and relation names. **Fusion Graph** will draw relations between these names,
 display the connections and perform a selected decomposition method.
