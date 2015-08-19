@@ -23,11 +23,17 @@ Signals
 Description
 -----------
 
+**Latent Factors** widget displays relations between latent factors from the matrix
+decomposition and arranges groups these factors by function. Selecting a latent factor
+will place it in the output channel, where you can futher feed the data into other widgets
+- for example a **Data Table**.
 
+![Latent factors widget](images/LatentFactors1-stamped.png)
 
-![Latent factors widget](images/GEOdataset-stamped.png)
-
-
+1. Information on the input (object types are nodes, relations are links between the nodes).
+2. A list of **recipe factors** (compressed matrix of the object type).
+3. A list of **backbone factors** (interactions between latent components).
+4. A list of **completed relations** (full relation matrix).
 
 Example
 -------
