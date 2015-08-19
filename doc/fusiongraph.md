@@ -3,7 +3,7 @@ Fusion Graph
 
 ![Fusion Graph widget icon](icons/fusion-graph.png)
 
-Fusion of input data sets into a collective matrix.
+Fusion of input data sets into a relational graph.
 
 Signals
 -------
