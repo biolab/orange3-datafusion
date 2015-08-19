@@ -25,8 +25,7 @@ Description
 
 **Latent Factors** widget displays relations between latent factors from the matrix
 decomposition and arranges groups these factors by function. Selecting a latent factor
-will place it in the output channel, where you can futher feed the data into other widgets
-- for example a **Data Table**.
+will place it in the output channel, where you can futher feed the data into other widget - for example a **Data Table**.
 
 ![Latent factors widget](images/LatentFactors1-stamped.png)
 
