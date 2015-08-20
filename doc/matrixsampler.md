@@ -44,6 +44,10 @@ systems.
 Example
 -------
 
+**Matrix Sampler** widget samples data into two subsets - in-sample and
+out-of-the-sample data. This is useful if you want to check the accuracy
+of matrix reconstruction with **Completion Scoring**. Feed in-sample data
+into the **Fusion Graph** to reconstruct the matrix and then compare
+the results with the out-of-the-sample data.
 
-
-<img src="images/GEODataSets-Example2.png" alt="image" width="600">
+<img src="images/MatrixSampler-Example2.png" alt="image" width="600">
