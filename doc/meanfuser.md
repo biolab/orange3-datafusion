@@ -39,10 +39,16 @@ The widget calculates latent mean values from the input matrix.
    - **rows**
    - **columns**
    - **all**
+2. Output completed relations for a selected matrix.
 
 Example
 -------
 
+**Mean Fuser** widget is useful for comparing RMSE values in
+**Completion Scoring** widget for the input data set. In the example
+below we have selected a subset, fed it into **Fusion Graph** and
+from there into **Completion Scoring** for evaluation. We also fed the
+out-of-the-sample data from **Matrix Sampler** and the mean values
+from **Mean Fuser** into the widget for scoring.
 
-
-<img src="images/GEODataSets-Example2.png" alt="image" width="600">
+<img src="images/MeanFuser-Example.png" alt="image" width="600">
