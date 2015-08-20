@@ -37,6 +37,10 @@ where you can select the node for chaining.
 Example
 -------
 
+This widget is great for finding relation chains between data sets. In the example
+below we have three data sets: ontology terms for genes, literature on genes and
+literature on ontology terms. To see how genes are related to ontology terms through
+literature, we use **Chaining**. The widget will display fusion graph, where you can
+select the term you want to chain.
 
-
-<img src="images/GEODataSets-Example2.png" alt="image" width="600">
+<img src="images/Chaining-Example.png" alt="image" width="600">
