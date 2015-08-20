@@ -36,5 +36,8 @@ attributes, which you can name in previous widgets (**Fusion Graph**).
 Example
 -------
 
+**Completion Scoring** widget scores matrix reconstruction as a RMSE value. Connect it
+with **Matrix Sampler** to score out-of-the-sample data with in-sample data. You can
+also use **Mean Fuser** to get a mean score for latent values.
 
-<img src="images/GEODataSets-Example2.png" alt="image" width="600">
+<img src="images/MeanFuser-Example.png" alt="image" width="600">
