@@ -24,7 +24,7 @@ Description
 -----------
 
 **Latent Factors** widget displays relations between latent factors from the matrix
-decomposition and arranges groups these factors by function. 
+decomposition and groups these factors by function. 
 
 Fused data from the widget input are decomposed into latent factors, which
 serve as components for subsequent matrix reconstruction. You would normally
