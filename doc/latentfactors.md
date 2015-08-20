@@ -24,8 +24,12 @@ Description
 -----------
 
 **Latent Factors** widget displays relations between latent factors from the matrix
-decomposition and arranges groups these factors by function. Selecting a latent factor
-will place it in the output channel, where you can futher feed the data into other widget - for example a **Data Table**.
+decomposition and arranges groups these factors by function. 
+
+Fused data from the widget input are decomposed into latent factors, which
+serve as components for subsequent matrix reconstruction. You would normally
+draw this widget from **Fusion Graph** and feed it into other visualization
+widgets, such as **Hierarchial Clusterin** or **Heat Map**.
 
 ![Latent factors widget](images/LatentFactors1-stamped.png)
 
@@ -37,6 +41,8 @@ will place it in the output channel, where you can futher feed the data into oth
 Example
 -------
 
+In the example below we demonstrate how 8 separate [yeast](data-yeast) 
+data sets are fused together in **Fusion Graph** and then decomposed 
+into latent factors with **Latent Factors** widget.
 
-
-<img src="images/GEODataSets-Example2.png" alt="image" width="600">
+<img src="images/LatentFactors-Example.png" alt="image" width="600">
