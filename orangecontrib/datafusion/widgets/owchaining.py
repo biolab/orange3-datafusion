@@ -87,9 +87,6 @@ class OWChaining(owlatentfactors.OWLatentFactors):
         self.fuser = fuser
         self._populate_table()
         self.repaint()
-        # this ensures gui.label-s get updated
-        self.n_object_types = fuser.n_object_types
-        self.n_relations = fuser.n_relations
 
     def on_graph_element_selected(self, element_id):
         if not element_id:
