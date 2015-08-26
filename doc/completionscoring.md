@@ -12,11 +12,11 @@ Signals
 
 - **Fitted fusion graph**
 
-  Fitted collective matrix.
+  Fitted collective latent data model.
 
 - **Relation**
 
-  Relations between two groups of objects.
+  Relationships between two groups of objects.
 
 **Outputs**:
 
@@ -25,9 +25,10 @@ Signals
 Description
 -----------
 
-This widget compares the quality of matrix optimization based on root mean squared error value
-([RMSE](https://en.wikipedia.org/wiki/Root-mean-square_deviation)). Scores will be displayed as
-attributes, which you can name in previous widgets (**Fusion Graph**).
+This widget compares the quality of matrix completion based on root mean squared error value
+([RMSE](https://en.wikipedia.org/wiki/Root-mean-square_deviation)). Each row contains scores
+representing matrix completion quality of different prediction models. Results for prediction
+models are in columns.
 
 ![Completion Scoring widget](images/CompletionScoring-stamped.png)
 
@@ -36,8 +37,8 @@ attributes, which you can name in previous widgets (**Fusion Graph**).
 Example
 -------
 
-**Completion Scoring** widget scores matrix reconstruction as a RMSE value. Connect it
-with **Matrix Sampler** to score out-of-the-sample data with in-sample data. You can
-also use **Mean Fuser** to get a mean score for latent values.
+**Completion Scoring** widget assesses the quality of matrix completion using the RMSE metric. Connect it
+with **Matrix Sampler** to score prediction models (previously learnt on in-sample data) on out-of-the-sample 
+data. You can also use **Mean Fuser** to get a mean score for latent values.
 
 <img src="images/MeanFuser-Example.png" alt="image" width="600">
