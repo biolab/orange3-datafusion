@@ -63,11 +63,13 @@ class OWChaining(owlatentfactors.OWLatentFactors):
         self.controlArea.layout().addStretch(1)
 
     def _highlight_relations(self, relations):
+        escape = lambda s: s.replace(' ', r'\\ ')
         selectors = set()
         for rel in relations:
-            selectors.add('.node[id*={}]'.format(rel.row_type.name))
-            selectors.add('.node[id*={}]'.format(rel.col_type.name))
-            selectors.add('.edge[id*={}][id*={}]'.format(rel.row_type.name, rel.col_type.name))
+            row_name, col_name = escape(rel.row_type.name), escape(rel.col_type.name)
+            selectors.add('.node[id*={}]'.format(row_name))
+            selectors.add('.node[id*={}]'.format(col_name))
+            selectors.add('.edge[id*={}][id*={}]'.format(row_name, col_name))
         self.webview.evalJS('highlight("{}");'.format(','.join(selectors)))
 
     def _populate_table(self, chains=[]):
@@ -87,9 +89,6 @@ class OWChaining(owlatentfactors.OWLatentFactors):
         self.fuser = fuser
         self._populate_table()
         self.repaint()
-        # this ensures gui.label-s get updated
-        self.n_object_types = fuser.n_object_types
-        self.n_relations = fuser.n_relations
 
     def on_graph_element_selected(self, element_id):
         if not element_id:

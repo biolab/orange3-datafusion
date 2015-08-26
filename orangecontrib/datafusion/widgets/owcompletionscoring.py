@@ -101,13 +101,13 @@ class OWCompletionScoring(widget.OWWidget):
 
     def on_fuser_change(self, fuser, id):
         if fuser:
-            N_RUNS = 1
-            self.fusers[id] = [fuser.retrain() for _ in range(N_RUNS)]
+            self.fusers[id] = [fuser]
         else: del self.fusers[id]
         self.update()
 
     def on_relation_change(self, relation, id):
-        if relation: self.relations[id] = relation.relation
+        if relation:
+            self.relations[id] = relation.relation
         else: del self.relations[id]
         self.warning(id, '')
         self.update()

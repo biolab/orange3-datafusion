@@ -36,7 +36,7 @@ class OWTableToRelation(OWWidget):
     col_type = ContextSetting("")
     col_names = None
 
-    auto_commit = Setting(False)
+    auto_commit = Setting(True)
 
     def __init__(self):
         super().__init__()
@@ -62,7 +62,9 @@ class OWTableToRelation(OWWidget):
                                             callback=self.update_row_names)
 
         gui.rubber(self.controlArea)
-        gui.auto_commit(self.controlArea, self, "auto_commit", "Send")
+        gui.auto_commit(self.controlArea, self, "auto_commit", "Send",
+                        checkbox_label='Auto-send',
+                        orientation='vertical')
 
     def populate_main_area(self):
         grid = QWidget()
