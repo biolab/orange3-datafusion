@@ -3,7 +3,8 @@ Chaining
 
 ![Chaining widget icon](icons/chaining.png)
 
-Profiles objects of one type in the feature space of another type through chaining of latent factors.
+Profiles objects of one type in the latent space of another object type through chaining of 
+latent matrices along paths in a data fusion graph.
 
 Signals
 -------
@@ -12,35 +13,37 @@ Signals
 
 - **Fitted Fusion Graph**
 
-  Fitted collective matrix.
+  Fitted collective latent data model.
 
 **Outputs**:
 
 - **Relation**
 
-  Relations between two groups of objects.
+  Relationships between two groups of objects.
 
 Description
 -----------
 
-**Chaining** profiles links between latent factors, allowing the user to output
-a particular latent chain. The widget displays a fitted fusion graph on the right,
-where you can select the node for chaining.
+**Chaining** constructs data profiles of objects of one type that are expressed in the latent 
+space of another object type. This is done by appropriately multiplying the latent matrices along
+paths that connect start and end nodes in the fusion graph. The widget displays a fitted fusion graph on the right,
+where you can select the start and end node (object type) considered for chaining.
 
 ![Chaining widget](images/Chaining1-stamped.png)
 
-1. By clicking on a node in the graph the widget will display latent chains. Click on the chain you wish to output.
+1. The widget displays all chains that connect selected start node with the selected end node (in orange).
+   Click on the chain you wish to output.
 2. Select what type of chain you wish to output:
-   - **latent space** (widget will output chains between latent factors)
-   - **feature space** (widget will output chains between features)
+   - **latent space** (widget outputs data profiles in the latent space)
+   - **feature space** (widget outputs data profiles in the original domain space)
 
 Example
 -------
 
-This widget is great for finding relation chains between data sets. In the example
-below we have three data sets: ontology terms for genes, literature on genes and
-literature on ontology terms. To see how genes are related to ontology terms through
-literature, we use **Chaining**. The widget will display fusion graph, where you can
+This widget is great for constructing profiles that relate objects, which are not directly
+connected in a fusion graph. In the example below we have three data sets: ontology terms for genes, 
+literature on genes and literature on ontology terms. To see how genes are related to ontology terms 
+through literature, we use **Chaining**. The widget will display fusion graph, where you can
 select the term you want to chain.
 
 <img src="images/Chaining-Example.png" alt="image" width="600">
