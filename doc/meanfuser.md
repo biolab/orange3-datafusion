@@ -3,7 +3,7 @@ Mean Fuser
 
 ![Mean Fuser widget icon](icons/mean-fuser.png)
 
-Constructs a mean fusion graph.
+Constructs relation matrices based on the average values of matrix elements.
 
 Signals
 -------
@@ -12,43 +12,46 @@ Signals
 
 - **Fusion Graph**
 
-  Collective matrix.
+  A relational scheme of a data compendium.
   
 - **Relation**
 
-  Relations between two groups of objects.
+  Relationships between two groups of objects.
 
 **Outputs**:
 
 - **Mean-fitted fusion graph**
 
-  Mean-fitted collective matrix.
+  Mean fuser.
 
 - **Relation**
 
-  Relations between two groups of objects.
+  Relationships between two groups of objects.
 
 Description
 -----------
 
-The widget calculates latent mean values from the input matrix.
+The widget completes each relation matrix at the input using the values
+obtained by averaging known values in matrix rows, columns or in the entire
+data matrix.
 
 ![Mean Fuser widget](images/MeanFuser-stamped.png)
 
-1. Select the factor for mean calculation:
+1. Select the axis for mean value calculation:
    - **rows**
    - **columns**
    - **all**
-2. Output completed relations for a selected matrix.
+2. Output selected relation matrix, where unknown matrix elements are replaced with mean values.
 
 Example
 -------
 
 **Mean Fuser** widget is useful for comparing RMSE values in
 **Completion Scoring** widget for the input data set. In the example
-below we have selected a subset, fed it into **Fusion Graph** and
-from there into **Completion Scoring** for evaluation. We also fed the
-out-of-the-sample data from **Matrix Sampler** and the mean values
-from **Mean Fuser** into the widget for scoring.
+below we have sampled movie ratings, fed the in-sample data into **Fusion Graph** and
+from there into **Completion Scoring** for evaluation. We also fed the out-of-sample
+data from **Matrix Sampler** into **Completion Scoring** widget as out-of-sample data
+is needed to assess how well the predicted values correspond to the true data. Finally,
+we compare prediction to those obtained by **Mean Fuser**.
 
 <img src="images/MeanFuser-Example.png" alt="image" width="600">
