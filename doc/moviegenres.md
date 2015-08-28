@@ -3,7 +3,7 @@ Movie Genres
 
 ![Movie Genres widget icon](icons/movie-genres.png)
 
-Constructs movies-genres or actors-genres relation matrix.
+Constructs movies-by-genres or actors-by-genres relation matrix.
 
 Signals
 -------
@@ -18,13 +18,14 @@ Signals
 
 - **Genres**
 
-  Data-to-genres relation matrix.
+  Data-by-genres relation matrix.
 
 Description
 -----------
 
-This widget matches movies or actors to movie genre and forms a relation matrix.
-It is used for filtering the data and getting a more precise reconstruction result.
+This widget matches movies or actors to movie genres and forms a relation matrix.
+It is used to obtain and append information on which genres movies from the input belong
+to or on genres associated with actors.
 
 ![Movie Genres widget](images/MovieGenres-stamped.png)
 
@@ -33,8 +34,8 @@ It is used for filtering the data and getting a more precise reconstruction resu
 Example
 -------
 
-This example shows how we refined the results of our data fusion by
-adding **Movie Genres** in the equation. You can see in the **Data Table**
-that all movies are matched by genre.
+Below we constructed a movies-by-genres relation matrix using the
+**Movie Genres** widget. You can see in the **Data Table**
+that all movies are matched by their genres.
 
 <img src="images/MovieGenres-Example.png" alt="image" width="600">
