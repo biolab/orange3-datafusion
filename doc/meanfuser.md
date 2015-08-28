@@ -54,4 +54,4 @@ data from **Matrix Sampler** into **Completion Scoring** widget as out-of-sample
 is needed to assess how well the predicted values correspond to the true data. Finally,
 we compare prediction to those obtained by **Mean Fuser**.
 
-<img src="images/MeanFuser-Example.png" alt="image" width="600">
+<img src="images/CompletionScoring-Example.png" alt="image" width="600">
