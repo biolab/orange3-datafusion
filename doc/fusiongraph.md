@@ -23,6 +23,10 @@ Signals
 - **Fitted Fusion Graph**
 
   Fitted collective latent data model.
+  
+- **Fusion Graph**
+
+  Latent data model.
 
 Description
 -----------
