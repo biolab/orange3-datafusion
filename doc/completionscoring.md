@@ -41,4 +41,4 @@ Example
 with **Matrix Sampler** to score prediction models (previously learnt on in-sample data) on out-of-the-sample 
 data. You can also use **Mean Fuser** to get a mean score for latent values.
 
-<img src="images/MeanFuser-Example.png" alt="image" width="600">
+<img src="images/CompletionScoring-Example.png" alt="image" width="600">
