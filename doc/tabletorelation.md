@@ -35,7 +35,7 @@ matrices into a collective latent data model.
 2. Label the object type in columns. Your entry will be displayed on top of the table. Note that the labels
    are case-sensitive.
 3. Label the object type in rows. If there is a label present in the data, it will be used as default.
-4. If *Auto send is on* is ticked, your changes will be communicated automatically. Alternatively click *Send*.
+4. If *Auto send* is ticked, your changes will be communicated automatically. Alternatively click *Send*.
 
 Example
 -------
