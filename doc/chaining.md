@@ -27,7 +27,7 @@ Description
 **Chaining** constructs data profiles of objects of one type that are expressed in the latent 
 space of another object type. This is done by appropriately multiplying the latent matrices along
 paths that connect start and end nodes in the fusion graph. The widget displays a fitted fusion graph on the right,
-where you can select the start and end node (object type) considered for chaining.
+where you can select the start and end node (object type) that are then used in chaining.
 
 ![Chaining widget](images/Chaining1-stamped.png)
 
@@ -41,9 +41,8 @@ Example
 -------
 
 This widget is great for constructing profiles that relate objects, which are not directly
-connected in a fusion graph. In the example below we have three data sets: ontology terms for genes, 
-literature on genes and literature on ontology terms. To see how genes are related to ontology terms 
-through literature, we use **Chaining**. The widget will display fusion graph, where you can
-select the term you want to chain.
+connected in a fusion graph. In the example below we have three data sets: annotations of genes
+from the Gene Ontology, literature on genes and literature on ontology terms. 
+We use **Chaining** to see how genes relate to ontology terms.
 
 <img src="images/Chaining-Example.png" alt="image" width="600">
