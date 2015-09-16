@@ -39,7 +39,7 @@ such as **Hierarchial Clustering** or **Heat Map**.
    Recipe factors encode latent components of respective object types.
 3. A list of **backbone factors** (latent matrices containing compressed representation of data relations).
    Backbone factors encode interactions between the latent components.
-4. A list of **completed relations** (completed relation matrices obtained by multiplying corresponding latent matrices).
+4. A list of **completed relations** (completed relation matrices obtained by multiplying the corresponding latent matrices).
 
 Example
 -------
