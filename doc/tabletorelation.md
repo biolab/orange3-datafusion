@@ -3,7 +3,7 @@ Table to Relation
 
 ![Table to Relation widget icon](icons/table-to-relation.png)
 
-Converts data table into a relation matrix. Labels objects in rows and columns of a relation matrix.
+Converts a data table into a relation matrix. Labels objects in rows and columns of a relation matrix.
 
 Signals
 -------
