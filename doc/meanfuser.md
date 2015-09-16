@@ -31,9 +31,9 @@ Signals
 Description
 -----------
 
-The widget completes each relation matrix at the input using the values
-obtained by averaging known values in matrix rows, columns or in the entire
-data matrix.
+The widget completes each relation matrix at the input based on the available data in the matrix. Unknown values
+in the matrix can be replaced with the values obtained by averaging matrix rows, matrix columns or the entire data
+matrix.
 
 ![Mean Fuser widget](images/MeanFuser-stamped.png)
 
@@ -48,9 +48,9 @@ Example
 
 **Mean Fuser** widget is useful for comparing RMSE values in
 **Completion Scoring** widget for the input data set. In the example
-below we have sampled movie ratings, fed the in-sample data into **Fusion Graph** and
+below we have sampled movie ratings, fed the in-sample movie ratings data into **Fusion Graph** and
 from there into **Completion Scoring** for evaluation. We also fed the out-of-sample
-data from **Matrix Sampler** into **Completion Scoring** widget as out-of-sample data
+data from **Matrix Sampler** into **Completion Scoring** widget as out-of-sample movie ratings data
 is needed to assess how well the predicted values correspond to the true data. Finally,
 we compare prediction to those obtained by **Mean Fuser**.
 
