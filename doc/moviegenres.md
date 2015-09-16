@@ -3,7 +3,7 @@ Movie Genres
 
 ![Movie Genres widget icon](icons/movie-genres.png)
 
-Constructs movies-by-genres or actors-by-genres relation matrix.
+Constructs a movies-by-genres or actors-by-genres relation matrix.
 
 Signals
 -------
@@ -24,12 +24,12 @@ Description
 -----------
 
 This widget matches movies or actors to movie genres and forms a relation matrix.
-It is used to obtain and append information on which genres movies from the input belong
-to or on genres associated with actors.
+It is used to obtain information about the genres to which movies in the input belong or 
+about genres that are associated with actors given in the input.
 
 ![Movie Genres widget](images/MovieGenres-stamped.png)
 
-1. A list of movie genres that are match with the input data.
+1. A list of movie genres included in the MovieLens database.
 
 Example
 -------
