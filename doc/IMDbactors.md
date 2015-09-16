@@ -3,7 +3,7 @@ IMDb Actors
 
 ![IMDB Actors widget icon](icons/imdb-actors.png)
 
-Constructs a movies-by-actors and actors-by-actors relation matrix.
+Constructs a movies-by-actors or actors-by-actors relation matrix.
 
 Signals
 -------
@@ -27,7 +27,7 @@ Signals
 Description
 -----------
 
-This widget gives you the access [IMDb](https://en.wikipedia.org/wiki/Internet_Movie_Database)
+This widget gives you the access to the [IMDb](https://en.wikipedia.org/wiki/Internet_Movie_Database)
 data sets on actors and movies. It outputs either a
 movies-by-actors relation matrix, an actors-by-actors relation matrix or both.
 
@@ -40,7 +40,7 @@ Example
 -------
 
 This simple widget is great for learning how data fusion works since it enables immediate
-access to [IMDb database](https://en.wikipedia.org/wiki/Internet_Movie_Database). To use it, 
+access to the [IMDb database](https://en.wikipedia.org/wiki/Internet_Movie_Database). To use it, 
 you need to connect it to **Movie Ratings** widget in the
 input and with **Fusion Graph** in the output. This will add the information on actors in relation
 to movies. You can view this new data in the **Data Table** widget.
