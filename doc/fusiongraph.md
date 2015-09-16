@@ -26,7 +26,7 @@ Signals
   
 - **Fusion Graph**
 
-  Latent data model.
+  Input data system.
 
 Description
 -----------
@@ -56,12 +56,12 @@ Example
 -------
 
 The example below shows how to fuse several data sets together. Say we have the data on
-[ontology terms for several genes](data-yeast/gene_annotations.tab), 
+[ontology terms for many genes](data-yeast/gene_annotations.tab), 
 [literature on ontology terms](data-yeast/literature_go.tab) and 
 [literature on genes](data-yeast/gene_literature.tab).
-To fuse these data together we use **Table to Relation** widget, where you manually set
+To fuse these data together we first use **Table to Relation** widget, where we manually set
 the object type and relation names. **Fusion Graph** will compile the fusion graph of our three data sets with
 connections between object types based on previously defined data relations,
-display the connections and perform a selected decomposition method.
+display the connections and run matrix decomposition algorithm.
 
 <img src="images/FusionGraph-Example.png" alt="image" width="600">
