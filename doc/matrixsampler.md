@@ -27,7 +27,7 @@ Signals
 Description
 -----------
 
-This widget samples the input data and sends both the sample and the remaining
+This widget samples the input data and sends both the sampled and the remaining
 data to the output. It is useful for evaluating the performance of recommendation
 systems.
 
@@ -44,7 +44,7 @@ systems.
 Example
 -------
 
-**Matrix Sampler** widget samples data into two subsets - in-sample and
+**Matrix Sampler** widget samples data into two subsets: in-sample and
 out-of-the-sample data. This is useful if you want to check the accuracy
 of matrix reconstruction with **Completion Scoring**. Feed in-sample data
 into the **Fusion Graph** to reconstruct the matrix and then compare
