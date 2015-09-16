@@ -3,7 +3,7 @@ Completion Scoring
 
 ![Completion Scoring widget icon](icons/completion-scoring.png)
 
-Scores the quality of matrix completion using root mean squared error (RSME).
+Scores the quality of matrix completion using root mean squared error (RSME) metric.
 
 Signals
 -------
@@ -25,9 +25,9 @@ Signals
 Description
 -----------
 
-This widget compares the quality of matrix completion based on root mean squared error value
+This widget assesses the quality of matrix completion based on root mean squared error metric
 ([RMSE](https://en.wikipedia.org/wiki/Root-mean-square_deviation)). Each row contains scores
-representing matrix completion quality of different prediction models. Results for prediction
+representing matrix completion quality of different relations. Results for prediction
 models are in columns.
 
 ![Completion Scoring widget](images/CompletionScoring-stamped.png)
