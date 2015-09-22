@@ -215,9 +215,14 @@ class FittedFusionGraph(FusionGraph, RelationCompleter):
 
     def compute_chain(self, chain, end_in_input_space=True):
         row_type = chain[0].row_type
-        result = self._fusion_fit.factor(row_type)
-        for rel in chain:
-            result = np.dot(result, self._fusion_fit.backbone(rel))
+        result = np.dot(self._fusion_fit.factor(row_type),
+                        self._fusion_fit.backbone(chain[0]))
+        for rel in chain[1:]:
+            row_type = rel.row_type
+            relax = np.dot(self._fusion_fit.factor(row_type).T,
+                           self._fusion_fit.factor(row_type))
+            jump = np.dot(relax, self._fusion_fit.backbone(rel))
+            result = np.dot(result, jump)
         col_type = None
         if end_in_input_space:
             col_type = chain[-1].col_type
