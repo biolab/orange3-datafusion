@@ -150,15 +150,18 @@ class OWFusionGraph(widget.OWWidget):
                          self, 'pref_initialization', INITIALIZATION_ALGO,
                          box='Initialization algorithm',
                          callback=self.checkcommit)
-        gui.hSlider(self.controlArea, self, 'pref_n_iterations',
-                    'Maximum number of iterations',
-                    minValue=10, maxValue=500, createLabel=True,
-                    callback=self.checkcommit)
+        slider = gui.hSlider(
+            self.controlArea, self, 'pref_n_iterations',
+            'Maximum number of iterations',
+            minValue=10, maxValue=500, createLabel=True,
+            callback=self.checkcommit)
+        slider.setTracking(False)
         self.slider_rank = gui.hSlider(self.controlArea, self, 'pref_rank',
                                        'Factorization rank',
                                        minValue=1, maxValue=100, createLabel=True,
                                        labelFormat=" %d%%",
                                        callback=self.checkcommit)
+        self.slider_rank.setTracking(False)
         gui.auto_commit(self.controlArea, self, "autorun", "Run",
                         checkbox_label="Run after any change  ")
 
