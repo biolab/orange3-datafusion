@@ -2,14 +2,13 @@ from io import BytesIO
 from collections import defaultdict
 from os import path
 
-from PyQt4 import QtCore, QtGui, QtWebKit
+from PyQt4 import QtCore, QtGui
 
 from Orange.widgets import widget, gui, settings
 from skfusion import fusion
 from orangecontrib.datafusion.models import Relation, FusionGraph, FittedFusionGraph
+from orangecontrib.datafusion.widgets.graphview import GraphView, Node, Edge
 
-
-JS_GRAPH = open(path.join(path.dirname(__file__), 'graph_script.js'), encoding='utf-8').read()
 
 DECOMPOSITION_ALGO = [
     ('Matrix tri-factorization', fusion.Dfmf),
@@ -48,14 +47,18 @@ def bold_item(item):
     item.setFont(font)
 
 
-def redraw_graph(webview, graph):
-    stream = BytesIO()
-    if graph:
-        graph.draw_graphviz(stream, 'svg')
-    stream.seek(0)
-    stream = QtCore.QByteArray(stream.read())
-    webview.setContent(stream, 'image/svg+xml')
-    webview.evalJS(JS_GRAPH)
+class FusionGraphView(GraphView):
+    def nodeClicked(self, node):
+        self.clearSelection()
+        for edge in node.edges:
+            edge.selected = True
+        super().nodeClicked(node)
+
+    def edgeClicked(self, edge):
+        self.clearSelection()
+        edge.source.selected = True
+        edge.dest.selected = True
+        super().nodeClicked(edge)
 
 
 class OWFusionGraph(widget.OWWidget):
@@ -71,9 +74,6 @@ class OWFusionGraph(widget.OWWidget):
         (Output.FUSION_GRAPH, FusionGraph),
     ]
 
-    # Signal emitted when a node in the SVG is selected, carrying its name
-    graph_element_selected = QtCore.pyqtSignal(str)
-
     pref_algo_name = settings.Setting('')
     pref_algorithm = settings.Setting(0)
     pref_initialization = settings.Setting(0)
@@ -86,38 +86,29 @@ class OWFusionGraph(widget.OWWidget):
         self.n_object_types = 0
         self.n_relations = 0
         self.relations = {}  # id-->relation map
-        self.graph_element_selected.connect(self.on_graph_element_selected)
         self.graph = FusionGraph(fusion.FusionGraph())
-        self.webview = gui.WebviewWidget(self.mainArea, self)
+        self.graphview = FusionGraphView(self)
+        self.graphview.selectionChanged.connect(self.on_graph_element_selected)
         self._create_layout()
 
-    @QtCore.pyqtSlot(str)
-    def on_graph_element_selected(self, element_id):
-        """Handle self.graph_element_selected signal, and highlight also:
-           * if edge was selected, the two related nodes,
-           * if node was selected, all its edges.
-           Additionally, update the info box.
-        """
-        if not element_id:
+    def on_graph_element_selected(self, selected):
+        if not selected:
             return self._populate_table()
-        selected_is_edge = element_id.startswith('edge ')
-        nodes = self.graph.get_selected_nodes(element_id)
-        # CSS selector query for selection-relevant nodes
-        selector = ','.join('[id^="node "][id*="`%s`"]' % n.name for n in nodes)
-        # If a node was selected, include the edges that connect to it
-        if not selected_is_edge:
-            selector += ',[id^="edge "][id*="`%s`"]' % nodes[0].name
-        # Highlight these additional elements
-        self.webview.evalJS("highlight('%s');" % selector)
+        selected_is_edge = isinstance(selected[0], Edge)
         # Update the control table table
         if selected_is_edge:
+            edge = next(i for i in selected if isinstance(i, Edge))
+            nodes = self.graph.get_selected_nodes([edge.source.name, edge.dest.name])
             relations = self.graph.get_relations(*nodes)
         else:
+            node = next(i for i in selected if isinstance(i, Node))
+            nodes = self.graph.get_selected_nodes([node.name])
             relations = (set(i for i in self.graph.in_relations(nodes[0])) |
                          set(i for i in self.graph.out_relations(nodes[0])))
         self._populate_table(relations)
 
     def _create_layout(self):
+        self.mainArea.layout().addWidget(self.graphview)
         info = gui.widgetBox(self.controlArea, 'Info')
         gui.label(info, self, '%(n_object_types)d object types')
         gui.label(info, self, '%(n_relations)d relations')
@@ -138,9 +129,9 @@ class OWFusionGraph(widget.OWWidget):
         self.table.selectionChanged = send_relation
         self.table.setColumnFilter(bold_item, (1, 3))
 
-        self.controlArea.layout().addStretch(1)
         gui.lineEdit(self.controlArea,
-                     self, 'pref_algo_name', 'Fuser name',
+                     self, 'pref_algo_name', 'Fuser name:',
+                     orientation='horizontal',
                      callback=self.checkcommit, enterPlaceholder=True)
         gui.radioButtons(self.controlArea,
                          self, 'pref_algorithm', [i[0] for i in DECOMPOSITION_ALGO],
@@ -182,11 +173,13 @@ class OWFusionGraph(widget.OWWidget):
             if cols > maxrank[col_type]:
                 maxrank[col_type] = col_type.rank = max(5, int(cols * (self.pref_rank / 100)))
         # Run the algo ...
-        self.fuser = Algo(init_type=init_type,
-                          max_iter=self.pref_n_iterations,
-                          random_state=0,
-                          callback=lambda *args: self.progressbar.advance()).fuse(self.graph)
-        self.progressbar.finish()
+        try:
+            self.fuser = Algo(init_type=init_type,
+                              max_iter=self.pref_n_iterations,
+                              random_state=0,
+                              callback=lambda *args: self.progressbar.advance()).fuse(self.graph)
+        finally:
+            self.progressbar.finish()
         self.fuser.name = self.pref_algo_name
         self.send(Output.FUSER, FittedFusionGraph(self.fuser))
 
@@ -211,6 +204,12 @@ class OWFusionGraph(widget.OWWidget):
             _on_add_relation(relation.relation, id)
         else:
             _on_remove_relation(id)
+
+        self.graphview.clear()
+        for relation in self.graph.relations:
+            self.graphview.addRelation(relation)
+        self.graphview.hideSquares()
+
         self._populate_table()
         LIMIT_RANK_THRESHOLD = 1000  # If so many objects or more, limit maximum rank
         self.slider_rank.setMaximum(30
@@ -218,7 +217,6 @@ class OWFusionGraph(widget.OWWidget):
                                            for rel in self.graph.relations)
                                     else
                                     100)
-        redraw_graph(self.webview, self.graph)
         self.send(Output.FUSION_GRAPH, FusionGraph(self.graph))
         # this ensures gui.label-s get updated
         self.n_object_types = self.graph.n_object_types
@@ -238,14 +236,15 @@ def main():
     R31 = np.random.rand(40, 50)
     R23 = np.random.rand(100, 40)
     R23 = np.random.rand(100, 40)
-    R24 = np.random.rand(100, 400)
-    R34 = np.random.rand(40, 400)
+    R24 = np.random.rand(100, 40)
+    R34 = np.random.rand(40, 40)
     t1 = fusion.ObjectType('Users', 10)
     t2 = fusion.ObjectType('Actors', 20)
     t3 = fusion.ObjectType('Movies', 30)
     t4 = fusion.ObjectType('Genres', 40)
     relations = [fusion.Relation(R12, t1, t2, name='like'),
                  fusion.Relation(R13, t1, t3, name='rated'),
+                 fusion.Relation(R13, t1, t3, name='mated'),
                  fusion.Relation(R23, t2, t3, name='play in'),
                  fusion.Relation(R31, t3, t1),
                  fusion.Relation(R24, t2, t4, name='prefer'),
