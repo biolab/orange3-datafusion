@@ -39,13 +39,12 @@ if __name__ == '__main__':
         packages=find_packages(),
         package_data={
             "orangecontrib.datafusion": ["datasets/*.csv"],
-            "orangecontrib.datafusion.widgets": ["icons/*.svg", "*.js"],
+            "orangecontrib.datafusion.widgets": ["icons/*.svg"],
             "orangecontrib.datafusion.tutorials": ["*.ows"],
         },
         install_requires=[
             'Orange',
             'scikit-fusion',
-            'pygraphviz>=1.3rc2',
         ],
         entry_points=ENTRY_POINTS,
         namespace_packages=['orangecontrib'],
