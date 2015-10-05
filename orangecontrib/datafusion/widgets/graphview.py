@@ -372,6 +372,20 @@ class GraphView(QtGui.QGraphicsView):
         self.nodes.clear()
         self.edges.clear()
 
+    def fromFusionFit(self, fuser):
+        self.clear()
+        if not fuser: return
+        for relation in fuser.relations:
+            edge = self.addRelation(relation)
+            if edge.source is edge.dest:
+                edge.squares.setVisible(False)
+                continue
+            last_rect = edge.squares.childItems()[-1]
+            edge.squares.removeFromGroup(last_rect)
+            last_rect.scene().removeItem(last_rect)
+            size = fuser.backbone(relation).shape[0]
+            edge.squares.addSquare(size)
+
     def addRelation(self, relation):
         ot1, ot2 = relation.row_type.name, relation.col_type.name
         rank1, rank2 = relation.data.shape
@@ -404,6 +418,7 @@ class GraphView(QtGui.QGraphicsView):
         edge.addRelation(rel_name, relation.data.shape, node1 is node2)
         edge.addWeight(np.ma.count(relation.data)/np.multiply(*relation.data.shape))
         self.relayout()
+        return edge
 
     def wheelEvent(self, event):
         if event.orientation() != Qt.Vertical: return

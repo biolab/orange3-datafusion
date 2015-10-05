@@ -5,11 +5,9 @@ from PyQt4 import QtCore, QtGui
 from Orange.widgets import widget, gui, settings
 from skfusion import fusion
 from orangecontrib.datafusion.widgets.owfusiongraph import \
-    redraw_graph, rel_shape, rel_cols, bold_item
+    rel_shape, rel_cols, bold_item
 from orangecontrib.datafusion.models import Relation, FittedFusionGraph
-
-
-JS_FACTORS = open(path.join(path.dirname(__file__), 'factors_script.js'), encoding='utf-8').read()
+from orangecontrib.datafusion.widgets.graphview import GraphView, Node, Edge
 
 
 def is_constraint(relation):
@@ -21,6 +19,13 @@ class Output:
     RELATION = 'Relation'
 
 
+class LatentGraphView(GraphView):
+    def itemClicked(self, item):
+        if isinstance(item, Edge) and item.source is item.dest: return
+        self.clearSelection()
+        super().itemClicked(item)
+
+
 class OWLatentFactors(widget.OWWidget):
     name = "Latent Factors"
     description = "Visualize data fusion graph with latent factors. Can " \
@@ -29,11 +34,6 @@ class OWLatentFactors(widget.OWWidget):
     icon = "icons/LatentFactors.svg"
     inputs = [("Fitted fusion graph", FittedFusionGraph, "on_fuser_change")]
     outputs = [(Output.RELATION, Relation)]
-
-    # Signal emitted when a node in the SVG is selected, carrying its id
-    graph_element_selected = QtCore.pyqtSignal(str)
-    # Signal to communicate the sizes of matrices on a node / along an edge
-    graph_element_get_size = QtCore.pyqtSignal(str)
 
     autorun = settings.Setting(True)
 
@@ -48,54 +48,30 @@ class OWLatentFactors(widget.OWWidget):
         super().__init__()
         self.n_relations = 0
         self.n_object_types = 0
-        self.graph_element_selected.connect(self._on_graph_element_selected)
-        self.graph_element_get_size.connect(self.on_graph_element_get_size)
-        self.webview = gui.WebviewWidget(self.mainArea, self)
+        self.graphview = LatentGraphView(self)
+        self.graphview.selectionChanged.connect(self.on_graph_element_selected)
         self._create_layout()
 
-    @QtCore.pyqtSlot(str)
-    def on_graph_element_get_size(self, element_id):
-        """ Return the list of matrix.shape[0] for the selected element(s)
-            (node(=factor) or edge(=backbone)).
-        """
-        selected_is_edge = element_id.startswith('edge ')
-        nodes = self.fuser.get_selected_nodes(element_id)
-        from math import log2
-
-        def _norm(s):
-            return min(max(1.3**log2(s), 8), 20)
-
-        if selected_is_edge:
-            rels = self.fuser.get_relations(nodes[0], nodes[1])
-            sizes = [_norm(self.fuser.backbone(rel).shape[0])
-                     for rel in rels
-                     if not is_constraint(rel)]
-        else:
-            sizes = [_norm(self.fuser.factor(nodes[0]).shape[0])]
-        self.webview.evalJS('SIZES = {};'.format(repr(sizes)))
-
-    @QtCore.pyqtSlot(str)
-    def _on_graph_element_selected(self, element_id):
-        self.on_graph_element_selected(element_id)
-
-    def on_graph_element_selected(self, element_id):
+    def on_graph_element_selected(self, selected):
         """Handle graph_element_selected signal, and update the info boxen"""
-        if not element_id:
+        if not selected:
             return self._populate_tables(reset=True)
-        selected_is_edge = element_id.startswith('edge ')
-        nodes = self.fuser.get_selected_nodes(element_id)
-        # Update the control listview table
+        selected_is_edge = isinstance(selected[0], Edge)
+        # Update the control table
         if selected_is_edge:
+            nodes = self.fuser.get_selected_nodes([selected[0].source.name, selected[0].dest.name])
             backbones = [(rel, (self.fuser.backbone(rel),))
                          for rel in self.fuser.get_relations(*nodes)
                          if not is_constraint(rel)]
             self._populate_tables(backbones=backbones)
             self.table_backbones.selectFirstRow()
         else:
-            self._populate_tables(factors=[(nodes[0], (self.fuser.factor(nodes[0]),))])
+            node = self.fuser.get_selected_nodes([selected[0].name])[0]
+            self._populate_tables(factors=[(node, (self.fuser.factor(node),))])
             self.table_factors.selectFirstRow()
 
     def _create_layout(self):
+        self.mainArea.layout().addWidget(self.graphview)
         info = gui.widgetBox(self.controlArea, 'Info')
         gui.label(info, self, '%(n_object_types)d object types')
         gui.label(info, self, '%(n_relations)d relations')
@@ -120,23 +96,22 @@ class OWLatentFactors(widget.OWWidget):
         def _on_selected_factor(item):
             self.table_completions.clearSelection()
             self.table_backbones.clearSelection()
-            self.commit(item)
 
         def _on_selected_backbone(item):
             self.table_completions.clearSelection()
             self.table_factors.clearSelection()
-            self.commit(item)
 
         def _on_selected_completion(item):
             self.table_factors.clearSelection()
             self.table_backbones.clearSelection()
-            self.commit(item)
 
         def on_selection_changed(table, itemChanged_handler):
             def _f(selected, deselected):
                 if not selected:
                     return self.commit(None)
-                itemChanged_handler(table.item(selected[0].top(), 0))
+                item = table.item(selected[0].top(), 0)
+                itemChanged_handler(item)
+                self.commit(item)
             return _f
 
         self.table_factors.selectionChanged = on_selection_changed(self.table_factors, _on_selected_factor)
@@ -169,14 +144,10 @@ class OWLatentFactors(widget.OWWidget):
     def on_fuser_change(self, fuser):
         self.fuser = fuser
         self._populate_tables(reset=True)
-        self.repaint()
+        self.graphview.fromFusionFit(fuser)
         # this ensures gui.label-s get updated
         self.n_object_types = fuser.n_object_types if fuser else 0
         self.n_relations = fuser.n_relations if fuser else 0
-
-    def repaint(self):
-        redraw_graph(self.webview, self.fuser)
-        self.webview.evalJS(JS_FACTORS)
 
 
 def main():
