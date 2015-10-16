@@ -20,14 +20,13 @@ def shape_line_intersection(shape, shape_pos, line):
         closest to line.p1().
     """
     intersections, point = [], QPointF()
-    t, dt, p1 = 0, 8/shape.length(), shape.pointAtPercent(0) + shape_pos
+    p1 = shape.pointAtPercent(0) + shape_pos
     r = shape.boundingRect()
-    while t <= 1:
+    for t in np.linspace(0, 1.01, 50) % 1:
         p2 = shape.pointAtPercent(t) + shape_pos
         if QLineF(p1, p2).intersect(line, point) == QLineF.BoundedIntersection:
             intersections.append(QPointF(point))
         p1 = p2
-        t += dt
     return min(intersections,
                key=lambda point: QLineF(line.p1(), point).length())
 
