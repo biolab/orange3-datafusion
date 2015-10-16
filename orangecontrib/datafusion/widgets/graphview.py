@@ -183,6 +183,8 @@ class Edge(_SelectableItem, QtGui.QGraphicsLineItem):
                                          (edge.dest for edge in node.edges
                                           if edge.dest != node and edge.source == node))]
             angles.sort()
+            if not angles:  # If this self-constraint is the only edge
+                return 225
             deltas = np.array(angles[1:] + [360 + angles[0]]) - angles
             return angles[deltas.argmax()] + deltas.max()/2
 
