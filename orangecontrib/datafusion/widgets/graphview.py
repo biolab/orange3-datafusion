@@ -79,8 +79,8 @@ class Edge(_SelectableItem, QtGui.QGraphicsLineItem):
     ARROW_SIZE = 16
 
     class Font:
-        DEFAULT = QFont('Sans', 10, QFont.Normal)
-        SELECTED = QFont('Sans', 10, QFont.DemiBold)
+        DEFAULT = QFont('Sans', 12, QFont.Normal)
+        SELECTED = QFont('Sans', 12, QFont.DemiBold)
 
     class Color:
         # = pen color, font brush
@@ -278,7 +278,7 @@ class Node(_SelectableItem, QtGui.QGraphicsEllipseItem):
         SELECTED = QPen(QColor('#880000'), 2), QBrush(QColor('#ffcc33'))
 
     class Font:
-        TITLE = QFont('Sans', 13, QFont.Bold)
+        TITLE = QFont('Sans', 14, QFont.Bold)
         SUBTITLE = QFont('Sans', 10, QFont.Normal)
 
     @_SelectableItem.selected.setter
