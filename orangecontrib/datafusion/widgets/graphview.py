@@ -127,7 +127,7 @@ class Edge(_SelectableItem, QtGui.QGraphicsLineItem):
         self.squares.setToolTip(tooltip)
 
         text = ', '.join(i[0] for i in self._labels)
-        text = text[:15] + ('...' if len(text) > 15 else '')
+        text = text[:15] + ('…' if len(text) > 15 else '')
         self.label.setText(text)
 
     def __contains__(self, node):
@@ -299,6 +299,7 @@ class Node(_SelectableItem, QtGui.QGraphicsEllipseItem):
         self.name = title
         self.squares = GroupOfSquares(self)
         # Add text labels
+        if len(title) > 20: title = title[:20] + '…'
         title = self.title = QtGui.QGraphicsSimpleTextItem(title, self)
         subtitle = self.subtitle = QtGui.QGraphicsSimpleTextItem('', self)
         self.rank = rank
