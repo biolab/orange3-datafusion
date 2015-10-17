@@ -1,4 +1,3 @@
-import functools
 from copy import copy
 from itertools import count
 
@@ -83,7 +82,6 @@ class Relation(Table):
         return self.relation.name
 
     @property
-    @functools.lru_cache()
     def X(self):
         """
         :return: relation data
