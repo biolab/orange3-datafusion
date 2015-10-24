@@ -150,7 +150,7 @@ class Edge(_SelectableItem, QtGui.QGraphicsLineItem):
     def adjust(self):
         line = QLineF(self.source.pos(), self.dest.pos())
         self.setLine(line)
-        self.label.setPos(line.pointAt(.5))
+        self.label.setPos(line.pointAt(.5) - self.label.boundingRect().center())
         self.squares.placeBelow(self.label)
 
     def boundingRect(self):
@@ -436,8 +436,8 @@ class GraphView(QtGui.QGraphicsView):
     def relayout(self):
         """Approximate Fruchterman-Reingold spring layout"""
         nodes = list(self.nodes.values())
-        pos = np.array([(np.cos(i/len(nodes)*2*np.pi),
-                         np.sin(i/len(nodes)*2*np.pi))
+        pos = np.array([(np.cos(i/len(nodes)*2*np.pi + np.pi/4),
+                         np.sin(i/len(nodes)*2*np.pi + np.pi/4))
                         for i in range(1, 1 + len(nodes))])
         K = 1 / np.sqrt(pos.shape[0])
         GRAVITY, ITERATIONS = 10, 20
