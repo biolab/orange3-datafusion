@@ -1,5 +1,3 @@
-import re
-import functools
 from copy import copy
 from itertools import count
 
@@ -84,7 +82,6 @@ class Relation(Table):
         return self.relation.name
 
     @property
-    @functools.lru_cache()
     def X(self):
         """
         :return: relation data
@@ -168,17 +165,10 @@ class FusionGraph:
     def __getattr__(self, attr):
         return getattr(self._fusion_graph, attr)
 
-    def get_selected_nodes(self, element_id):
-        """ Return ObjectTypes from that correspond to selected `element_id`
-            (in the SVG).
+    def get_selected_nodes(self, ot_names):
+        """ Return ObjectTypes that correspond to their names.
         """
-        assert element_id.startswith('edge ') or element_id.startswith('node ')
-        selected_is_edge = element_id.startswith('edge ')
-        # Assumes SVG element's id attributes specify nodes `-delimited
-        node_names = re.findall('`([^`]+)`', element_id)
-        nodes = [self._fusion_graph.get_object_type(name) for name in node_names]
-        assert len(nodes) == 2 if selected_is_edge else len(nodes) == 1
-        return nodes
+        return [self._fusion_graph.get_object_type(name) for name in ot_names]
 
 
 class FittedFusionGraph(FusionGraph, RelationCompleter):
