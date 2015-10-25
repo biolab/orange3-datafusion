@@ -17,6 +17,8 @@ class OWIMDbActors(OWWidget):
     priority = 80000
     icon = "icons/IMDbActors.svg"
     want_main_area = False
+    resizing_enabled = False
+
     inputs = [("Filter", Relation, "set_data")]
     outputs = [(MOVIE_ACTORS, Relation),
                (ACTORS_ACTORS, Relation)]
