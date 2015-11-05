@@ -13,6 +13,8 @@ class OWMovieRatings(OWWidget):
     priority = 70000
     icon = "icons/MovieRatings.svg"
     want_main_area = False
+    resizing_enabled = False
+
     outputs = [("Ratings", Relation, widget.Default)]
 
     percent = settings.Setting(10)  # 10: default is 10% of data

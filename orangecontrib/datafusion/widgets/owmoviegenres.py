@@ -16,6 +16,8 @@ class OWMovieGenres(OWWidget):
     priority = 90000
     icon = "icons/MovieGenres.svg"
     want_main_area = False
+    resizing_enabled = False
+
     inputs = [("Row Type", Relation, "set_data", widget.Default)]
     outputs = [("Genres", Relation, widget.Default)]
 
