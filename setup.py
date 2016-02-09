@@ -2,7 +2,7 @@
 
 from setuptools import setup, find_packages
 import distutils
-VERSION = '0.1.8'
+VERSION = '0.1.9'
 
 ENTRY_POINTS = {
     'orange3.addon': (
