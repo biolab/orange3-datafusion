@@ -1,12 +1,13 @@
 
 from collections import defaultdict
 
-from PyQt4 import QtGui, QtCore
+from PyQt4 import QtGui
 from Orange.widgets import widget, gui, settings
+from Orange.widgets.utils.itemmodels import PyTableModel
 
 from skfusion import fusion
 from orangecontrib.datafusion.models import Relation, FusionGraph, RelationCompleter
-from orangecontrib.datafusion.widgets.owfusiongraph import bold_item, rel_shape, rel_cols
+from orangecontrib.datafusion.widgets.owfusiongraph import rel_shape, rel_cols
 
 import numpy as np
 
@@ -87,6 +88,7 @@ class OWMeanFuser(widget.OWWidget):
         super().__init__()
         self.relations = defaultdict(int)
         self.id_relations = {}
+        self.graph = None
         self._create_layout()
         self.commit()
 
@@ -97,17 +99,32 @@ class OWMeanFuser(widget.OWWidget):
                          label='Calculate masked values as mean by:',
                          items=MeanBy.all, callback=self.commit))
         box = gui.widgetBox(self.controlArea, 'Output completed relation')
-        self.table = gui.TableWidget(box, select_rows=True)
-        self.table.selectionChanged = lambda _, __: self.commit()
-        self.table.setColumnFilter(bold_item, (1, 3))
+
+        class TableView(gui.TableView):
+            def __init__(self, parent):
+                super().__init__(parent, selectionMode=self.SingleSelection)
+                self._parent = parent
+                self.bold_font = self.BoldFontDelegate(self)   # member because PyQt sometimes unrefs too early
+                self.setItemDelegateForColumn(2, self.bold_font)
+                self.setItemDelegateForColumn(4, self.bold_font)
+                self.horizontalHeader().setVisible(False)
+
+            def selectionChanged(self, *args):
+                super().selectionChanged(*args)
+                self._parent.commit()
+
+        table = self.table = TableView(self)
+        model = self.model = PyTableModel(parent=self)
+        table.setModel(model)
+        box.layout().addWidget(table)
         self.controlArea.layout().addStretch(1)
 
     def commit(self, item=None):
         self.fuser = MeanFuser(self.mean_by)
         self.send(Output.FUSER, self.fuser)
-        selection = self.table.selectedRanges()
-        if self.table.rowCount() and selection:
-            relation = self.table.rowData(selection[0].topRow())
+        rows = [i.row() for i in self.table.selectionModel().selectedRows()]
+        if self.model.rowCount() and rows:
+            relation = self.model[rows[0]][0]
             data = Relation.create(self.fuser.complete(relation),
                                    relation.row_type,
                                    relation.col_type,
@@ -117,12 +134,11 @@ class OWMeanFuser(widget.OWWidget):
         self.send(Output.RELATION, data)
 
     def update_table(self):
-        self.table.clear()
-        for rel in self.relations:
-            self.table.addRow([rel_shape(rel.data)]
-                              + rel_cols(rel)
-                              + ['(not masked)' if not np.ma.is_masked(rel.data) else ''],
-                              data=rel)
+        self.model.wrap([([rel, rel_shape(rel.data)] +
+                          rel_cols(rel) +
+                          ['(not masked)' if not np.ma.is_masked(rel.data) else ''])
+                         for rel in self.relations])
+        self.table.hideColumn(0)
 
     def _add_relation(self, relation):
         self.relations[relation] += 1
@@ -138,6 +154,7 @@ class OWMeanFuser(widget.OWWidget):
             for rel in graph.relations:
                 self._add_relation(rel)
         else:
+            self.graph = None
             for rel in self.graph.relations:
                 self._remove_relation(rel)
         self.update_table()

@@ -1,10 +1,9 @@
-from io import BytesIO
 from collections import defaultdict
-from os import path
 
-from PyQt4 import QtCore, QtGui
+from PyQt4 import QtGui
 
 from Orange.widgets import widget, gui, settings
+from Orange.widgets.utils.itemmodels import PyTableModel
 from skfusion import fusion
 from orangecontrib.datafusion.models import Relation, FusionGraph, FittedFusionGraph
 from orangecontrib.datafusion.widgets.graphview import GraphView, Node, Edge
@@ -39,12 +38,6 @@ def rel_cols(relation):
 
 def relation_str(relation):
     return '[{}] {}'.format(rel_shape(relation.data), ' '.join(rel_cols(relation)))
-
-
-def bold_item(item):
-    font = item.font()
-    font.setBold(True)
-    item.setFont(font)
 
 
 class FusionGraphView(GraphView):
@@ -115,19 +108,31 @@ class OWFusionGraph(widget.OWWidget):
         # Table view of relation details
         info = gui.widgetBox(self.controlArea, 'Relations')
 
-        def send_relation(selected, deselected):
-            if not selected:
-                assert len(deselected) > 0
-                relation = None
-            else:
-                assert len(selected) == 1
-                data = self.table.rowData(selected[0].top())
-                relation = Relation(data)
-            self.send(Output.RELATION, relation)
+        class TableView(gui.TableView):
+            def __init__(self, parent=None, **kwargs):
+                super().__init__(parent, **kwargs)
+                self._parent = parent
+                self.bold_font = self.BoldFontDelegate(self)   # member because PyQt sometimes unrefs too early
+                self.setItemDelegateForColumn(2, self.bold_font)
+                self.setItemDelegateForColumn(4, self.bold_font)
+                self.horizontalHeader().setVisible(False)
 
-        self.table = gui.TableWidget(info, select_rows=True)
-        self.table.selectionChanged = send_relation
-        self.table.setColumnFilter(bold_item, (1, 3))
+            def selectionChanged(self, selected, deselected):
+                super().selectionChanged(selected, deselected)
+                if not selected:
+                    assert len(deselected) > 0
+                    relation = None
+                else:
+                    assert len(selected) == 1
+                    data = self._parent.tablemodel[selected[0].top()][0]
+                    relation = Relation(data)
+                self._parent.send(Output.RELATION, relation)
+
+        model = self.tablemodel = PyTableModel(parent=self)
+        table = self.table = TableView(self,
+                                       selectionMode=TableView.SingleSelection)
+        table.setModel(model)
+        info.layout().addWidget(self.table)
 
         gui.lineEdit(self.controlArea,
                      self, 'pref_algo_name', 'Fuser name:',
@@ -184,10 +189,10 @@ class OWFusionGraph(widget.OWWidget):
         self.send(Output.FUSER, FittedFusionGraph(self.fuser))
 
     def _populate_table(self, relations=None):
-        self.table.clear()
-        for rel in relations or self.graph.relations:
-            self.table.addRow([rel_shape(rel.data)] + rel_cols(rel), data=rel)
-        self.table.selectFirstRow()
+        self.tablemodel.wrap([[rel, rel_shape(rel.data)] + rel_cols(rel)
+                              for rel in relations or self.graph.relations])
+        self.table.hideColumn(0)
+        self.table.selectRow(0)
 
     def on_relation_change(self, relation, id):
         def _on_remove_relation(id):
