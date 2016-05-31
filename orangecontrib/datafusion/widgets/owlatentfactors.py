@@ -1,13 +1,11 @@
-from os import path
-
-from PyQt4 import QtCore, QtGui
+from PyQt4 import QtGui
 
 from Orange.widgets import widget, gui, settings
+from Orange.widgets.utils.itemmodels import PyTableModel
 from skfusion import fusion
-from orangecontrib.datafusion.widgets.owfusiongraph import \
-    rel_shape, rel_cols, bold_item
+from orangecontrib.datafusion.widgets.owfusiongraph import rel_shape, rel_cols
 from orangecontrib.datafusion.models import Relation, FittedFusionGraph
-from orangecontrib.datafusion.widgets.graphview import GraphView, Node, Edge
+from orangecontrib.datafusion.widgets.graphview import GraphView, Edge
 
 
 def is_constraint(relation):
@@ -64,11 +62,11 @@ class OWLatentFactors(widget.OWWidget):
                          for rel in self.fuser.get_relations(*nodes)
                          if not is_constraint(rel)]
             self._populate_tables(backbones=backbones)
-            self.table_backbones.selectFirstRow()
+            self.table_backbones.selectRow(0)
         else:
             node = self.fuser.get_selected_nodes([selected[0].name])[0]
             self._populate_tables(factors=[(node, (self.fuser.factor(node),))])
-            self.table_factors.selectFirstRow()
+            self.table_factors.selectRow(0)
 
     def _create_layout(self):
         self.mainArea.layout().addWidget(self.graphview)
@@ -76,20 +74,32 @@ class OWLatentFactors(widget.OWWidget):
         gui.label(info, self, '%(n_object_types)d object types')
         gui.label(info, self, '%(n_relations)d relations')
 
+        class TableView(gui.TableView):
+            def __init__(self, parent, bold_columns):
+                super().__init__(parent,
+                                 selectionMode=self.SingleSelection)
+                self.horizontalHeader().setVisible(False)
+                self.bold_font = self.BoldFontDelegate(self)  # member because PyQt sometimes unrefs too early
+                for col in bold_columns:
+                    self.setItemDelegateForColumn(col, self.bold_font)
+
         box = gui.widgetBox(self.controlArea, 'Recipe factors')
-        self.table_factors = gui.TableWidget(box, select_rows=True)
-        self.table_factors.setColumnFilter(bold_item, 1)
-        self.controlArea.layout().addWidget(box)
+        table = self.table_factors = TableView(self, (2,))
+        model = self.model_factors = PyTableModel(parent=self)
+        table.setModel(model)
+        box.layout().addWidget(table)
 
         box = gui.widgetBox(self.controlArea, 'Backbone factors')
-        self.table_backbones = gui.TableWidget(box, select_rows=True)
-        self.table_backbones.setColumnFilter(bold_item, (1, 3))
-        self.controlArea.layout().addWidget(box)
+        table = self.table_backbones = TableView(self, (2, 4))
+        model = self.model_backbones = PyTableModel(parent=self)
+        table.setModel(model)
+        box.layout().addWidget(table)
 
         box = gui.widgetBox(self.controlArea, 'Completed relations')
-        self.table_completions = gui.TableWidget(box, select_rows=True)
-        self.table_completions.setColumnFilter(bold_item, (1, 3))
-        self.controlArea.layout().addWidget(box)
+        table = self.table_completions = TableView(self, (2, 4))
+        model = self.model_completions = PyTableModel(parent=self)
+        table.setModel(model)
+        box.layout().addWidget(table)
 
         self.controlArea.layout().addStretch(1)
 
@@ -105,41 +115,48 @@ class OWLatentFactors(widget.OWWidget):
             self.table_factors.clearSelection()
             self.table_backbones.clearSelection()
 
-        def on_selection_changed(table, itemChanged_handler):
+        def on_selection_changed(table, model, itemChanged_handler):
             def _f(selected, deselected):
+                gui.TableView.selectionChanged(table, selected, deselected)
                 if not selected:
                     return self.commit(None)
-                item = table.item(selected[0].top(), 0)
+                item = model[selected[0].top()][0]
                 itemChanged_handler(item)
                 self.commit(item)
             return _f
 
-        self.table_factors.selectionChanged = on_selection_changed(self.table_factors, _on_selected_factor)
-        self.table_backbones.selectionChanged = on_selection_changed(self.table_backbones, _on_selected_backbone)
-        self.table_completions.selectionChanged = on_selection_changed(self.table_completions, _on_selected_completion)
+        self.table_factors.selectionChanged = on_selection_changed(
+            self.table_factors, self.model_factors, _on_selected_factor)
+        self.table_backbones.selectionChanged = on_selection_changed(
+            self.table_backbones, self.model_backbones, _on_selected_backbone)
+        self.table_completions.selectionChanged = on_selection_changed(
+            self.table_completions, self.model_completions, _on_selected_completion)
 
     def commit(self, item):
-        data = Relation.create(*item.tableWidget().rowData(item.row()), graph=self.fuser) if item else None
+        data = Relation.create(*item, graph=self.fuser) if item else None
         self.send(Output.RELATION, data)
 
     def _populate_tables(self, factors=None, backbones=None, reset=False):
         if not self.fuser: return
-        self.table_factors.clear()
-        self.table_backbones.clear()
+        self.model_factors.clear()
+        self.model_backbones.clear()
         self.send(Output.RELATION, None)
         if factors or reset:
             for otype, matrices in factors or self.fuser.factors_.items():
                 M = matrices[0]
-                self.table_factors.addRow((rel_shape(M.data), otype.name), data=(M, otype, None))
+                self.model_factors.append([(M, otype, None), rel_shape(M.data), otype.name])
+            self.table_factors.hideColumn(0)
         if backbones or reset:
             for relation, matrices in backbones or self.fuser.backbones_.items():
                 M = matrices[0]
-                self.table_backbones.addRow([rel_shape(M.data)] + rel_cols(relation), data=(M, None, None))
+                self.model_backbones.append([(M, None, None), rel_shape(M.data)] + rel_cols(relation))
+            self.table_backbones.hideColumn(0)
         if reset:
-            self.table_completions.clear()
+            self.model_completions.clear()
             for rel, matrices in self.fuser.backbones_.items():
                 M = self.fuser.complete(rel)
-                self.table_completions.addRow([rel_shape(M.data)] + rel_cols(rel), data=(M, rel.row_type, rel.col_type))
+                self.model_completions.append([(M, rel.row_type, rel.col_type), rel_shape(M.data)] + rel_cols(rel))
+            self.table_completions.hideColumn(0)
 
     def on_fuser_change(self, fuser):
         self.fuser = fuser

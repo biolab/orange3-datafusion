@@ -186,12 +186,13 @@ class Edge(_SelectableItem, QtGui.QGraphicsLineItem):
             if not angles:  # If this self-constraint is the only edge
                 return 225
             deltas = np.array(angles[1:] + [360 + angles[0]]) - angles
-            return angles[deltas.argmax()] + deltas.max()/2
+            return (angles[deltas.argmax()] + deltas.max()/2) % 360
 
         angle = best_angle()
-        line0 = QLineF(node.pos(), QPointF(-100, -100))
-        line1 = QLineF(node.pos(), QPointF(-100, -100))
-        line2 = QLineF(node.pos(), QPointF(-100, -100))
+        inf = QPointF(-1e20, -1e20)  # Doesn't work with real -np.inf!
+        line0 = QLineF(node.pos(), inf)
+        line1 = QLineF(node.pos(), inf)
+        line2 = QLineF(node.pos(), inf)
         line0.setAngle(angle)
         line1.setAngle(angle - 13)
         line2.setAngle(angle + 13)

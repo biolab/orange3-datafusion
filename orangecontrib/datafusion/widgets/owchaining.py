@@ -2,11 +2,12 @@ import numpy as np
 
 from PyQt4 import QtCore, QtGui
 from Orange.widgets import widget, gui, settings
+from Orange.widgets.utils.itemmodels import PyTableModel
 
 from skfusion import fusion
 from orangecontrib.datafusion.models import Relation, FittedFusionGraph
 from orangecontrib.datafusion.widgets.graphview import GraphView, Edge
-from orangecontrib.datafusion.widgets.owfusiongraph import rel_cols, bold_item
+from orangecontrib.datafusion.widgets.owfusiongraph import rel_cols
 
 
 class Output:
@@ -49,28 +50,47 @@ class OWChaining(widget.OWWidget):
         box = gui.widgetBox(self.controlArea, margin=7)
         box.layout().addWidget(self.graphview)
         box = gui.widgetBox(self.controlArea, 'Latent chains')
-        self.table = gui.TableWidget(box, select_rows=True)
-        self.table.setColumnFilter(bold_item, list(range(1, 100, 2)))
 
-        def selectionChanged(selected, _):
-            if not selected:
-                data = None
-            else:
-                chain = self.table.rowData(selected[0].top())
+        class TableView(gui.TableView):
+            selected_row = QtCore.pyqtSignal(int)
+
+            def __init__(self, parent):
+                super().__init__(parent,
+                                 selectionMode=self.SingleSelection)
+                self._parent = parent
+                self.bold_font = self.BoldFontDelegate(self)   # member because PyQt sometimes unrefs too early
+                for column in range(2, 100, 2):
+                    self.setItemDelegateForColumn(column, self.bold_font)
+                self.horizontalHeader().setVisible(False)
+
+            def selectionChanged(self, selected, deselected):
+                super().selectionChanged(selected, deselected)
+                self.selected_row.emit(selected.indexes()[0].row() if len(selected) else -1)
+
+        model = self.model = PyTableModel(parent=self)
+        table = self.table = TableView(self)
+        table.setModel(model)
+
+        def selected_row(row):
+            data = None
+            if row >= 0:
+                chain = self.model[row][0]
                 self.graphview.clearSelection()
                 self._highlight_relations(chain)
                 data = self.fuser.compute_chain(chain, self.pref_complete)
             self.send(Output.RELATION, data)
 
-        self.table.selectionChanged = selectionChanged
+        table.selected_row.connect(selected_row)
+        box.layout().addWidget(table)
+
         self.controlArea.layout().addWidget(box)
 
         def on_change_pref_complete():
-            ranges = self.table.selectedRanges()
+            rows = self.table.selectionModel().selectedRows()
             self._populate_table(self.chains)
             # Re-apply selection
-            if ranges:
-                self.table.selectRow(ranges[0].topRow())
+            if rows:
+                self.table.selectRow(rows[0].row())
 
         gui.radioButtons(box, self, 'pref_complete',
                          label='Complete chain to:',
@@ -79,7 +99,6 @@ class OWChaining(widget.OWWidget):
         self.controlArea.layout().addStretch(1)
 
     def _highlight_relations(self, relations):
-        selectors = set()
         for rel in relations:
             row_name, col_name = rel.row_type.name, rel.col_type.name
             node1, node2 = self.graphview.nodes[row_name], self.graphview.nodes[col_name]
@@ -90,8 +109,8 @@ class OWChaining(widget.OWWidget):
                     edge.selected = True
 
     def _populate_table(self, chains=[]):
-        self.table.clear()
         self.send(Output.RELATION, None)
+        model = []
         for chain in chains:
             columns = [str(self.startNode.name)]
             for rel in chain:
@@ -99,8 +118,10 @@ class OWChaining(widget.OWWidget):
             assert columns[-1] == str(self.endNode.name)
             shape = (chain[0]. data.shape[0],
                      chain[-1].data.shape[1] if self.pref_complete else chain[-1].col_type.rank)
-            self.table.addRow(['{}×{}'.format(*shape)] + columns, data=chain)
+            model.append([chain, '{}×{}'.format(*shape)] + columns)
             self._highlight_relations(chain)
+        self.model.wrap(model)
+        self.table.hideColumn(0)
 
     def on_fuser_change(self, fuser):
         self.fuser = fuser
