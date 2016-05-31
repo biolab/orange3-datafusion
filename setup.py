@@ -43,7 +43,7 @@ if __name__ == '__main__':
             "orangecontrib.datafusion.tutorials": ["*.ows"],
         },
         install_requires=[
-            'Orange',
+            'Orange3',
             'scikit-fusion',
         ],
         entry_points=ENTRY_POINTS,
