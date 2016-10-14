@@ -427,7 +427,7 @@ class GraphView(QtGui.QGraphicsView):
         if event.orientation() != Qt.Vertical: return
         self.scaleView(2**(event.delta() / 240))
     def scaleView(self, factor):
-        magnitude = self.matrix().scale(factor, factor).mapRect(QRectF(0, 0, 1, 1)).width()
+        magnitude = self.transform().scale(factor, factor).mapRect(QRectF(0, 0, 1, 1)).width()
         if 0.4 < magnitude < 6:
             self.scale(factor, factor)
 
