@@ -137,7 +137,7 @@ class OWFusionGraph(widget.OWWidget):
         gui.lineEdit(self.controlArea,
                      self, 'pref_algo_name', 'Fuser name:',
                      orientation='horizontal',
-                     callback=self.checkcommit, enterPlaceholder=True)
+                     callback=self.checkcommit)
         gui.radioButtons(self.controlArea,
                          self, 'pref_algorithm', [i[0] for i in DECOMPOSITION_ALGO],
                          box='Decomposition algorithm',
