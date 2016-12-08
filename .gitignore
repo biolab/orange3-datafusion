@@ -2,6 +2,7 @@
 build
 dist
 *.egg-info/*
+doc/_build
 *.so
 *.la
 *.o
