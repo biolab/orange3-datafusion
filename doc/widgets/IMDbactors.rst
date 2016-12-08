@@ -2,9 +2,7 @@ IMDb Actors
 ===========
 
 .. figure:: icons/imdb-actors.png
-   :alt: IMDB Actors widget icon
 
-   IMDB Actors widget icon
 Constructs a movies-by-actors or actors-by-actors relation matrix.
 
 Signals
@@ -14,17 +12,17 @@ Signals
 
 -  **Filter**
 
-Data filter.
+   Data filter.
 
 **Outputs**:
 
 -  **Movie Actors**
 
-A movies-by-actors relation matrix.
+   A movies-by-actors relation matrix.
 
 -  **Costarring Actors**
 
-An actors-by-actors relation matrix.
+   An actors-by-actors relation matrix.
 
 Description
 -----------
@@ -35,9 +33,6 @@ sets on actors and movies. It outputs either a movies-by-actors relation
 matrix, an actors-by-actors relation matrix or both.
 
 .. figure:: images/IMDbActors-stamped.png
-   :alt: IMDb widget
-
-   IMDb widget
 
 1. Select how many actors from the IMDb database would you like to
    consider.
@@ -53,3 +48,5 @@ use it, you need to connect it to **Movie Ratings** widget in the input
 and with **Fusion Graph** in the output. This will add the information
 on actors in relation to movies. You can view this new data in the
 **Data Table** widget.
+
+.. figure:: images/IMDbActors-Example.png

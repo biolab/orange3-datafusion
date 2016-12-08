@@ -2,9 +2,7 @@ Latent Factors
 ==============
 
 .. figure:: icons/latent-factors.png
-   :alt: Latent factors widget icon
 
-   Latent factors widget icon
 Draws data fusion graph with the estimated latent factors overlaid.
 Outputs latent factors for further analysis.
 
@@ -15,13 +13,13 @@ Signals
 
 -  **Fitted fusion graph**
 
-Fitted collective latent data model.
+   Fitted collective latent data model.
 
 **Outputs**:
 
 -  **Relation**
 
-Selected latent data matrix or a completed relation.
+   Selected latent data matrix or a completed relation.
 
 Description
 -----------
@@ -38,9 +36,6 @@ widgets for downstream data analysis, such as **Hierarchial Clustering**
 or **Heat Map**.
 
 .. figure:: images/LatentFactors1-stamped.png
-   :alt: Latent factors widget
-
-   Latent factors widget
 
 1. Information on the input (object types are nodes, data relations are
    links between the nodes).
@@ -59,3 +54,5 @@ Example
 In the example below we demonstrate how 8 separate
 `yeast <data-yeast>`__ data sets are fused together in **Fusion Graph**
 and then decomposed into latent factors with **Latent Factors** widget.
+
+.. figure:: images/LatentFactors-Example.png

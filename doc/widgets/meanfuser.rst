@@ -2,9 +2,7 @@ Mean Fuser
 ==========
 
 .. figure:: icons/mean-fuser.png
-   :alt: Mean Fuser widget icon
 
-   Mean Fuser widget icon
 Constructs relation matrices based on the average values of matrix
 elements.
 
@@ -15,21 +13,21 @@ Signals
 
 -  **Fusion Graph**
 
-A relational scheme of a data compendium.
+   A relational scheme of a data compendium.
 
 -  **Relation**
 
-Relationships between two groups of objects.
+   Relationships between two groups of objects.
 
 **Outputs**:
 
 -  **Mean-fitted fusion graph**
 
-Mean fuser.
+   Mean fuser.
 
 -  **Relation**
 
-Relationships between two groups of objects.
+   Relationships between two groups of objects.
 
 Description
 -----------
@@ -40,16 +38,13 @@ replaced with the values obtained by averaging matrix rows, matrix
 columns or the entire data matrix.
 
 .. figure:: images/MeanFuser-stamped.png
-   :alt: Mean Fuser widget
-
-   Mean Fuser widget
 
 1. Select the axis for mean value calculation:
 
--  **rows**
--  **columns**
--  **all**
-
+   -  **rows**
+   -  **columns**
+   -  **all**
+   
 2. Output selected relation matrix, where unknown matrix elements are
    replaced with mean values.
 
@@ -65,3 +60,5 @@ Sampler** into **Completion Scoring** widget as out-of-sample movie
 ratings data is needed to assess how well the predicted values
 correspond to the true data. Finally, we compare prediction to those
 obtained by **Mean Fuser**.
+
+.. figure:: images/MeanFuser-Example.png

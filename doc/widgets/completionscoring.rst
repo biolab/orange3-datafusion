@@ -2,9 +2,7 @@ Completion Scoring
 ==================
 
 .. figure:: icons/completion-scoring.png
-   :alt: Completion Scoring widget icon
 
-   Completion Scoring widget icon
 Scores the quality of matrix completion using root mean squared error
 (RSME) metric.
 
@@ -15,11 +13,11 @@ Signals
 
 -  **Fitted fusion graph**
 
-Fitted collective latent data model.
+   Fitted collective latent data model.
 
 -  **Relation**
 
-Relationships between two groups of objects.
+   Relationships between two groups of objects.
 
 **Outputs**:
 
@@ -35,9 +33,6 @@ Each row contains scores representing matrix completion quality of
 different relations. Results for prediction models are in columns.
 
 .. figure:: images/CompletionScoring-stamped.png
-   :alt: Completion Scoring widget
-
-   Completion Scoring widget
 
 1. The RMSE value chart for the input relation matrix.
 
@@ -49,3 +44,5 @@ using the RMSE metric. Connect it with **Matrix Sampler** to score
 prediction models (previously learnt on in-sample data) on
 out-of-the-sample data. You can also use **Mean Fuser** to get a mean
 score for latent values.
+
+.. figure:: images/CompletionScoring-Example.png

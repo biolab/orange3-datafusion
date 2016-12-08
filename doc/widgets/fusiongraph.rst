@@ -2,9 +2,7 @@ Fusion Graph
 ============
 
 .. figure:: icons/fusion-graph.png
-   :alt: Fusion Graph widget icon
 
-   Fusion Graph widget icon
 Constructs a data fusion graph and runs collective matrix factorization
 algorithm.
 
@@ -15,21 +13,21 @@ Signals
 
 -  **Relation**
 
-Relationships between two groups of objects.
+   Relationships between two groups of objects.
 
 **Outputs**:
 
 -  **Relation**
 
-Relationships between two groups of objects.
+   Relationships between two groups of objects.
 
 -  **Fitted Fusion Graph**
 
-Fitted collective latent data model.
+   Fitted collective latent data model.
 
 -  **Fusion Graph**
 
-Input data system.
+   Input data system.
 
 Description
 -----------
@@ -40,9 +38,6 @@ comprehensive structure. The widget returns a relational structure of
 the entire data system estimated by a collective latent factor approach.
 
 .. figure:: images/FusionGraph1-stamped.png
-   :alt: Fusion Graph widget
-
-   Fusion Graph widget
 
 1. Information on the input (object types are nodes, relations are links
    between the nodes).
@@ -50,14 +45,13 @@ the entire data system estimated by a collective latent factor approach.
 3. Specify a descriptive name for your fusion system.
 4. Select the algorithm for
    `factorization <https://en.wikipedia.org/wiki/Non-negative_matrix_factorization>`__:
-
--  **matrix tri-factorization** decomposes each relation matrix into
-   three latent matrices and shares the latent matrices between related
-   data sets. Unknown values are imputed prior to collective
-   factorization.
--  **matrix tri-completion** works the same as matrix tri-factorization,
-   but does not require relation matrices to be fully observed.
-
+   
+   -  **matrix tri-factorization** decomposes each relation matrix into
+      three latent matrices and shares the latent matrices between related
+      data sets. Unknown values are imputed prior to collective
+      factorization.
+   -  **matrix tri-completion** works the same as matrix tri-factorization,
+      but does not require relation matrices to be fully observed.
 5. Select the *initialization algorithm* for matrix factorization.
 6. Set the *maximum number of iterations* used for factorization.
    Default is 10.
@@ -80,3 +74,5 @@ object type and relation names. **Fusion Graph** will compile the fusion
 graph of our three data sets with connections between object types based
 on previously defined data relations, display the connections and run
 matrix decomposition algorithm.
+
+.. figure:: images/FusionGraph-Example.png
