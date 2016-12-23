@@ -5,6 +5,7 @@ from PyQt4 import QtGui
 from PyQt4.QtCore import Qt
 from Orange.widgets.widget import OWWidget
 from Orange.widgets import widget, gui, settings
+from skfusion import fusion
 from orangecontrib.datafusion.models import Relation
 
 import numpy as np
@@ -65,9 +66,16 @@ class OWSampleMatrix(OWWidget):
 
     def __init__(self):
         super().__init__()
-        self.relation = None
+        self.data = None
 
         form = QtGui.QGridLayout()
+
+        self.row_type = ""
+        w_rowtype = gui.lineEdit(self.controlArea, self, "row_type", "Row Type", callback=self.send_output)
+
+        self.col_type = ""
+        w_coltype = gui.lineEdit(self.controlArea, self, "col_type", "Column Type", callback=self.send_output)
+
         methodbox = gui.radioButtonsInBox(
             self.controlArea, self, "method", [],
             box=self.tr("Sampling method"), orientation=form)
@@ -100,12 +108,31 @@ class OWSampleMatrix(OWWidget):
         self.send_output()
 
     def set_data(self, data):
-        self.relation = data
+        self.data = data
+
+        if hasattr(self.data, 'row_type'):
+            self.row_type = self.data.row_type
+
+        if hasattr(self.data, 'col_type'):
+            self.col_type = self.data.col_type
+
         self.send_output()
 
     def send_output(self):
-        if self.relation is not None:
-            oos_mask = hide_data(self.relation,
+        if self.data is not None:
+            relation_ = None
+            if isinstance(self.data, Relation):
+                relation_ = Relation(self.data.relation)
+                if self.row_type:
+                    relation_.relation.row_type = fusion.ObjectType(self.row_type)
+                if self.col_type:
+                    relation_.relation.col_type = fusion.ObjectType(self.col_type)
+            else:
+                relation_ = Relation.create(self.data.X,
+                    fusion.ObjectType(self.row_type or "Unknown"),
+                    fusion.ObjectType(self.col_type or "Unknown"))
+
+            oos_mask = hide_data(relation_,
                                  self.percent / 100,
                                  SampleBy.all[self.method])
             def _mask_relation(relation, mask):
@@ -115,7 +142,7 @@ class OWSampleMatrix(OWWidget):
                 data.data = np.ma.array(data.data, mask=mask)
                 return data
 
-            oos_mask = _mask_relation(self.relation.relation, oos_mask)
+            oos_mask = _mask_relation(relation_.relation, oos_mask)
 
             self.send(Output.IN_SAMPLE_DATA, Relation(oos_mask))
             self.send(Output.OUT_OF_SAMPLE_DATA, Relation(oos_mask))
