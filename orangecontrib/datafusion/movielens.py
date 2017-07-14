@@ -74,6 +74,7 @@ def movie_user_matrix(percentage=None, start_year=None, end_year=None):
     filename = get_valid_file_path("ratings.csv")
     users, movies, ratings, timestamps = np.loadtxt(filename, skiprows=1, delimiter=",", unpack=True)
     unique_users, unique_movies = np.unique(users.astype(int)), np.unique(movies.astype(int))
+    users = users.astype(int)
 
     if percentage is not None:
         idx = set(random.sample(range(len(unique_movies)), int(len(unique_movies) * percentage / 100.0)))
