@@ -1,7 +1,5 @@
 from collections import defaultdict
 
-from PyQt4 import QtGui
-
 from Orange.widgets import widget, gui, settings
 from Orange.widgets.utils.itemmodels import PyTableModel
 from skfusion import fusion
@@ -235,6 +233,7 @@ class OWFusionGraph(widget.OWWidget):
 def main():
     # example from https://github.com/marinkaz/scikit-fusion
     import numpy as np
+    from AnyQt.QtWidgets import QApplication
     R12 = np.random.rand(50, 100)
     R22 = np.random.rand(100, 100)
     R13 = np.random.rand(50, 40)
@@ -256,7 +255,7 @@ def main():
                  fusion.Relation(R34, t3, t4, name='belong to'),
                  fusion.Relation(R22, t2, t2, name='married to')]
 
-    app = QtGui.QApplication(['asdf'])
+    app = QApplication(['asdf'])
     w = OWFusionGraph()
     w.show()
 

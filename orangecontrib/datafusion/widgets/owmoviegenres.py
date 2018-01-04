@@ -1,10 +1,11 @@
 import sys
-from orangecontrib.datafusion import movielens
 import numpy as np
-from PyQt4 import QtGui
-from PyQt4.QtGui import QGridLayout
+
+from AnyQt.QtWidgets import QGridLayout, QSizePolicy
+
 from Orange.widgets.widget import OWWidget
 from Orange.widgets import widget, gui
+from orangecontrib.datafusion import movielens
 from orangecontrib.datafusion.models import Relation
 
 from skfusion import fusion
@@ -34,8 +35,7 @@ class OWMovieGenres(OWWidget):
         self.layout = QGridLayout()
         self.genrebox = gui.widgetBox(self.controlArea, "Genres")
 
-        self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed,
-                           QtGui.QSizePolicy.Fixed))
+        self.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
         self.setMinimumWidth(250)
 
     def update_genres(self):
@@ -78,7 +78,8 @@ class OWMovieGenres(OWWidget):
             self.send("Genres", Relation(relation))
 
 if __name__ == "__main__":
-    app = QtGui.QApplication(sys.argv)
+    from AnyQt.QtWidgets import QApplication
+    app = QApplication(sys.argv)
     ow = OWMovieGenres()
     #ow.set_data(movies)
     ow.show()

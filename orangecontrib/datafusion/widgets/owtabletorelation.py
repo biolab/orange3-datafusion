@@ -1,5 +1,6 @@
-from PyQt4.QtGui import QTableView, QGridLayout, QWidget
-from PyQt4.QtCore import Qt, QSize
+from AnyQt.QtWidgets import QTableView, QGridLayout, QWidget
+from AnyQt.QtCore import Qt, QSize
+
 from Orange.data import Table, Domain
 from Orange.widgets.settings import Setting, ContextSetting, PerfectDomainContextHandler
 from Orange.widgets.utils.itemmodels import TableModel
@@ -177,11 +178,10 @@ class OWTableToRelation(OWWidget):
 
 
 if __name__ == '__main__':
-    from PyQt4.QtGui import QApplication
-    import Orange
+    from AnyQt.QtWidgets import QApplication
     app = QApplication([])
     ow = OWTableToRelation()
-    ow.set_data(Orange.data.Table('zoo'))
+    ow.set_data(Table('zoo'))
     ow.show()
     app.exec()
     ow.saveSettings()

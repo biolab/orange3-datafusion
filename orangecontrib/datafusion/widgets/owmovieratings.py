@@ -1,5 +1,7 @@
 import sys
-from PyQt4 import QtGui
+
+from AnyQt.QtWidgets import QSizePolicy
+
 from Orange.widgets.widget import OWWidget
 from Orange.widgets import widget, gui, settings
 from orangecontrib.datafusion.models import Relation
@@ -47,8 +49,7 @@ class OWMovieRatings(OWWidget):
         gui.button(self.controlArea, self, "&Apply",
                    callback=self.send_output, default=True)
 
-        self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed,
-                           QtGui.QSizePolicy.Fixed))
+        self.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
 
         self.setMinimumWidth(250)
         self.setMaximumWidth(250)
@@ -77,7 +78,8 @@ class OWMovieRatings(OWWidget):
         self.send("Ratings", Relation(relation))
 
 if __name__ == "__main__":
-    app = QtGui.QApplication(sys.argv)
+    from AnyQt.QtWidgets import QApplication
+    app = QApplication(sys.argv)
     ow = OWMovieRatings()
     ow.show()
     app.exec_()
