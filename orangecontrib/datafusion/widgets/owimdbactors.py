@@ -1,5 +1,7 @@
 import sys
-from PyQt4 import QtGui
+
+from AnyQt.QtWidgets import QSizePolicy
+
 from orangecontrib.datafusion.models import Relation
 from Orange.widgets.widget import OWWidget
 from Orange.widgets import widget, gui, settings
@@ -37,8 +39,7 @@ class OWIMDbActors(OWWidget):
         gui.button(self.controlArea, self, "&Apply",
                    callback=self.send_output, default=True)
 
-        self.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed,
-                                             QtGui.QSizePolicy.Fixed))
+        self.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
 
         self.setMinimumWidth(250)
         self.setMaximumWidth(250)
@@ -75,7 +76,8 @@ class OWIMDbActors(OWWidget):
 
 
 if __name__ == "__main__":
-    app = QtGui.QApplication(sys.argv)
+    from AnyQt.QtWidgets import QApplication
+    app = QApplication(sys.argv)
     ow = OWIMDbActors()
     # ow.set_data(movies_users)
     ow.show()

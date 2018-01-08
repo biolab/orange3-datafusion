@@ -1,6 +1,5 @@
 import numpy as np
 
-from PyQt4 import QtCore, QtGui
 from Orange.widgets import widget, gui, settings
 from Orange.widgets.utils.itemmodels import PyTableModel
 
@@ -9,6 +8,7 @@ from orangecontrib.datafusion.models import Relation, FittedFusionGraph
 from orangecontrib.datafusion.widgets.graphview import GraphView, Edge
 from orangecontrib.datafusion.widgets.owfusiongraph import rel_cols
 
+from AnyQt.QtCore import pyqtSignal
 
 class Output:
     RELATION = 'Relation'
@@ -52,7 +52,7 @@ class OWChaining(widget.OWWidget):
         box = gui.widgetBox(self.controlArea, 'Latent chains')
 
         class TableView(gui.TableView):
-            selected_row = QtCore.pyqtSignal(int)
+            selected_row = pyqtSignal(int)
 
             def __init__(self, parent):
                 super().__init__(parent,
@@ -173,6 +173,7 @@ class OWChaining(widget.OWWidget):
 def main():
     # example from https://github.com/marinkaz/scikit-fusion
     import numpy as np
+    from AnyQt.QtWidgets import QApplication
     R12 = np.random.rand(50, 100)
     R32 = np.random.rand(100, 150)
     R33 = np.random.rand(150, 150)
@@ -190,7 +191,7 @@ def main():
         G.add_relation(rel)
     fuser = fusion.Dfmf()
     fuser.fuse(G)
-    app = QtGui.QApplication([])
+    app = QApplication([])
     w = OWChaining()
     w.on_fuser_change(FittedFusionGraph(fuser))
     w.show()

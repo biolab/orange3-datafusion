@@ -1,8 +1,10 @@
 import sys
 import copy
-import Orange.data.table
-from PyQt4 import QtGui
-from PyQt4.QtCore import Qt
+
+from AnyQt.QtCore import Qt
+from AnyQt.QtWidgets import QGridLayout, QSizePolicy
+
+from Orange.data import Table
 from Orange.widgets.widget import OWWidget
 from Orange.widgets import widget, gui, settings
 from skfusion import fusion
@@ -56,7 +58,7 @@ class OWSampleMatrix(OWWidget):
     want_main_area = False
     resizing_enabled = False
 
-    inputs = [("Data", Orange.data.table.Table, "set_data", widget.Default)]
+    inputs = [("Data", Table, "set_data", widget.Default)]
     outputs = [(Output.IN_SAMPLE_DATA, Relation),
                (Output.OUT_OF_SAMPLE_DATA, Relation)]
 
@@ -68,13 +70,13 @@ class OWSampleMatrix(OWWidget):
         super().__init__()
         self.data = None
 
-        form = QtGui.QGridLayout()
+        form = QGridLayout()
 
         self.row_type = ""
-        w_rowtype = gui.lineEdit(self.controlArea, self, "row_type", "Row Type", callback=self.send_output)
+        gui.lineEdit(self.controlArea, self, "row_type", "Row Type", callback=self.send_output)
 
         self.col_type = ""
-        w_coltype = gui.lineEdit(self.controlArea, self, "col_type", "Column Type", callback=self.send_output)
+        gui.lineEdit(self.controlArea, self, "col_type", "Column Type", callback=self.send_output)
 
         methodbox = gui.radioButtonsInBox(
             self.controlArea, self, "method", [],
@@ -93,16 +95,13 @@ class OWSampleMatrix(OWWidget):
         form.addWidget(entries, 1, 1, Qt.AlignLeft)
 
         sample_size = gui.widgetBox(self.controlArea, "Proportion of data in the sample")
-        percent = gui.hSlider(
-            sample_size, self, 'percent', minValue=1, maxValue=100, step=5,
-            ticks=10, labelFormat=" %d%%")
+        gui.hSlider(sample_size, self, 'percent', minValue=1, maxValue=100, step=5, ticks=10,
+                    labelFormat=" %d%%")
 
         gui.button(self.controlArea, self, "&Apply",
                    callback=self.send_output, default=True)
 
-        self.setSizePolicy(
-            QtGui.QSizePolicy(QtGui.QSizePolicy.Fixed,
-                              QtGui.QSizePolicy.Fixed))
+        self.setSizePolicy(QSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed))
 
         self.setMinimumWidth(250)
         self.send_output()
@@ -149,7 +148,8 @@ class OWSampleMatrix(OWWidget):
 
 
 if __name__ == "__main__":
-    app = QtGui.QApplication(sys.argv)
+    from AnyQt.QtWidgets import QApplication
+    app = QApplication(sys.argv)
     ow = OWSampleMatrix()
     # ow.set_data(Orange.data.Table("housing.tab"))
     ow.send_output()

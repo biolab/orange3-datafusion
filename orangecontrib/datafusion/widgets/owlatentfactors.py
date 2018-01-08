@@ -1,5 +1,3 @@
-from PyQt4 import QtGui
-
 from Orange.widgets import widget, gui, settings
 from Orange.widgets.utils.itemmodels import PyTableModel
 from skfusion import fusion
@@ -170,6 +168,7 @@ class OWLatentFactors(widget.OWWidget):
 def main():
     # example from https://github.com/marinkaz/scikit-fusion
     import numpy as np
+    from AnyQt.QtWidgets import QApplication
     R12 = np.random.rand(50, 100)
     R32 = np.random.rand(150, 100)
     R33 = np.random.rand(150, 150)
@@ -185,7 +184,7 @@ def main():
         G.add_relation(rel)
     fuser = fusion.Dfmf()
     fuser.fuse(G)
-    app = QtGui.QApplication([])
+    app = QApplication([])
     w = OWLatentFactors()
     w.on_fuser_change(FittedFusionGraph(fuser))
     w.show()

@@ -1,14 +1,16 @@
 from collections import OrderedDict
 
-from PyQt4 import QtCore, QtGui
-from Orange.widgets import widget, gui
-
+import numpy as np
 from skfusion import fusion
+
+from AnyQt.QtCore import Qt
+from AnyQt.QtGui import QFont
+from AnyQt.QtWidgets import QTableWidgetItem, QTableWidget
+
+from Orange.widgets import widget, gui
 from orangecontrib.datafusion.models import Relation, RelationCompleter
 from orangecontrib.datafusion.widgets.owfusiongraph import \
     relation_str
-
-import numpy as np
 
 
 def _rmse(true, pred):
@@ -50,11 +52,11 @@ class OWCompletionScoring(widget.OWWidget):
 
     def _create_layout(self):
         box = gui.widgetBox(self.mainArea, 'RMSE')
-        BOLD_FONT = QtGui.QFont()
-        BOLD_FONT.setWeight(QtGui.QFont.DemiBold)
+        BOLD_FONT = QFont()
+        BOLD_FONT.setWeight(QFont.DemiBold)
         widget = self
 
-        class HereTableWidget(QtGui.QTableWidget):
+        class HereTableWidget(QTableWidget):
             def __init__(self, parent):
                 super().__init__(parent)
                 parent.layout().addWidget(self)
@@ -85,8 +87,8 @@ class OWCompletionScoring(widget.OWWidget):
                     except ValueError: continue # No fuser could complete this relation
                     for col, rmse in enumerate(rmses):
                         if rmse is None: continue
-                        item = QtGui.QTableWidgetItem('{:.05f}'.format(rmse))
-                        item.setFlags(QtCore.Qt.ItemIsEnabled)
+                        item = QTableWidgetItem('{:.05f}'.format(rmse))
+                        item.setFlags(Qt.ItemIsEnabled)
                         if rmse == min_rmse and len(rmses) > 1:
                             item.setFont(BOLD_FONT)
                         self.setItem(row, col, item)
@@ -116,6 +118,7 @@ class OWCompletionScoring(widget.OWWidget):
 def main():
     from sklearn.datasets import make_blobs
     import numpy as np
+    from AnyQt.QtWidgets import QApplication
     from orangecontrib.datafusion.models import FittedFusionGraph
     from orangecontrib.datafusion.widgets.owmeanfuser import MeanFuser
     X, y = make_blobs(100, 3, centers=2, center_box=(-100, 100), cluster_std=10)
@@ -152,7 +155,7 @@ def main():
     fuserC.name = 'My dfmc<3'
     fuserC.fuse(G)
 
-    app = QtGui.QApplication([])
+    app = QApplication([])
     w = OWCompletionScoring()
     w.on_fuser_change(FittedFusionGraph(fuserF), fuserF.__class__.__name__)
     w.on_fuser_change(FittedFusionGraph(fuserC), fuserC.__class__.__name__)

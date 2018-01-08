@@ -1,7 +1,6 @@
 
 from collections import defaultdict
 
-from PyQt4 import QtGui
 from Orange.widgets import widget, gui, settings
 from Orange.widgets.utils.itemmodels import PyTableModel
 
@@ -171,6 +170,7 @@ class OWMeanFuser(widget.OWWidget):
 
 
 def main():
+    from AnyQt.QtWidgets import QApplication
     t1 = fusion.ObjectType('Users', 10)
     t2 = fusion.ObjectType('Movies', 30)
     t3 = fusion.ObjectType('Actors', 40)
@@ -196,7 +196,7 @@ def main():
     ]
     G = fusion.FusionGraph()
     G.add_relations_from(relations)
-    app = QtGui.QApplication([])
+    app = QApplication([])
     w = OWMeanFuser()
     w.on_fusion_graph_change(G)
     w.show()

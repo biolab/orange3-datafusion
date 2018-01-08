@@ -7,9 +7,11 @@ from functools import wraps
 
 import numpy as np
 
-from PyQt4 import QtCore, QtGui
-from PyQt4.QtCore import QLineF, QPointF, QRectF, Qt
-from PyQt4.QtGui import qApp, QBrush, QPen, QPolygonF, QStyle, QColor, QFont
+from AnyQt.QtCore import QLineF, QPointF, QRectF, QSize, QSizeF, Qt, pyqtSignal
+from AnyQt.QtGui import QBrush, QPen, QPolygonF, QColor, QFont, QPolygonF, QPainterPath, QPainter
+from AnyQt.QtWidgets import qApp, QStyle, QGraphicsSimpleTextItem, QGraphicsItemGroup,\
+    QGraphicsRectItem, QGraphicsLineItem, QGraphicsEllipseItem, QGraphicsView, QApplication,\
+    QGraphicsScene, QGraphicsSimpleTextItem
 
 def pp(i):
     return i.pos().x(), i.pos().y()
@@ -31,7 +33,7 @@ def shape_line_intersection(shape, shape_pos, line):
                key=lambda point: QLineF(line.p1(), point).length())
 
 
-class TextItem(QtGui.QGraphicsSimpleTextItem):
+class TextItem(QGraphicsSimpleTextItem):
     def __init__(self, text, parent):
         super().__init__(text)
         self._parent = parent
@@ -40,7 +42,7 @@ class TextItem(QtGui.QGraphicsSimpleTextItem):
         return self._parent
 
 
-class GroupOfSquares(QtGui.QGraphicsItemGroup):
+class GroupOfSquares(QGraphicsItemGroup):
     def __init__(self, parent):
         super().__init__(parent)
         self.setZValue(2)
@@ -51,7 +53,7 @@ class GroupOfSquares(QtGui.QGraphicsItemGroup):
 
     def addSquare(self, size):
         size = np.clip(1.3**np.log2(size**.5), 8, 20)
-        item = QtGui.QGraphicsRectItem(self)
+        item = QGraphicsRectItem(self)
         offset = len(self.childItems())
         item.setRect(offset*3, offset*2, size, size)
         item.setPen(QColor('maroon'))
@@ -74,7 +76,7 @@ class _SelectableItem:
         return self._selected
 
 
-class Edge(_SelectableItem, QtGui.QGraphicsLineItem):
+class Edge(_SelectableItem, QGraphicsLineItem):
 
     ARROW_SIZE = 16
 
@@ -95,7 +97,7 @@ class Edge(_SelectableItem, QtGui.QGraphicsLineItem):
         pen = QPen(Edge.Color.DEFAULT[0], 1)
         pen.setJoinStyle(Qt.MiterJoin)
         self.setPen(pen)
-        self.arrowHead = QtGui.QPolygonF()
+        self.arrowHead = QPolygonF()
         self._selected = False
         self._weights = []
         self._labels = []
@@ -156,7 +158,7 @@ class Edge(_SelectableItem, QtGui.QGraphicsLineItem):
     def boundingRect(self):
         extra = (self.pen().width() + Edge.ARROW_SIZE) / 2
         p1, p2 = self.line().p1(), self.line().p2()
-        return QtCore.QRectF(p1, QtCore.QSizeF(p2.x() - p1.x(), p2.y() - p1.y())).normalized().adjusted(-extra, -extra, extra, extra)
+        return QRectF(p1, QSizeF(p2.x() - p1.x(), p2.y() - p1.y())).normalized().adjusted(-extra, -extra, extra, extra)
     def shape(self):
         path = super().shape()
         path.addPolygon(self.arrowHead)
@@ -200,7 +202,7 @@ class Edge(_SelectableItem, QtGui.QGraphicsLineItem):
         p0 = shape_line_intersection(node.shape(), node.pos(), line0)
         p1 = shape_line_intersection(node.shape(), node.pos(), line1)
         p2 = shape_line_intersection(node.shape(), node.pos(), line2)
-        path = QtGui.QPainterPath()
+        path = QPainterPath()
         path.moveTo(p1)
         line = QLineF(node.pos(), p0)
         line.setLength(3*line.length())
@@ -269,7 +271,7 @@ class Edge(_SelectableItem, QtGui.QGraphicsLineItem):
         painter.drawPolygon(self.arrowHead)
 
 
-class Node(_SelectableItem, QtGui.QGraphicsEllipseItem):
+class Node(_SelectableItem, QGraphicsEllipseItem):
     """
     This class provides an interface for all the bells & whistles of the
     Network Explorer.
@@ -301,8 +303,8 @@ class Node(_SelectableItem, QtGui.QGraphicsEllipseItem):
         self.squares = GroupOfSquares(self)
         # Add text labels
         if len(title) > 20: title = title[:20] + '…'
-        title = self.title = QtGui.QGraphicsSimpleTextItem(title, self)
-        subtitle = self.subtitle = QtGui.QGraphicsSimpleTextItem('', self)
+        title = self.title = QGraphicsSimpleTextItem(title, self)
+        subtitle = self.subtitle = QGraphicsSimpleTextItem('', self)
         self.rank = rank
         title.setFont(Node.Font.TITLE)
         subtitle.setFont(Node.Font.SUBTITLE)
@@ -348,22 +350,22 @@ class Node(_SelectableItem, QtGui.QGraphicsEllipseItem):
         self.subtitle.setPos(cx - w2/2, cy - h2/2 - h/2 - 2)
 
 
-class GraphView(QtGui.QGraphicsView):
+class GraphView(QGraphicsView):
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.nodes = OrderedDict()
         self.edges = []
 
-        self.setScene(QtGui.QGraphicsScene(self))
+        self.setScene(QGraphicsScene(self))
         self.setCacheMode(self.CacheBackground)
         self.setViewportUpdateMode(self.FullViewportUpdate)
 
         self.setTransformationAnchor(self.AnchorUnderMouse)
         self.setResizeAnchor(self.AnchorViewCenter)
 
-        self.setRenderHints(QtGui.QPainter.Antialiasing |
-                            QtGui.QPainter.TextAntialiasing)
+        self.setRenderHints(QPainter.Antialiasing |
+                            QPainter.TextAntialiasing)
 
     def hideSquares(self):
         for i in chain(self.nodes.values(), self.edges):
@@ -432,7 +434,7 @@ class GraphView(QtGui.QGraphicsView):
             self.scale(factor, factor)
 
     def sizeHint(self):
-        return QtCore.QSize(600, 500)
+        return QSize(600, 500)
 
     def relayout(self):
         """Approximate Fruchterman-Reingold spring layout"""
@@ -474,7 +476,7 @@ class GraphView(QtGui.QGraphicsView):
         self.scene().setSceneRect(rect)
         self.scene().invalidate()
 
-    selectionChanged = QtCore.pyqtSignal(list)
+    selectionChanged = pyqtSignal(list)
 
     def edgeClicked(self, edge): edge.selected = True
     def nodeClicked(self, node): node.selected = True
@@ -507,7 +509,7 @@ class GraphView(QtGui.QGraphicsView):
 if __name__ == '__main__':
 
     import sys
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
 
     widget = GraphView()
     widget.show()
