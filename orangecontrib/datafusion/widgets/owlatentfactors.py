@@ -1,5 +1,7 @@
 from Orange.widgets import widget, gui, settings
 from Orange.widgets.utils.itemmodels import PyTableModel
+from Orange.widgets.widget import Input, Output
+
 from skfusion import fusion
 from orangecontrib.datafusion.widgets.owfusiongraph import rel_shape, rel_cols
 from orangecontrib.datafusion.models import Relation, FittedFusionGraph
@@ -9,10 +11,6 @@ from orangecontrib.datafusion.widgets.graphview import GraphView, Edge
 def is_constraint(relation):
     """Skip constraint (Theta) relations"""
     return relation.row_type == relation.col_type
-
-
-class Output:
-    RELATION = 'Relation'
 
 
 class LatentGraphView(GraphView):
@@ -28,8 +26,12 @@ class OWLatentFactors(widget.OWWidget):
                   "select a latent factor for further analysis."
     priority = 20000
     icon = "icons/LatentFactors.svg"
-    inputs = [("Fitted fusion graph", FittedFusionGraph, "on_fuser_change")]
-    outputs = [(Output.RELATION, Relation)]
+
+    class Inputs:
+        fitted_fusion_graph = Input("Fitted fusion graph", FittedFusionGraph)
+
+    class Outputs:
+        relation = Output("Relation", Relation)
 
     autorun = settings.Setting(True)
 
@@ -132,13 +134,13 @@ class OWLatentFactors(widget.OWWidget):
 
     def commit(self, item):
         data = Relation.create(*item, graph=self.fuser) if item else None
-        self.send(Output.RELATION, data)
+        self.Outputs.relation.send(data)
 
     def _populate_tables(self, factors=None, backbones=None, reset=False):
         if not self.fuser: return
         self.model_factors.clear()
         self.model_backbones.clear()
-        self.send(Output.RELATION, None)
+        self.Outputs.relation.send(None)
         if factors or reset:
             for otype, matrices in factors or self.fuser.factors_.items():
                 M = matrices[0]
@@ -156,6 +158,7 @@ class OWLatentFactors(widget.OWWidget):
                 self.model_completions.append([(M, rel.row_type, rel.col_type), rel_shape(M.data)] + rel_cols(rel))
             self.table_completions.hideColumn(0)
 
+    @Inputs.fitted_fusion_graph
     def on_fuser_change(self, fuser):
         self.fuser = fuser
         self._populate_tables(reset=True)
