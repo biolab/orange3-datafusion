@@ -4,6 +4,7 @@ from AnyQt.QtWidgets import QSizePolicy
 
 from Orange.widgets.widget import OWWidget
 from Orange.widgets import widget, gui, settings
+from Orange.widgets.widget import Output
 from orangecontrib.datafusion.models import Relation
 from orangecontrib.datafusion import movielens
 
@@ -17,7 +18,8 @@ class OWMovieRatings(OWWidget):
     want_main_area = False
     resizing_enabled = False
 
-    outputs = [("Ratings", Relation, widget.Default)]
+    class Outputs:
+        relation = Output("Ratings", Relation)
 
     percent = settings.Setting(10)  # 10: default is 10% of data
     start = settings.Setting(2005)  # from year 2005 (default)
@@ -70,12 +72,12 @@ class OWMovieRatings(OWWidget):
                 matrix, movies, users = movielens.movie_user_matrix(start_year=self.start, end_year=self.end)
             except ValueError:
                 self.error(0, "Invalid starting years")
-                self.send("Ratings", None)
+                self.Outputs.relation.send(None)
 
         relation = fusion.Relation(matrix.T, name='rate',
                                    row_type=movielens.ObjectType.Users, row_names=users,
                                    col_type=movielens.ObjectType.Movies, col_names=movies)
-        self.send("Ratings", Relation(relation))
+        self.Outputs.relation.send(Relation(relation))
 
 if __name__ == "__main__":
     from AnyQt.QtWidgets import QApplication

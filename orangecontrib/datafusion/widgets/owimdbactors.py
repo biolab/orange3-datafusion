@@ -3,14 +3,11 @@ import sys
 from AnyQt.QtWidgets import QSizePolicy
 
 from orangecontrib.datafusion.models import Relation
-from Orange.widgets.widget import OWWidget
 from Orange.widgets import widget, gui, settings
+from Orange.widgets.widget import OWWidget, Input, Output
 from orangecontrib.datafusion import movielens
 
 from skfusion import fusion
-
-MOVIE_ACTORS = "Movie Actors"
-ACTORS_ACTORS = "Costarring Actors"
 
 
 class OWIMDbActors(OWWidget):
@@ -21,9 +18,12 @@ class OWIMDbActors(OWWidget):
     want_main_area = False
     resizing_enabled = False
 
-    inputs = [("Filter", Relation, "set_data")]
-    outputs = [(MOVIE_ACTORS, Relation),
-               (ACTORS_ACTORS, Relation)]
+    class Inputs:
+        filter = Input("Filter", Relation)
+
+    class Outputs:
+        movie_actors = Output("Movie Actors", Relation)
+        actors_actors = Output("Costarring Actors", Relation)
 
     percent = settings.Setting(10)
 
@@ -46,6 +46,7 @@ class OWIMDbActors(OWWidget):
 
         self.movies = None
 
+    @Inputs.filter
     def set_data(self, relation):
         if relation is not None:
             assert isinstance(relation, Relation)
@@ -67,12 +68,12 @@ class OWIMDbActors(OWWidget):
             movies_actors = fusion.Relation(movie_actor_mat.T, name='play in',
                                             row_type=movielens.ObjectType.Actors, row_names=actors,
                                             col_type=movielens.ObjectType.Movies, col_names=self.movies)
-            self.send(MOVIE_ACTORS, Relation(movies_actors))
+            self.Outputs.movie_actors.send(Relation(movies_actors))
 
             actors_actors = fusion.Relation(actor_actor_mat, name='costar with',
                                             row_type=movielens.ObjectType.Actors, row_names=actors,
                                             col_type=movielens.ObjectType.Actors, col_names=actors)
-            self.send(ACTORS_ACTORS, Relation(actors_actors))
+            self.Outputs.actors_actors.send(Relation(actors_actors))
 
 
 if __name__ == "__main__":

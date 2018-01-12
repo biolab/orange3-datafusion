@@ -5,6 +5,7 @@ from AnyQt.QtWidgets import QGridLayout, QSizePolicy
 
 from Orange.widgets.widget import OWWidget
 from Orange.widgets import widget, gui
+from Orange.widgets.widget import Input, Output
 from orangecontrib.datafusion import movielens
 from orangecontrib.datafusion.models import Relation
 
@@ -19,8 +20,11 @@ class OWMovieGenres(OWWidget):
     want_main_area = False
     resizing_enabled = False
 
-    inputs = [("Row Type", Relation, "set_data", widget.Default)]
-    outputs = [("Genres", Relation, widget.Default)]
+    class Inputs:
+        relation = Input("Row Type", Relation)
+
+    class Outputs:
+        relation = Output("Genres", Relation)
 
     def __init__(self):
         super().__init__()
@@ -47,6 +51,7 @@ class OWMovieGenres(OWWidget):
             for i in range(len(self.genres)):
                 self.labels.append(gui.widgetLabel(self.genrebox, self.genres[i]))
 
+    @Inputs.relation
     def set_data(self, data):
         self.data = data
         if self.data is not None:
@@ -75,7 +80,7 @@ class OWMovieGenres(OWWidget):
             relation = fusion.Relation(self.matrix, name=self.relation_name,
                                        row_type=self.row_type, row_names=self.row_names,
                                        col_type=fusion.ObjectType("Genres"), col_names=self.genres)
-            self.send("Genres", Relation(relation))
+            self.Outputs.relation.send(Relation(relation))
 
 if __name__ == "__main__":
     from AnyQt.QtWidgets import QApplication

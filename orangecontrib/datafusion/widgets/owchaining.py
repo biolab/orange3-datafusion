@@ -1,6 +1,7 @@
 import numpy as np
 
 from Orange.widgets import widget, gui, settings
+from Orange.widgets.widget import Input, Output
 from Orange.widgets.utils.itemmodels import PyTableModel
 
 from skfusion import fusion
@@ -9,10 +10,6 @@ from orangecontrib.datafusion.widgets.graphview import GraphView, Edge
 from orangecontrib.datafusion.widgets.owfusiongraph import rel_cols
 
 from AnyQt.QtCore import pyqtSignal
-
-class Output:
-    RELATION = 'Relation'
-
 
 class ChainingGraphView(GraphView):
     def __init__(self, parent):
@@ -33,8 +30,12 @@ class OWChaining(widget.OWWidget):
                   "another type through chaining of latent factors."
     priority = 30000
     icon = "icons/LatentChaining.svg"
-    inputs = [("Fitted fusion graph", FittedFusionGraph, "on_fuser_change")]
-    outputs = [(Output.RELATION, Relation)]
+
+    class Inputs:
+        fitted_fusion_graph = Input("Fitted fusion graph", FittedFusionGraph)
+
+    class Outputs:
+        relation = Output("Relation", Relation)
 
     pref_complete = settings.Setting(0)  # Complete chaining to feature space
 
@@ -78,7 +79,7 @@ class OWChaining(widget.OWWidget):
                 self.graphview.clearSelection()
                 self._highlight_relations(chain)
                 data = self.fuser.compute_chain(chain, self.pref_complete)
-            self.send(Output.RELATION, data)
+            self.Outputs.relation.send(data)
 
         table.selected_row.connect(selected_row)
         box.layout().addWidget(table)
@@ -109,7 +110,7 @@ class OWChaining(widget.OWWidget):
                     edge.selected = True
 
     def _populate_table(self, chains=[]):
-        self.send(Output.RELATION, None)
+        self.Outputs.relation.send(None)
         model = []
         for chain in chains:
             columns = [str(self.startNode.name)]
@@ -123,6 +124,7 @@ class OWChaining(widget.OWWidget):
         self.model.wrap(model)
         self.table.hideColumn(0)
 
+    @Inputs.fitted_fusion_graph
     def on_fuser_change(self, fuser):
         self.fuser = fuser
         self._populate_table()

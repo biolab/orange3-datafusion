@@ -3,17 +3,13 @@ from collections import defaultdict
 
 from Orange.widgets import widget, gui, settings
 from Orange.widgets.utils.itemmodels import PyTableModel
+from Orange.widgets.widget import Input, Output
 
 from skfusion import fusion
 from orangecontrib.datafusion.models import Relation, FusionGraph, RelationCompleter
 from orangecontrib.datafusion.widgets.owfusiongraph import rel_shape, rel_cols
 
 import numpy as np
-
-
-class Output:
-    FUSER = 'Mean-fitted fusion graph'
-    RELATION = 'Relation'
 
 
 class MeanBy:
@@ -69,14 +65,14 @@ class OWMeanFuser(widget.OWWidget):
     name = 'Mean Fuser'
     priority = 55000
     icon = 'icons/MeanFuser.svg'
-    inputs = [
-        ('Fusion graph', FusionGraph, 'on_fusion_graph_change'),
-        ('Relation', Relation, 'on_relation_change', widget.Multiple),
-    ]
-    outputs = [
-        (Output.FUSER, MeanFuser, widget.Default),
-        (Output.RELATION, Relation)
-    ]
+
+    class Inputs:
+        fusion_graph = Input('Fusion graph', FusionGraph)
+        relation = Input('Relation', Relation, multiple=True)
+
+    class Outputs:
+        fuser = Output('Mean-fitted fusion graph', MeanFuser, default=True)
+        relation = Output('Relation', Relation)
 
     want_main_area = False
 
@@ -120,7 +116,7 @@ class OWMeanFuser(widget.OWWidget):
 
     def commit(self, item=None):
         self.fuser = MeanFuser(self.mean_by)
-        self.send(Output.FUSER, self.fuser)
+        self.Outputs.fuser.send(self.fuser)
         rows = [i.row() for i in self.table.selectionModel().selectedRows()]
         if self.model.rowCount() and rows:
             relation = self.model[rows[0]][0]
@@ -130,7 +126,7 @@ class OWMeanFuser(widget.OWWidget):
                                    self.graph)
         else:
             data = None
-        self.send(Output.RELATION, data)
+        self.Outputs.relation.send(data)
 
     def update_table(self):
         self.model.wrap([([rel, rel_shape(rel.data)] +
@@ -147,6 +143,7 @@ class OWMeanFuser(widget.OWWidget):
         if not self.relations[relation]:
             del self.relations[relation]
 
+    @Inputs.fusion_graph
     def on_fusion_graph_change(self, graph):
         if graph:
             self.graph = graph
@@ -159,6 +156,7 @@ class OWMeanFuser(widget.OWWidget):
         self.update_table()
         self.commit()
 
+    @Inputs.relation
     def on_relation_change(self, relation, id):
         try: self._remove_relation(self.id_relations.pop(id))
         except KeyError: pass

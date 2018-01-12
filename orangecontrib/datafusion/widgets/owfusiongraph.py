@@ -2,6 +2,8 @@ from collections import defaultdict
 
 from Orange.widgets import widget, gui, settings
 from Orange.widgets.utils.itemmodels import PyTableModel
+from Orange.widgets.widget import Input, Output
+
 from skfusion import fusion
 from orangecontrib.datafusion.models import Relation, FusionGraph, FittedFusionGraph
 from orangecontrib.datafusion.widgets.graphview import GraphView, Node, Edge
@@ -16,12 +18,6 @@ INITIALIZATION_ALGO = [
     'Random C',
     'Random Vcol'
 ]
-
-
-class Output:
-    RELATION = 'Relation'
-    FUSION_GRAPH = 'Fusion Graph'
-    FUSER = 'Fitted Fusion Graph'
 
 
 def rel_shape(relation):
@@ -58,12 +54,14 @@ class OWFusionGraph(widget.OWWidget):
                   "collective matrix factorization."
     priority = 10000
     icon = "icons/FusionGraph.svg"
-    inputs = [("Relation", Relation, "on_relation_change", widget.Multiple)]
-    outputs = [
-        (Output.RELATION, Relation),
-        (Output.FUSER, FittedFusionGraph, widget.Default),
-        (Output.FUSION_GRAPH, FusionGraph),
-    ]
+
+    class Inputs:
+        relation = Input("Relation", Relation, multiple=True)
+
+    class Outputs:
+        relation = Output('Relation', Relation)
+        fuser = Output('Fitted Fusion Graph', FittedFusionGraph, default=True)
+        fusion_graph = Output('Fusion Graph', FusionGraph)
 
     pref_algo_name = settings.Setting('')
     pref_algorithm = settings.Setting(0)
@@ -124,7 +122,7 @@ class OWFusionGraph(widget.OWWidget):
                     assert len(selected) == 1
                     data = self._parent.tablemodel[selected[0].top()][0]
                     relation = Relation(data)
-                self._parent.send(Output.RELATION, relation)
+                self._parent.Outputs.relation.send(relation)
 
         model = self.tablemodel = PyTableModel(parent=self)
         table = self.table = TableView(self,
@@ -184,7 +182,7 @@ class OWFusionGraph(widget.OWWidget):
         finally:
             self.progressbar.finish()
         self.fuser.name = self.pref_algo_name
-        self.send(Output.FUSER, FittedFusionGraph(self.fuser))
+        self.Outputs.fuser.send(FittedFusionGraph(self.fuser))
 
     def _populate_table(self, relations=None):
         self.tablemodel.wrap([[rel, rel_shape(rel.data)] + rel_cols(rel)
@@ -192,6 +190,7 @@ class OWFusionGraph(widget.OWWidget):
         self.table.hideColumn(0)
         self.table.selectRow(0)
 
+    @Inputs.relation
     def on_relation_change(self, relation, id):
         def _on_remove_relation(id):
             try: relation = self.relations.pop(id)
@@ -220,7 +219,7 @@ class OWFusionGraph(widget.OWWidget):
                                            for rel in self.graph.relations)
                                     else
                                     100)
-        self.send(Output.FUSION_GRAPH, FusionGraph(self.graph))
+        self.Outputs.fusion_graph.send(FusionGraph(self.graph))
         # this ensures gui.label-s get updated
         self.n_object_types = self.graph.n_object_types
         self.n_relations = self.graph.n_relations

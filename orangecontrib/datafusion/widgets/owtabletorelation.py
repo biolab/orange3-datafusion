@@ -4,14 +4,10 @@ from AnyQt.QtCore import Qt, QSize
 from Orange.data import Table, Domain
 from Orange.widgets.settings import Setting, ContextSetting, PerfectDomainContextHandler
 from Orange.widgets.utils.itemmodels import TableModel
-from Orange.widgets.widget import OWWidget
+from Orange.widgets.widget import OWWidget, Input, Output
 from Orange.widgets import gui
 from orangecontrib.datafusion.models import Relation
 from skfusion import fusion
-
-
-class Output:
-    RELATION = 'Relation'
 
 
 class OWTableToRelation(OWWidget):
@@ -20,8 +16,11 @@ class OWTableToRelation(OWWidget):
     priority = 50000
     icon = "icons/TableToRelation.svg"
 
-    inputs = [("Data", Table, "set_data")]
-    outputs = [(Output.RELATION, Relation)]
+    class Inputs:
+        data = Input("Data", Table)
+
+    class Outputs:
+        relation = Output("Relation", Relation)
 
     settingsHandler = PerfectDomainContextHandler()
 
@@ -88,6 +87,7 @@ class OWTableToRelation(OWWidget):
     def sizeHint(self):
         return QSize(800, 500)
 
+    @Inputs.data
     def set_data(self, data):
         self.closeContext()
         self.data = data
@@ -174,7 +174,7 @@ class OWTableToRelation(OWWidget):
                     row_metadata=metadata,
                     col_type=fusion.ObjectType(self.col_type or 'Unknown'), col_names=self.col_names,
                 )
-            self.send(Output.RELATION, Relation(relation))
+            self.Outputs.relation.send(Relation(relation))
 
 
 if __name__ == '__main__':

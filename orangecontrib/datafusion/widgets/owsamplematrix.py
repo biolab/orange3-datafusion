@@ -5,17 +5,12 @@ from AnyQt.QtCore import Qt
 from AnyQt.QtWidgets import QGridLayout, QSizePolicy
 
 from Orange.data import Table
-from Orange.widgets.widget import OWWidget
 from Orange.widgets import widget, gui, settings
+from Orange.widgets.widget import OWWidget, Input, Output
 from skfusion import fusion
 from orangecontrib.datafusion.models import Relation
 
 import numpy as np
-
-
-class Output:
-    IN_SAMPLE_DATA = "In-sample Data"
-    OUT_OF_SAMPLE_DATA = "Out-of-sample Data"
 
 
 class SampleBy:
@@ -58,9 +53,12 @@ class OWSampleMatrix(OWWidget):
     want_main_area = False
     resizing_enabled = False
 
-    inputs = [("Data", Table, "set_data", widget.Default)]
-    outputs = [(Output.IN_SAMPLE_DATA, Relation),
-               (Output.OUT_OF_SAMPLE_DATA, Relation)]
+    class Inputs:
+        data = Input("Data", Table, default=True)
+
+    class Outputs:
+        in_sample_data = Output("In-sample Data", Relation)
+        out_of_sample_data = Output("Out-of-sample Data", Relation)
 
     percent = settings.Setting(90)
     method = settings.Setting(0)
@@ -106,6 +104,7 @@ class OWSampleMatrix(OWWidget):
         self.setMinimumWidth(250)
         self.send_output()
 
+    @Inputs.data
     def set_data(self, data):
         self.data = data
 
@@ -143,8 +142,8 @@ class OWSampleMatrix(OWWidget):
 
             oos_mask = _mask_relation(relation_.relation, oos_mask)
 
-            self.send(Output.IN_SAMPLE_DATA, Relation(oos_mask))
-            self.send(Output.OUT_OF_SAMPLE_DATA, Relation(oos_mask))
+            self.Outputs.in_sample_data.send(Relation(oos_mask))
+            self.Outputs.out_of_sample_data.send(Relation(oos_mask))
 
 
 if __name__ == "__main__":

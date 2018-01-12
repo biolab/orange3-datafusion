@@ -1,6 +1,7 @@
 from collections import OrderedDict
 
 import numpy as np
+
 from skfusion import fusion
 
 from AnyQt.QtCore import Qt
@@ -8,6 +9,7 @@ from AnyQt.QtGui import QFont
 from AnyQt.QtWidgets import QTableWidgetItem, QTableWidget
 
 from Orange.widgets import widget, gui
+from Orange.widgets.widget import Input
 from orangecontrib.datafusion.models import Relation, RelationCompleter
 from orangecontrib.datafusion.widgets.owfusiongraph import \
     relation_str
@@ -36,10 +38,10 @@ class OWCompletionScoring(widget.OWWidget):
                   "root mean squared error (RMSE)."
     priority = 40000
     icon = 'icons/CompletionScoring.svg'
-    inputs = [
-        ('Fitted fusion graph', RelationCompleter, 'on_fuser_change', widget.Multiple),
-        ('Relation', Relation, 'on_relation_change', widget.Multiple),
-    ]
+
+    class Inputs:
+        fitted_fusion_graph = Input('Fitted fusion graph', RelationCompleter, multiple=True)
+        relation = Input('Relation', Relation, multiple=True)
 
     want_main_area = True
     want_control_area = False
@@ -101,12 +103,14 @@ class OWCompletionScoring(widget.OWWidget):
     def update(self):
         self.table.update_table(self.fusers, self.relations)
 
+    @Inputs.fitted_fusion_graph
     def on_fuser_change(self, fuser, id):
         if fuser:
             self.fusers[id] = [fuser]
         else: del self.fusers[id]
         self.update()
 
+    @Inputs.relation
     def on_relation_change(self, relation, id):
         if relation:
             self.relations[id] = relation.relation
