@@ -116,7 +116,6 @@ class OWFusionGraph(widget.OWWidget):
             def selectionChanged(self, selected, deselected):
                 super().selectionChanged(selected, deselected)
                 if not selected:
-                    assert len(deselected) > 0
                     relation = None
                 else:
                     assert len(selected) == 1
